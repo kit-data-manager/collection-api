@@ -1,9 +1,12 @@
 package edu.kit.datamanager.collection.domain;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 import javax.persistence.Entity;
+import javax.persistence.GeneratedValue;
+import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.Transient;
 import org.springframework.validation.annotation.Validated;
@@ -20,11 +23,15 @@ import lombok.Data;
 @Data
 public class MemberItem{
 
+  @Id
+  @GeneratedValue(strategy = GenerationType.IDENTITY)
+  @JsonIgnore
+  private Long id;
+
   @ApiModelProperty(required = true, value = "Identifier for the member")
   @NotNull
   @JsonProperty("id")
-  @Id
-  private String id = null;
+  private String mid = null;
 
   @ApiModelProperty(required = true, value = "Location at which the item data can be retrieved")
   @NotNull
@@ -49,13 +56,16 @@ public class MemberItem{
   private CollectionItemMappingMetadata mappings = null;
 
   public static MemberItem copy(MemberItem item){
-    MemberItem i = new MemberItem();
-    i.datatype = item.datatype;
-    i.description = item.description;
-    i.id = item.id;
-    i.location = item.location;
-    i.mappings = item.mappings;
-    i.ontology = item.ontology;
-    return i;
+    return new MemberItem().copyFrom(item);
+  }
+
+  public MemberItem copyFrom(MemberItem item){
+    this.datatype = item.datatype;
+    this.description = item.description;
+    this.id = item.id;
+    this.location = item.location;
+    this.mappings = item.mappings;
+    this.ontology = item.ontology;
+    return this;
   }
 }

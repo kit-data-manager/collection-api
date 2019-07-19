@@ -6,10 +6,8 @@
 package edu.kit.datamanager.collection.web;
 
 import edu.kit.datamanager.collection.domain.CollectionCapabilities;
-import edu.kit.datamanager.collection.domain.CollectionItemMappingMetadata;
 import edu.kit.datamanager.collection.domain.CollectionObject;
 import edu.kit.datamanager.collection.domain.CollectionResultSet;
-import edu.kit.datamanager.collection.domain.Error;
 import edu.kit.datamanager.collection.domain.MemberItem;
 import edu.kit.datamanager.collection.domain.MemberResultSet;
 import io.swagger.annotations.*;

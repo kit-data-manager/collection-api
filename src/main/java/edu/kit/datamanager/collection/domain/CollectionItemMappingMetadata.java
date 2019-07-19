@@ -31,9 +31,9 @@ public class CollectionItemMappingMetadata{
   @JsonIgnore
   private Long id;
 
-  @ApiModelProperty(value = "The ole that applies to this item. Only available if the collection supportsRoles per its capabilities. A Controlled Vocabulary should be used.")
+  @ApiModelProperty(value = "The role that applies to this item. Only available if the collection supportsRoles per its capabilities. A Controlled Vocabulary should be used.")
   @JsonProperty("role")
-  private String role = null;
+  private String memberRole = null; //name is not 'role' in database, as 'role' is a reserved keyword according to SQL-99 standard
 
   @ApiModelProperty(value = "position of the item in the collection. Only available if the Collection isOrdered per its capabilities.")
   @JsonProperty("index")

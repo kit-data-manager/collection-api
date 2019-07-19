@@ -16,10 +16,6 @@
 package edu.kit.datamanager.collection.dao;
 
 import edu.kit.datamanager.collection.domain.Membership;
-import java.util.List;
-import java.util.Optional;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 /**
@@ -28,23 +24,24 @@ import org.springframework.data.jpa.repository.JpaRepository;
  */
 public interface IMembershipDao extends JpaRepository<Membership, String>{
 
-  public Optional<Membership> findByCollectionIdEqualsAndMemberIdEquals(String collectionId, String memberId);
-
-  public List<Membership> findByCollectionIdIn(List<String> collectionIds);
-  
-  public Long countByCollectionId(String collectionIds);
-
-  public Page<Membership> findByMemberIdIn(List<String> memberIds, Pageable pgbl);
-
-  public List<Membership> findByMemberIdIn(List<String> memberIds);
-
-  public Page<Membership> findByMemberIdInAndCollectionIdIn(List<String> memberIds, List<String> collectionIds, Pageable pgbl);
-
-  public Page<Membership> findByIdInAndMemberIdIn(List<Long> ids, List<String> memberIds, Pageable pgbl);
-
-  public Page<Membership> findByIdInAndCollectionIdIn(List<Long> ids, List<String> collectionIds, Pageable pgbl);
-  
-  
-  
+//  public Optional<Membership> findByCollectionIdEqualsAndMemberIdEquals(String collectionId, String memberId);
+//
+//  public List<Membership> findByCollectionIdIn(List<String> collectionIds);
+//  
+//  public Long countByCollectionId(String collectionIds);
+//
+//  public Page<Membership> findByMemberIdIn(List<String> memberIds, Pageable pgbl);
+//
+//  public List<Membership> findByMemberIdIn(List<String> memberIds);
+//
+//  public Page<Membership> findByMemberIdInAndCollectionIdIn(List<String> memberIds, List<String> collectionIds, Pageable pgbl);
+//
+//  public Page<Membership> findByIdInAndMemberIdIn(List<Long> ids, List<String> memberIds, Pageable pgbl);
+//
+//  public Page<Membership> findByIdInAndCollectionIdIn(List<Long> ids, List<String> collectionIds, Pageable pgbl);
+//  
+//  
+//  
+  Long countByIdIn(String... ids);
 
 }

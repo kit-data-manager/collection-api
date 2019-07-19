@@ -17,7 +17,7 @@ package edu.kit.datamanager.collection.dao;
 
 import edu.kit.datamanager.collection.domain.CollectionObject;
 import edu.kit.datamanager.collection.domain.Membership;
-import java.util.List;
+import java.util.Optional;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 
@@ -27,7 +27,5 @@ import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
  */
 public interface ICollectionObjectDao extends JpaRepository<CollectionObject, String>, JpaSpecificationExecutor<CollectionObject>{
 
-  List<CollectionObject> findByPropertiesMemberOfContains(String id);
-  
-  
+  Long countByIdIn(String... ids);
 }

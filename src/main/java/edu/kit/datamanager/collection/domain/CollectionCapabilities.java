@@ -1,6 +1,5 @@
 package edu.kit.datamanager.collection.domain;
 
-import java.util.Objects;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
@@ -9,7 +8,6 @@ import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import org.springframework.validation.annotation.Validated;
-import javax.validation.constraints.*;
 import lombok.Data;
 
 /**

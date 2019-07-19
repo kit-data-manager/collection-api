@@ -13,25 +13,20 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.kit.datamanager.collection.test.util;
+package edu.kit.datamanager.collection.util;
 
 import edu.kit.datamanager.collection.dao.ICollectionObjectDao;
 import edu.kit.datamanager.collection.dao.IMemberItemDao;
-import edu.kit.datamanager.collection.dao.IMembershipDao;
 import edu.kit.datamanager.collection.domain.CollectionCapabilities;
 import edu.kit.datamanager.collection.domain.CollectionItemMappingMetadata;
 import edu.kit.datamanager.collection.domain.CollectionObject;
 import edu.kit.datamanager.collection.domain.CollectionProperties;
 import edu.kit.datamanager.collection.domain.MemberItem;
 import edu.kit.datamanager.collection.domain.Membership;
-import java.time.Instant;
-import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
-import net.minidev.json.writer.CollectionMapper;
 
 /**
  *
@@ -39,19 +34,16 @@ import net.minidev.json.writer.CollectionMapper;
  */
 public class TestDataCreationHelper{
 
-  private IMemberItemDao memberDao;
   private ICollectionObjectDao collectionDao;
-  private IMembershipDao membershipDao;
+  private IMemberItemDao memberDao;
 
   Map<String, CollectionObject> collections = new HashMap<>();
   Map<String, MemberItem> members = new HashMap<>();
-  List<Membership> memberships = new ArrayList<>();
 
-  public static TestDataCreationHelper initialize(IMemberItemDao memberDao, ICollectionObjectDao collectionDao, IMembershipDao membershipDao){
+  public static TestDataCreationHelper initialize(ICollectionObjectDao collectionDao, IMemberItemDao memberDao){
     TestDataCreationHelper helper = new TestDataCreationHelper();
-    helper.memberDao = memberDao;
     helper.collectionDao = collectionDao;
-    helper.membershipDao = membershipDao;
+    helper.memberDao = memberDao;
     return helper;
   }
 
@@ -73,45 +65,37 @@ public class TestDataCreationHelper{
     return this.addCollection(id, null, CollectionCapabilities.getDefault(), props);
   }
 
-  public TestDataCreationHelper addMemberItem(String id, String description, String dataType, String location, String ontology, CollectionItemMappingMetadata mappings){
+  public TestDataCreationHelper addMemberItem(String collectionId, String id, String description, String dataType, String location, String ontology, CollectionItemMappingMetadata mappings){
     MemberItem o = new MemberItem();
-    o.setId(id);
+    o.setMid(id);
     o.setDescription(description);
     o.setDatatype(dataType);
     o.setLocation(location);
     o.setOntology(ontology);
     o.setMappings(mappings);
-    members.put(id, o);
-    return this;
-  }
-
-  public TestDataCreationHelper addMemberItem(String id, String description, String dataType, String location, String ontology){
-    return this.addMemberItem(id, description, dataType, location, ontology, null);
-  }
-
-  public TestDataCreationHelper addMemberItem(String id, String description, String dataType, String location){
-    return this.addMemberItem(id, description, dataType, location, null, null);
-  }
-
-  public TestDataCreationHelper addMemberItem(String id, String location){
-    return this.addMemberItem(id, null, null, location, null, null);
-  }
-
-  public TestDataCreationHelper addMemberItem(String id, String dataType, String location){
-    return this.addMemberItem(id, null, dataType, location, null, null);
-  }
-
-  public TestDataCreationHelper addMembership(String collectionId, String memberId, CollectionItemMappingMetadata metadata){
     Membership m = new Membership();
-    m.setCollection(collections.get(collectionId));
-    m.setMember(members.get(memberId));
-    m.setMappings(metadata);
-    memberships.add(m);
+    m.setMember(o);
+    m.setMappings(mappings);
+    members.put(id, o);
+    collections.get(collectionId).getMembers().add(m);
+
     return this;
   }
 
-  public TestDataCreationHelper addMembership(String collectionId, String memberId){
-    return this.addMembership(collectionId, memberId, new CollectionItemMappingMetadata());
+  public TestDataCreationHelper addMemberItem(String collectionId, String id, String description, String dataType, String location, String ontology){
+    return this.addMemberItem(collectionId, id, description, dataType, location, ontology, null);
+  }
+
+  public TestDataCreationHelper addMemberItem(String collectionId, String id, String description, String dataType, String location){
+    return this.addMemberItem(collectionId, id, description, dataType, location, null, null);
+  }
+
+  public TestDataCreationHelper addMemberItem(String collectionId, String id, String location){
+    return this.addMemberItem(collectionId, id, null, null, location, null, null);
+  }
+
+  public TestDataCreationHelper addMemberItem(String collectionId, String id, String dataType, String location){
+    return this.addMemberItem(collectionId, id, null, dataType, location, null, null);
   }
 
   public TestDataCreationHelper addCollectionToCollection(String parentCollectionId, String childCollectionId){
@@ -124,17 +108,14 @@ public class TestDataCreationHelper{
   }
 
   public void persist(){
-    Set<Entry<String, CollectionObject>> collectionEntries = collections.entrySet();
-    collectionEntries.forEach((entry) -> {
-      collectionDao.save(entry.getValue());
-    });
     Set<Entry<String, MemberItem>> memberEntries = members.entrySet();
     memberEntries.forEach((entry) -> {
       memberDao.save(entry.getValue());
     });
 
-    memberships.forEach((membership) -> {
-      membershipDao.save(membership);
+    Set<Entry<String, CollectionObject>> collectionEntries = collections.entrySet();
+    collectionEntries.forEach((entry) -> {
+      collectionDao.save(entry.getValue());
     });
   }
 }

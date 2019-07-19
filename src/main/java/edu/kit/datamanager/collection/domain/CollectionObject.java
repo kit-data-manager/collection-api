@@ -4,7 +4,8 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
-import java.util.List;
+import java.util.HashSet;
+import java.util.Set;
 import javax.persistence.CascadeType;
 import javax.persistence.Entity;
 import javax.persistence.Id;
@@ -52,6 +53,6 @@ public class CollectionObject{
   @JsonProperty("members")
   @OneToMany(cascade = CascadeType.ALL)
   @JsonIgnore
-  private List<MemberItem> members;
+  private Set<Membership> members = new HashSet<>();
 
 }

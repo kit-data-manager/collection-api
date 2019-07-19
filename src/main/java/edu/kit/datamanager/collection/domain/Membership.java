@@ -35,10 +35,7 @@ public class Membership{
   @GeneratedValue(strategy = GenerationType.IDENTITY)
   private Long id;
 
-  @OneToOne
-  private CollectionObject collection;
-
-  @OneToOne
+  @OneToOne(orphanRemoval = true)
   private MemberItem member;
 
   @OneToOne(cascade = CascadeType.ALL)
