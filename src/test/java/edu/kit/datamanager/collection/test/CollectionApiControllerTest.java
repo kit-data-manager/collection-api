@@ -932,5 +932,31 @@ public class CollectionApiControllerTest{
     this.mockMvc.perform(get("/api/v1/collections/1/ops/union/666").contentType(MediaType.APPLICATION_JSON)).andDo(print()).andExpect(status().isNotFound()).andReturn();
 
   }
+  
+  @Test
+  public void testOpsIntersection() throws Exception{
+    TestDataCreationHelper.initialize(collectionDao, memberDao).
+            addCollection("1", CollectionProperties.getDefault()).
+            addCollection("2", CollectionProperties.getDefault()).
+            addMemberItem("1", "m1", "localhost").
+            addMemberItem("1", "m2", "localhost").
+            addMemberItem("2", "m3", "localhost").
+            addMemberItem("2", "m1", "localhost").
+            persist();
+    ObjectMapper map = new ObjectMapper();
+
+    MvcResult res = this.mockMvc.perform(get("/api/v1/collections/1/ops/intersection/2").contentType(MediaType.APPLICATION_JSON)).andDo(print()).andExpect(status().isOk()).andReturn();
+    String result = res.getResponse().getContentAsString();
+    MemberResultSet members = map.readValue(result, MemberResultSet.class);
+
+    Assert.assertNotNull(members);
+    Assert.assertEquals(1, members.getContents().size());
+
+    //test left collection not found
+    this.mockMvc.perform(get("/api/v1/collections/666/ops/intersection/2").contentType(MediaType.APPLICATION_JSON)).andDo(print()).andExpect(status().isNotFound()).andReturn();
+    //test right collection not found
+    this.mockMvc.perform(get("/api/v1/collections/1/ops/intersection/666").contentType(MediaType.APPLICATION_JSON)).andDo(print()).andExpect(status().isNotFound()).andReturn();
+
+  }
 
 }
