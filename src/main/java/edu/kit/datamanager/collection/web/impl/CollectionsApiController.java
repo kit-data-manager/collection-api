@@ -20,7 +20,6 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestParam;
 import javax.validation.Valid;
 import javax.servlet.http.HttpServletRequest;
-import java.io.IOException;
 import java.time.Instant;
 import java.util.List;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -38,13 +37,11 @@ import java.time.format.DateTimeParseException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Map.Entry;
 import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
 import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
-import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 import org.springframework.web.util.UriComponentsBuilder;
 
 @javax.annotation.Generated(value = "io.swagger.codegen.languages.SpringCodegen", date = "2019-07-09T15:21:24.632+02:00")
@@ -74,58 +71,58 @@ public class CollectionsApiController implements CollectionsApi{
   }
 
 //for testing purposes
-  private void buildData(){
-    collectionDao.deleteAll();
-    membershipDao.deleteAll();
-    CollectionProperties props2 = CollectionProperties.getDefault();
-    props2.getMemberOf().add("1");
-    CollectionProperties props3 = CollectionProperties.getDefault();
-    props3.getMemberOf().add("2");
-    CollectionProperties props4 = CollectionProperties.getDefault();
-    props4.getMemberOf().add("3");
-    props4.getMemberOf().add("1");
-    CollectionItemMappingMetadata md1 = new CollectionItemMappingMetadata();
-    md1.setIndex(4);
-    CollectionItemMappingMetadata md2 = new CollectionItemMappingMetadata();
-    md2.setIndex(1);
-    CollectionItemMappingMetadata md3 = new CollectionItemMappingMetadata();
-    md3.setIndex(3);
-    CollectionItemMappingMetadata md4 = new CollectionItemMappingMetadata();
-    md4.setIndex(8);
-    CollectionItemMappingMetadata md5 = new CollectionItemMappingMetadata();
-    md5.setIndex(3);
-    CollectionItemMappingMetadata md6 = new CollectionItemMappingMetadata();
-    md6.setIndex(4);
-
-    CollectionItemMappingMetadata md7 = new CollectionItemMappingMetadata();
-    md7.setIndex(3);
-
-//    TestDataCreationHelper.initialize(collectionDao, memberDao).addCollection("1", CollectionProperties.getDefault()).
-//            addCollection("2", props2).
-//            addCollection("3", props3).
-//            // addCollection("4", props4).
-//            addMemberItem("1", "m1", "decription", "type1", "test", "ont1", md1).
-//            addMemberItem("2", "m2", "decription", "type1", "test", "ont1", md2).addMemberItem("2", "m3", "decription", "type1", "test", "ont1", md3).
-//            addMemberItem("3", "m4", "decription", "type1", "test", "ont1", md4).addMemberItem("3", "m5", "decription", "type1", "test", "ont1", md5).addMemberItem("3", "m6", "decription", "type1", "test", "ont1", md6).
-//            //            addMemberItem("4", "m7", "test").
-//            //            addMemberItem("4", "m8", "test").
-//            //            addMemberItem("4", "m9", "test").
-//            //            addMemberItem("4", "m10", "test").
-//            addMemberItem("1", "2", "decription", "type1", "test", "ont1", md7).
-//            // addMemberItem("1", "4", "test").
-//            addMemberItem("2", "3", "test").
-//            addMemberItem("3", "4", "test").
+//  private void buildData(){
+//    collectionDao.deleteAll();
+//    membershipDao.deleteAll();
+//    CollectionProperties props2 = CollectionProperties.getDefault();
+//    props2.getMemberOf().add("1");
+//    CollectionProperties props3 = CollectionProperties.getDefault();
+//    props3.getMemberOf().add("2");
+//    CollectionProperties props4 = CollectionProperties.getDefault();
+//    props4.getMemberOf().add("3");
+//    props4.getMemberOf().add("1");
+//    CollectionItemMappingMetadata md1 = new CollectionItemMappingMetadata();
+//    md1.setIndex(4);
+//    CollectionItemMappingMetadata md2 = new CollectionItemMappingMetadata();
+//    md2.setIndex(1);
+//    CollectionItemMappingMetadata md3 = new CollectionItemMappingMetadata();
+//    md3.setIndex(3);
+//    CollectionItemMappingMetadata md4 = new CollectionItemMappingMetadata();
+//    md4.setIndex(8);
+//    CollectionItemMappingMetadata md5 = new CollectionItemMappingMetadata();
+//    md5.setIndex(3);
+//    CollectionItemMappingMetadata md6 = new CollectionItemMappingMetadata();
+//    md6.setIndex(4);
+//
+//    CollectionItemMappingMetadata md7 = new CollectionItemMappingMetadata();
+//    md7.setIndex(3);
+//
+////    TestDataCreationHelper.initialize(collectionDao, memberDao).addCollection("1", CollectionProperties.getDefault()).
+////            addCollection("2", props2).
+////            addCollection("3", props3).
+////            // addCollection("4", props4).
+////            addMemberItem("1", "m1", "decription", "type1", "test", "ont1", md1).
+////            addMemberItem("2", "m2", "decription", "type1", "test", "ont1", md2).addMemberItem("2", "m3", "decription", "type1", "test", "ont1", md3).
+////            addMemberItem("3", "m4", "decription", "type1", "test", "ont1", md4).addMemberItem("3", "m5", "decription", "type1", "test", "ont1", md5).addMemberItem("3", "m6", "decription", "type1", "test", "ont1", md6).
+////            //            addMemberItem("4", "m7", "test").
+////            //            addMemberItem("4", "m8", "test").
+////            //            addMemberItem("4", "m9", "test").
+////            //            addMemberItem("4", "m10", "test").
+////            addMemberItem("1", "2", "decription", "type1", "test", "ont1", md7).
+////            // addMemberItem("1", "4", "test").
+////            addMemberItem("2", "3", "test").
+////            addMemberItem("3", "4", "test").
+////            persist();
+//    TestDataCreationHelper.initialize(collectionDao, memberDao).
+//            addCollection("1", CollectionProperties.getDefault()).
+//            addCollection("2", CollectionProperties.getDefault()).
+//            addMemberItem("1", "m1", "localhost").
+//            addMemberItem("1", "m2", "localhost").
+//            addMemberItem("2", "m3", "localhost").
+//            addMemberItem("2", "m1", "localhost").
 //            persist();
-    TestDataCreationHelper.initialize(collectionDao, memberDao).
-            addCollection("1", CollectionProperties.getDefault()).
-            addCollection("2", CollectionProperties.getDefault()).
-            addMemberItem("1", "m1", "localhost").
-            addMemberItem("1", "m2", "localhost").
-            addMemberItem("2", "m3", "localhost").
-            addMemberItem("2", "m1", "localhost").
-            persist();
-
-  }
+//
+//  }
 
   @Override
   public ResponseEntity<List<CollectionObject>> collectionsPost(@ApiParam(value = "The properties of the collection.", required = true) @Valid @RequestBody List<CollectionObject> content){
@@ -189,7 +186,7 @@ public class CollectionsApiController implements CollectionsApi{
           final UriComponentsBuilder uriBuilder){
     LOG.trace("Calling collectionsGet({}, {}, {}, {}).", fModelType, fMemberType, fOwnership, pgbl);
 
-    buildData();
+   // buildData();
     int pageSize = (pgbl != null) ? pgbl.getPageSize() : 20;
     int offset = (pgbl != null) ? pgbl.getPageNumber() * pgbl.getPageSize() : 0;
     JPAQueryHelper helper = new JPAQueryHelper(em);
@@ -277,6 +274,7 @@ public class CollectionsApiController implements CollectionsApi{
     LOG.trace("Checking collection capabilities.");
     if(content.getCapabilities() != null){
       if(existing.getCapabilities() == null){
+        //should not happen as default capabilities are created for every collection
         LOG.trace("No capabilities defined for existing collection. Transferring capabilities from provided collection.");
         existing.setCapabilities(content.getCapabilities());
         existing.getCapabilities().setId(null);
