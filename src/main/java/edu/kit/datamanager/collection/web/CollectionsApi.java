@@ -242,7 +242,7 @@ public interface CollectionsApi{
   })
   ResponseEntity<MemberResultSet> collectionsIdOpsFindMatchPost(
           @ApiParam(value = "identifier for the collection", required = true) @PathVariable("id") String id,
-          @ApiParam(value = "the member item properties to use when matching", required = true) @Valid @RequestBody MemberItem memberProperties,
+          @ApiParam(value = "the member item properties to use when matching", required = true) @RequestBody MemberItem memberProperties,
           final Pageable pgbl);
 
   @ApiOperation(value = "Flattens the collection. A successful request returns  an HTTP 200 response code with a MemberResultSet object in the response body.", nickname = "collectionsIdOpsFlattenGet", notes = "This request returns a resultset which is a flattened representation of a collection of collections into a single collection.", response = MemberResultSet.class, authorizations = {

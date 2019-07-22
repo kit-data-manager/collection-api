@@ -50,4 +50,10 @@ public class CollectionItemMappingMetadata{
   @JsonDeserialize(using = CustomInstantDeserializer.class)
   @JsonSerialize(using = CustomInstantSerializer.class)
   private Instant dateUpdated = null;
+
+  public static CollectionItemMappingMetadata getDefault(){
+    CollectionItemMappingMetadata md = new CollectionItemMappingMetadata();
+    md.setIndex(0);
+    return md;
+  }
 }

@@ -30,6 +30,7 @@ import edu.kit.datamanager.collection.util.JPAQueryHelper;
 import edu.kit.datamanager.collection.domain.CollectionItemMappingMetadata;
 import edu.kit.datamanager.collection.domain.CollectionProperties;
 import edu.kit.datamanager.collection.domain.Membership;
+import edu.kit.datamanager.collection.util.PaginationHelper;
 import edu.kit.datamanager.collection.util.TestDataCreationHelper;
 import java.time.ZoneOffset;
 import java.time.format.DateTimeFormatter;
@@ -37,7 +38,9 @@ import java.time.format.DateTimeParseException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Optional;
+import java.util.Set;
 import java.util.UUID;
 import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
@@ -70,10 +73,60 @@ public class CollectionsApiController implements CollectionsApi{
     this.request = request;
   }
 
-//  private void buildData(){
-//    collectionDao.deleteAll();
-//    TestDataCreationHelper.initialize(collectionDao, memberDao).addCollection("1", CollectionProperties.getDefault()).addCollection("2", CollectionProperties.getDefault()).addMemberItem("1", "1", "localhost").addMemberItem("2", "2", "localhost").persist();
-//  }
+//for testing purposes
+  private void buildData(){
+    collectionDao.deleteAll();
+    membershipDao.deleteAll();
+    CollectionProperties props2 = CollectionProperties.getDefault();
+    props2.getMemberOf().add("1");
+    CollectionProperties props3 = CollectionProperties.getDefault();
+    props3.getMemberOf().add("2");
+    CollectionProperties props4 = CollectionProperties.getDefault();
+    props4.getMemberOf().add("3");
+    props4.getMemberOf().add("1");
+    CollectionItemMappingMetadata md1 = new CollectionItemMappingMetadata();
+    md1.setIndex(4);
+    CollectionItemMappingMetadata md2 = new CollectionItemMappingMetadata();
+    md2.setIndex(1);
+    CollectionItemMappingMetadata md3 = new CollectionItemMappingMetadata();
+    md3.setIndex(3);
+    CollectionItemMappingMetadata md4 = new CollectionItemMappingMetadata();
+    md4.setIndex(8);
+    CollectionItemMappingMetadata md5 = new CollectionItemMappingMetadata();
+    md5.setIndex(3);
+    CollectionItemMappingMetadata md6 = new CollectionItemMappingMetadata();
+    md6.setIndex(4);
+
+    CollectionItemMappingMetadata md7 = new CollectionItemMappingMetadata();
+    md7.setIndex(3);
+
+//    TestDataCreationHelper.initialize(collectionDao, memberDao).addCollection("1", CollectionProperties.getDefault()).
+//            addCollection("2", props2).
+//            addCollection("3", props3).
+//            // addCollection("4", props4).
+//            addMemberItem("1", "m1", "decription", "type1", "test", "ont1", md1).
+//            addMemberItem("2", "m2", "decription", "type1", "test", "ont1", md2).addMemberItem("2", "m3", "decription", "type1", "test", "ont1", md3).
+//            addMemberItem("3", "m4", "decription", "type1", "test", "ont1", md4).addMemberItem("3", "m5", "decription", "type1", "test", "ont1", md5).addMemberItem("3", "m6", "decription", "type1", "test", "ont1", md6).
+//            //            addMemberItem("4", "m7", "test").
+//            //            addMemberItem("4", "m8", "test").
+//            //            addMemberItem("4", "m9", "test").
+//            //            addMemberItem("4", "m10", "test").
+//            addMemberItem("1", "2", "decription", "type1", "test", "ont1", md7).
+//            // addMemberItem("1", "4", "test").
+//            addMemberItem("2", "3", "test").
+//            addMemberItem("3", "4", "test").
+//            persist();
+    TestDataCreationHelper.initialize(collectionDao, memberDao).
+            addCollection("1", CollectionProperties.getDefault()).
+            addCollection("2", CollectionProperties.getDefault()).
+            addMemberItem("1", "m1", "localhost").
+            addMemberItem("1", "m2", "localhost").
+            addMemberItem("2", "m3", "localhost").
+            addMemberItem("2", "m1", "localhost").
+            persist();
+
+  }
+
   @Override
   public ResponseEntity<List<CollectionObject>> collectionsPost(@ApiParam(value = "The properties of the collection.", required = true) @Valid @RequestBody List<CollectionObject> content){
     LOG.trace("Calling collectionsPost({}).", content);
@@ -136,7 +189,7 @@ public class CollectionsApiController implements CollectionsApi{
           final UriComponentsBuilder uriBuilder){
     LOG.trace("Calling collectionsGet({}, {}, {}, {}).", fModelType, fMemberType, fOwnership, pgbl);
 
-    //buildData();
+    buildData();
     int pageSize = (pgbl != null) ? pgbl.getPageSize() : 20;
     int offset = (pgbl != null) ? pgbl.getPageNumber() * pgbl.getPageSize() : 0;
     JPAQueryHelper helper = new JPAQueryHelper(em);
@@ -147,16 +200,6 @@ public class CollectionsApiController implements CollectionsApi{
     LOG.trace("Total element count is {}. Calculating total page.", totalElementCount);
     int totalPages = (totalElementCount > 0) ? (int) Math.rint(totalElementCount / pageSize) + ((totalElementCount % pageSize != 0) ? 1 : 0) : 0;
 
-    LOG.trace("Building cursor links.");
-    int nextPage = (pgbl != null) ? pgbl.getPageNumber() + 1 : 0;
-    LOG.trace("Next page has number {}.", nextPage);
-    String nextPageLink = (nextPage >= totalPages) ? null : ServletUriComponentsBuilder.fromCurrentRequest().replaceQueryParam("page", nextPage).replaceQueryParam("size", pageSize).build().toString();
-    LOG.trace("Next page link is: {}", nextPage);
-    int prevPage = (pgbl != null) ? pgbl.getPageNumber() - 1 : -1;
-    LOG.trace("Next page has number {}.", prevPage);
-    String prevPageLink = (prevPage < 0) ? null : ServletUriComponentsBuilder.fromCurrentRequest().replaceQueryParam("page", prevPage).replaceQueryParam("size", pageSize).build().toString();
-    LOG.trace("Prev page link is: {}", nextPage);
-
     CollectionResultSet resultSet = new CollectionResultSet();
     LOG.trace("Filling result set with {} results from result list.", resultList.size());
     resultList.forEach((o) -> {
@@ -164,8 +207,8 @@ public class CollectionsApiController implements CollectionsApi{
     });
 
     LOG.trace("Setting cursor values.");
-    resultSet.setNextCursor(nextPageLink);
-    resultSet.setPrevCursor(prevPageLink);
+    resultSet.setNextCursor(PaginationHelper.create(pgbl.getPageNumber(), totalElementCount).withElementsPerPage(pgbl.getPageSize()).getNextPageLink());
+    resultSet.setPrevCursor(PaginationHelper.create(pgbl.getPageNumber(), totalElementCount).withElementsPerPage(pgbl.getPageSize()).getPrevPageLink());
     LOG.trace("Returning result set.");
     return new ResponseEntity<>(resultSet, HttpStatus.OK);
   }
@@ -314,7 +357,6 @@ public class CollectionsApiController implements CollectionsApi{
     }
 
     CollectionObject existing = result.get();
-    Map<String, CollectionObject> memberCollections = new HashMap<>();
     Map<String, MemberItem> existingMembers = new HashMap<>();
 
     String restrictedToType = null;
@@ -358,7 +400,6 @@ public class CollectionsApiController implements CollectionsApi{
           LOG.trace("Provided member with id {} represents an existing collection. Adding parent collection id {} to memberOf property.", item.getMid(), id);
           CollectionObject collection = optionalCollection.get();
           collection.getProperties().getMemberOf().add(id);
-          memberCollections.put(collection.getId(), collection);
         } else{
           //might be another existing member?
           Optional<MemberItem> optionalMember = memberDao.findByMid(item.getMid());
@@ -385,7 +426,7 @@ public class CollectionsApiController implements CollectionsApi{
       CollectionItemMappingMetadata mappingMetadata = item.getMappings();
       if(mappingMetadata == null){
         LOG.trace("No collection item metadata provided. Creating new metadata instance.");
-        mappingMetadata = new CollectionItemMappingMetadata();
+        mappingMetadata = CollectionItemMappingMetadata.getDefault();
       }
 
       MemberItem membershipMember;
@@ -440,37 +481,24 @@ public class CollectionsApiController implements CollectionsApi{
     JPAQueryHelper helper = new JPAQueryHelper(em);
     int offset = pgbl.getPageNumber() * pgbl.getPageSize();
     int pageSize = pgbl.getPageSize();
-    List<Membership> itemList = helper.getColletionsMembershipsByFilters(id, fDatatype, fIndex, fRole, fDateAdded, offset, pageSize);
+    int depth = (expandDepth == null) ? 0 : expandDepth;
 
-    List<Membership> totalItemList = new ArrayList<>(itemList);
+    LOG.trace("Obtaining sub collections of collection with id {} with expandDepth {}.", id, depth);
+    Set<String> collectionIds = helper.getSubCollections(id, depth);
+    LOG.trace("Sub-collections: {}", collectionIds);
 
-    if(expandDepth != null){
-      while(expandDepth > 0){
-        boolean hadSubCollection = false;
-        for(Membership membership : itemList){
-          String memberId = membership.getMember().getMid();
-          if(collectionDao.countByIdIn(memberId) == 1){
-            //member is collection, add members recursively
-            itemList = helper.getColletionsMembershipsByFilters(membership.getMember().getMid(), fDatatype, fIndex, fRole, fDateAdded);
-            totalItemList.addAll(itemList);
-            hadSubCollection = true;
-          }
-        }
-        if(hadSubCollection){
-          LOG.trace("Subcollections found. Decreasing expandDepth by one.");
-          expandDepth--;
-          LOG.trace("ExpandDepth is now: {}", expandDepth);
-        } else{
-          LOG.trace("Leaving sub-collection check as there were no more subcollections.");
-          break;
-        }
-      }
+    List<String> collectionIdList = new ArrayList<>();
+    collectionIdList.add(id);
+    collectionIds.remove(id);
+    collectionIdList.addAll(collectionIds);
 
-    }
+    LOG.trace("Obtaining members from collections {}.", collectionIdList);
+    List<Membership> itemList = helper.getColletionsMembershipsByFilters(collectionIdList, fDatatype, fIndex, fRole, fDateAdded, result.get().getCapabilities().getIsOrdered(), offset, pageSize);
+
     MemberResultSet resultSet = new MemberResultSet();
-    LOG.trace("Filling result set with {} results from result list.", totalItemList.size());
+    LOG.trace("Filling result set with {} results from result list.", itemList.size());
 
-    for(Membership membership : totalItemList){
+    for(Membership membership : itemList){
       //we have to copy the item in case an item is in multiple collections, in that case the same item  pointer is returned multiple times pointing to the same memory location
       MemberItem item = membership.getMember();
       item.setMappings(membership.getMappings());
@@ -478,24 +506,12 @@ public class CollectionsApiController implements CollectionsApi{
     }
 
     LOG.trace("Obtaining total element count.");
-    long totalElementCount = helper.getColletionsMembershipsCountByFilters(id, fDatatype, fIndex, fRole, fDateAdded);
+    long totalElementCount = helper.getColletionsMembershipsCountByFilters(collectionIdList, fDatatype, fIndex, fRole, fDateAdded);
 
     long totalPages = (totalElementCount > 0) ? (int) Math.rint(totalElementCount / pageSize) + ((totalElementCount % pageSize != 0) ? 1 : 0) : 0;
-    LOG.trace("Total element count is {}. This represents {} page(s) in total.", totalElementCount, totalPages);
-
-    LOG.trace("Building cursor links.");
-    int nextPage = pgbl.getPageNumber() + 1;
-    LOG.trace("Next page has number {}.", nextPage);
-    String nextPageLink = (nextPage >= totalPages) ? null : ServletUriComponentsBuilder.fromCurrentRequest().replaceQueryParam("page", nextPage).replaceQueryParam("size", pageSize).build().toString();
-    LOG.trace("Next page link is: {}", nextPage);
-    int prevPage = pgbl.getPageNumber() - 1;
-    LOG.trace("Next page has number {}.", prevPage);
-    String prevPageLink = (prevPage < 0) ? null : ServletUriComponentsBuilder.fromCurrentRequest().replaceQueryParam("page", prevPage).replaceQueryParam("size", pageSize).build().toString();
-    LOG.trace("Prev page link is: {}", nextPage);
-
     LOG.trace("Setting cursor values.");
-    resultSet.setNextCursor(nextPageLink);
-    resultSet.setPrevCursor(prevPageLink);
+    resultSet.setNextCursor(PaginationHelper.create(pgbl.getPageNumber(), totalElementCount).withElementsPerPage(pgbl.getPageSize()).getNextPageLink());
+    resultSet.setPrevCursor(PaginationHelper.create(pgbl.getPageNumber(), totalElementCount).withElementsPerPage(pgbl.getPageSize()).getPrevPageLink());
     LOG.trace("Returning result set.");
     return new ResponseEntity<>(resultSet, HttpStatus.OK);
   }
@@ -791,26 +807,48 @@ public class CollectionsApiController implements CollectionsApi{
     LOG.trace("Returning HTTP 200.");
     return new ResponseEntity<>(HttpStatus.OK);
   }
+////////////////////////////
+////COLLECTION OPS
+///////////////////////////
 
-  /**
-   * *COLLECTION OPS**
-   */
   @Override
   public ResponseEntity<MemberResultSet> collectionsIdOpsFindMatchPost(
-          @ApiParam(value = "identifier for the collection", required = true) @PathVariable("id") String id,
-          @ApiParam(value = "the member item properties to use when matching", required = true) @Valid @RequestBody MemberItem memberProperties,
+          @ApiParam(value = "Identifier for the collection", required = true) @PathVariable("id") String id,
+          @ApiParam(value = "The member item properties to use when matching", required = true) @RequestBody MemberItem memberProperties,
           final Pageable pgbl){
-    String accept = request.getHeader("Accept");
-    if(accept != null && accept.contains("application/json")){
-      try{
-        return new ResponseEntity<>(objectMapper.readValue("{  \"prev_cursor\" : \"prev_cursor\",  \"next_cursor\" : \"next_cursor\",  \"contents\" : [ {    \"mappings\" : {      \"role\" : \"role\",      \"index\" : 0,      \"dateAdded\" : \"2000-01-23T04:56:07.000+00:00\",      \"dateUpdated\" : \"2000-01-23T04:56:07.000+00:00\"    },    \"datatype\" : \"datatype\",    \"description\" : \"description\",    \"location\" : \"location\",    \"id\" : \"id\",    \"ontology\" : \"ontology\"  }, {    \"mappings\" : {      \"role\" : \"role\",      \"index\" : 0,      \"dateAdded\" : \"2000-01-23T04:56:07.000+00:00\",      \"dateUpdated\" : \"2000-01-23T04:56:07.000+00:00\"    },    \"datatype\" : \"datatype\",    \"description\" : \"description\",    \"location\" : \"location\",    \"id\" : \"id\",    \"ontology\" : \"ontology\"  } ]}", MemberResultSet.class), HttpStatus.NOT_IMPLEMENTED);
-      } catch(IOException e){
-        LOG.error("Couldn't serialize response for content type application/json", e);
-        return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
-      }
+
+    LOG.trace("Calling collectionsIdOpsFindMatchPost({}, {}).", id, memberProperties);
+    Optional<CollectionObject> result = collectionDao.findById(id);
+
+    if(result.isEmpty()){
+      LOG.debug("No collection with id {} found.", id);
+      return new ResponseEntity<>(HttpStatus.NOT_FOUND);
     }
 
-    return new ResponseEntity<>(HttpStatus.NOT_IMPLEMENTED);
+    JPAQueryHelper helper = new JPAQueryHelper(em);
+    int offset = pgbl.getPageNumber() * pgbl.getPageSize();
+    int pageSize = pgbl.getPageSize();
+    List<Membership> memberships = helper.findCollectionMembershipsByExample(id, memberProperties, result.get().getCapabilities().getIsOrdered(), offset, pageSize);
+
+    MemberResultSet resultSet = new MemberResultSet();
+    LOG.trace("Filling result set with {} results from result list.", memberships.size());
+
+    for(Membership membership : memberships){
+      //we have to copy the item in case an item is in multiple collections, in that case the same item  pointer is returned multiple times pointing to the same memory location
+      MemberItem item = membership.getMember();
+      item.setMappings(membership.getMappings());
+      resultSet.addContentsItem(item);
+    }
+
+    LOG.trace("Obtaining total element count.");
+    long totalElementCount = helper.findCollectionMembershipsCountByExample(id, memberProperties);
+
+    long totalPages = (totalElementCount > 0) ? (int) Math.rint(totalElementCount / pageSize) + ((totalElementCount % pageSize != 0) ? 1 : 0) : 0;
+    LOG.trace("Setting cursor values.");
+    resultSet.setNextCursor(PaginationHelper.create(pgbl.getPageNumber(), totalElementCount).withElementsPerPage(pgbl.getPageSize()).getNextPageLink());
+    resultSet.setPrevCursor(PaginationHelper.create(pgbl.getPageNumber(), totalElementCount).withElementsPerPage(pgbl.getPageSize()).getPrevPageLink());
+    LOG.trace("Returning result set.");
+    return new ResponseEntity<>(resultSet, HttpStatus.OK);
   }
 
   @Override
@@ -818,7 +856,7 @@ public class CollectionsApiController implements CollectionsApi{
           @ApiParam(value = "Identifier for the collection to be flattened", required = true) @PathVariable("id") String id,
           final Pageable pgbl){
     LOG.trace("Calling collectionsIdOpsFlattenGet({}, {}).", id, pgbl);
-    return collectionsIdMembersGet(id, null, null, null, null, null, pgbl);
+    return collectionsIdMembersGet(id, null, null, null, null, Integer.MAX_VALUE, pgbl);
   }
 
   @Override
@@ -826,17 +864,53 @@ public class CollectionsApiController implements CollectionsApi{
           @ApiParam(value = "Identifier for the first collection in the operation", required = true) @PathVariable("id") String id,
           @ApiParam(value = "Identifier for the second collection in the operation", required = true) @PathVariable("otherId") String otherId,
           final Pageable pgbl){
-    String accept = request.getHeader("Accept");
-    if(accept != null && accept.contains("application/json")){
-      try{
-        return new ResponseEntity<>(objectMapper.readValue("{  \"prev_cursor\" : \"prev_cursor\",  \"next_cursor\" : \"next_cursor\",  \"contents\" : [ {    \"mappings\" : {      \"role\" : \"role\",      \"index\" : 0,      \"dateAdded\" : \"2000-01-23T04:56:07.000+00:00\",      \"dateUpdated\" : \"2000-01-23T04:56:07.000+00:00\"    },    \"datatype\" : \"datatype\",    \"description\" : \"description\",    \"location\" : \"location\",    \"id\" : \"id\",    \"ontology\" : \"ontology\"  }, {    \"mappings\" : {      \"role\" : \"role\",      \"index\" : 0,      \"dateAdded\" : \"2000-01-23T04:56:07.000+00:00\",      \"dateUpdated\" : \"2000-01-23T04:56:07.000+00:00\"    },    \"datatype\" : \"datatype\",    \"description\" : \"description\",    \"location\" : \"location\",    \"id\" : \"id\",    \"ontology\" : \"ontology\"  } ]}", MemberResultSet.class), HttpStatus.NOT_IMPLEMENTED);
-      } catch(IOException e){
-        LOG.error("Couldn't serialize response for content type application/json", e);
-        return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
-      }
+
+    LOG.trace("Calling collectionsIdOpsIntersectionOtherIdGet({}, {}).", id, otherId);
+
+    Optional<CollectionObject> left = collectionDao.findById(id);
+
+    if(left.isEmpty()){
+      LOG.debug("No collection with id {} found.", id);
+      return new ResponseEntity<>(HttpStatus.NOT_FOUND);
     }
 
-    return new ResponseEntity<>(HttpStatus.NOT_IMPLEMENTED);
+    Optional<CollectionObject> right = collectionDao.findById(otherId);
+
+    if(right.isEmpty()){
+      LOG.debug("No collection with id {} found.", otherId);
+      return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+    }
+
+    JPAQueryHelper helper = new JPAQueryHelper(em);
+    int offset = pgbl.getPageNumber() * pgbl.getPageSize();
+    int pageSize = pgbl.getPageSize();
+
+    List<String> collectionIdList = new ArrayList<>();
+    collectionIdList.add(id);
+    collectionIdList.add(otherId);
+
+    LOG.trace("Obtaining members from collections {}.", collectionIdList);
+    List<Membership> itemList = helper.getCollectionIntersection(id, otherId, left.get().getCapabilities().getIsOrdered() && right.get().getCapabilities().getIsOrdered(), offset, pageSize);
+
+    MemberResultSet resultSet = new MemberResultSet();
+    LOG.trace("Filling result set with {} results from result list.", itemList.size());
+
+    for(Membership membership : itemList){
+      //we have to copy the item in case an item is in multiple collections, in that case the same item  pointer is returned multiple times pointing to the same memory location
+      MemberItem item = membership.getMember();
+      item.setMappings(membership.getMappings());
+      resultSet.addContentsItem(item);
+    }
+
+    LOG.trace("Obtaining total element count.");
+    long totalElementCount = helper.getColletionsMembershipsCountByFilters(collectionIdList, null, null, null, null);
+
+    LOG.trace("Setting cursor values.");
+    resultSet.setNextCursor(PaginationHelper.create(pgbl.getPageNumber(), totalElementCount).withElementsPerPage(pgbl.getPageSize()).getNextPageLink());
+    resultSet.setPrevCursor(PaginationHelper.create(pgbl.getPageNumber(), totalElementCount).withElementsPerPage(pgbl.getPageSize()).getPrevPageLink());
+    LOG.trace("Returning result set.");
+    return new ResponseEntity<>(resultSet, HttpStatus.OK);
+
   }
 
   @Override
@@ -844,17 +918,51 @@ public class CollectionsApiController implements CollectionsApi{
           @ApiParam(value = "Identifier for the first collection in the operation", required = true) @PathVariable("id") String id,
           @ApiParam(value = "Identifier for the second collection in the operation", required = true) @PathVariable("otherId") String otherId,
           final Pageable pgbl){
-    String accept = request.getHeader("Accept");
-    if(accept != null && accept.contains("application/json")){
-      try{
-        return new ResponseEntity<>(objectMapper.readValue("{  \"prev_cursor\" : \"prev_cursor\",  \"next_cursor\" : \"next_cursor\",  \"contents\" : [ {    \"mappings\" : {      \"role\" : \"role\",      \"index\" : 0,      \"dateAdded\" : \"2000-01-23T04:56:07.000+00:00\",      \"dateUpdated\" : \"2000-01-23T04:56:07.000+00:00\"    },    \"datatype\" : \"datatype\",    \"description\" : \"description\",    \"location\" : \"location\",    \"id\" : \"id\",    \"ontology\" : \"ontology\"  }, {    \"mappings\" : {      \"role\" : \"role\",      \"index\" : 0,      \"dateAdded\" : \"2000-01-23T04:56:07.000+00:00\",      \"dateUpdated\" : \"2000-01-23T04:56:07.000+00:00\"    },    \"datatype\" : \"datatype\",    \"description\" : \"description\",    \"location\" : \"location\",    \"id\" : \"id\",    \"ontology\" : \"ontology\"  } ]}", MemberResultSet.class), HttpStatus.NOT_IMPLEMENTED);
-      } catch(IOException e){
-        LOG.error("Couldn't serialize response for content type application/json", e);
-        return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
-      }
+    LOG.trace("Calling collectionsIdOpsUnionOtherIdGet({}, {}).", id, otherId);
+
+    Optional<CollectionObject> left = collectionDao.findById(id);
+
+    if(left.isEmpty()){
+      LOG.debug("No collection with id {} found.", id);
+      return new ResponseEntity<>(HttpStatus.NOT_FOUND);
     }
 
-    return new ResponseEntity<>(HttpStatus.NOT_IMPLEMENTED);
+    Optional<CollectionObject> right = collectionDao.findById(otherId);
+
+    if(right.isEmpty()){
+      LOG.debug("No collection with id {} found.", otherId);
+      return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+    }
+
+    JPAQueryHelper helper = new JPAQueryHelper(em);
+    int offset = pgbl.getPageNumber() * pgbl.getPageSize();
+    int pageSize = pgbl.getPageSize();
+
+    List<String> collectionIdList = new ArrayList<>();
+    collectionIdList.add(id);
+    collectionIdList.add(otherId);
+
+    LOG.trace("Obtaining members from collections {}.", collectionIdList);
+    List<Membership> itemList = helper.getColletionsMembershipsByFilters(collectionIdList, null, null, null, null, left.get().getCapabilities().getIsOrdered() && right.get().getCapabilities().getIsOrdered(), offset, pageSize);
+
+    MemberResultSet resultSet = new MemberResultSet();
+    LOG.trace("Filling result set with {} results from result list.", itemList.size());
+
+    for(Membership membership : itemList){
+      //we have to copy the item in case an item is in multiple collections, in that case the same item  pointer is returned multiple times pointing to the same memory location
+      MemberItem item = membership.getMember();
+      item.setMappings(membership.getMappings());
+      resultSet.addContentsItem(item);
+    }
+
+    LOG.trace("Obtaining total element count.");
+    long totalElementCount = helper.getColletionsMembershipsCountByFilters(collectionIdList, null, null, null, null);
+
+    LOG.trace("Setting cursor values.");
+    resultSet.setNextCursor(PaginationHelper.create(pgbl.getPageNumber(), totalElementCount).withElementsPerPage(pgbl.getPageSize()).getNextPageLink());
+    resultSet.setPrevCursor(PaginationHelper.create(pgbl.getPageNumber(), totalElementCount).withElementsPerPage(pgbl.getPageSize()).getPrevPageLink());
+    LOG.trace("Returning result set.");
+    return new ResponseEntity<>(resultSet, HttpStatus.OK);
   }
 
 }

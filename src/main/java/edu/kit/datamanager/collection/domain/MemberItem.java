@@ -59,6 +59,13 @@ public class MemberItem{
     return new MemberItem().copyFrom(item);
   }
 
+  /**
+   * Copy all properties of the provided MemberItem into this item.
+   *
+   * @param item The item to copy the properties from.
+   *
+   * @return This
+   */
   public MemberItem copyFrom(MemberItem item){
     this.datatype = item.datatype;
     this.description = item.description;

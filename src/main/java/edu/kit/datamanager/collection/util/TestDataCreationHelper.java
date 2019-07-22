@@ -66,17 +66,23 @@ public class TestDataCreationHelper{
   }
 
   public TestDataCreationHelper addMemberItem(String collectionId, String id, String description, String dataType, String location, String ontology, CollectionItemMappingMetadata mappings){
-    MemberItem o = new MemberItem();
-    o.setMid(id);
-    o.setDescription(description);
-    o.setDatatype(dataType);
-    o.setLocation(location);
-    o.setOntology(ontology);
-    o.setMappings(mappings);
+    MemberItem o;
+    if(members.containsKey(id)){
+      o = members.get(id);
+    } else{
+      o = new MemberItem();
+      o.setMid(id);
+      o.setDescription(description);
+      o.setDatatype(dataType);
+      o.setLocation(location);
+      o.setOntology(ontology);
+      o.setMappings((mappings != null) ? mappings : CollectionItemMappingMetadata.getDefault());
+      o = memberDao.save(o);
+      members.put(id, o);
+    }
     Membership m = new Membership();
     m.setMember(o);
-    m.setMappings(mappings);
-    members.put(id, o);
+    m.setMappings(o.getMappings());
     collections.get(collectionId).getMembers().add(m);
 
     return this;
@@ -108,10 +114,11 @@ public class TestDataCreationHelper{
   }
 
   public void persist(){
-    Set<Entry<String, MemberItem>> memberEntries = members.entrySet();
-    memberEntries.forEach((entry) -> {
-      memberDao.save(entry.getValue());
-    });
+//    Set<Entry<String, MemberItem>> memberEntries = members.entrySet();
+//    memberEntries.forEach((entry) -> {
+//      MemberItem result = memberDao.save(entry.getValue());
+//      entry.getValue().setId(result.getId());
+//    });
 
     Set<Entry<String, CollectionObject>> collectionEntries = collections.entrySet();
     collectionEntries.forEach((entry) -> {

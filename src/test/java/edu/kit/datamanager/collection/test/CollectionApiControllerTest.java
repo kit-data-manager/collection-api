@@ -34,7 +34,6 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
 import java.util.UUID;
-import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.collections4.IterableUtils;
 import org.junit.Assert;
 import org.junit.Before;
@@ -783,7 +782,6 @@ public class CollectionApiControllerTest{
     Assert.assertEquals(Integer.valueOf(5), member.getMappings().getIndex());
     Assert.assertEquals("guest", member.getMappings().getMemberRole());
 
-    
     memberTemplate.setMid("m2");
     //put correct member and copy membership metadata attributes -> returns HTTP 200 and member
     res = this.mockMvc.perform(put("/api/v1/collections/1/members/m2").content(map.writeValueAsBytes(memberTemplate)).contentType(MediaType.APPLICATION_JSON)).andDo(print()).andExpect(status().isOk()).andReturn();
@@ -802,6 +800,136 @@ public class CollectionApiControllerTest{
 
     Assert.assertEquals(Integer.valueOf(5), member.getMappings().getIndex());
     Assert.assertEquals("guest", member.getMappings().getMemberRole());
+
+  }
+
+  @Test
+  public void testOpsFindMatch() throws Exception{
+    TestDataCreationHelper.initialize(collectionDao, memberDao).
+            addCollection("1", CollectionProperties.getDefault()).
+            addMemberItem("1", "m1", "This is member one", "customType", "localhost", "ontology", new CollectionItemMappingMetadata()).
+            addMemberItem("1", "m2", "This is member two", "customType", "localhost", "ontology", new CollectionItemMappingMetadata()).
+            addMemberItem("1", "m3", "localhost").
+            persist();
+    ObjectMapper map = new ObjectMapper();
+
+    MemberItem example = new MemberItem();
+    example.setDatatype("customType");
+
+    //search in invalid collection -> returns HTTP 404
+    this.mockMvc.perform(post("/api/v1/collections/2/ops/findMatch").content(map.writeValueAsBytes(example)).contentType(MediaType.APPLICATION_JSON)).andDo(print()).andExpect(status().isNotFound()).andReturn();
+
+    //search for type
+    MvcResult res = this.mockMvc.perform(post("/api/v1/collections/1/ops/findMatch").content(map.writeValueAsBytes(example)).contentType(MediaType.APPLICATION_JSON)).andDo(print()).andExpect(status().isOk()).andReturn();
+    String result = res.getResponse().getContentAsString();
+    MemberResultSet members = map.readValue(result, MemberResultSet.class);
+
+    Assert.assertNotNull(members);
+    Assert.assertEquals(2, members.getContents().size());
+
+    example.setDatatype(null);
+    example.setDescription("This is member two");
+
+    //search for description
+    res = this.mockMvc.perform(post("/api/v1/collections/1/ops/findMatch").content(map.writeValueAsBytes(example)).contentType(MediaType.APPLICATION_JSON)).andDo(print()).andExpect(status().isOk()).andReturn();
+    result = res.getResponse().getContentAsString();
+    members = map.readValue(result, MemberResultSet.class);
+
+    Assert.assertNotNull(members);
+    Assert.assertEquals(1, members.getContents().size());
+
+    example.setDescription(null);
+    example.setOntology("ontology");
+
+    //search for ontology
+    res = this.mockMvc.perform(post("/api/v1/collections/1/ops/findMatch").content(map.writeValueAsBytes(example)).contentType(MediaType.APPLICATION_JSON)).andDo(print()).andExpect(status().isOk()).andReturn();
+    result = res.getResponse().getContentAsString();
+    members = map.readValue(result, MemberResultSet.class);
+
+    Assert.assertNotNull(members);
+    Assert.assertEquals(2, members.getContents().size());
+
+    example.setOntology(null);
+    example.setLocation("localhost");
+
+    //search for location
+    res = this.mockMvc.perform(post("/api/v1/collections/1/ops/findMatch").content(map.writeValueAsBytes(example)).contentType(MediaType.APPLICATION_JSON)).andDo(print()).andExpect(status().isOk()).andReturn();
+    result = res.getResponse().getContentAsString();
+    members = map.readValue(result, MemberResultSet.class);
+
+    Assert.assertNotNull(members);
+    Assert.assertEquals(3, members.getContents().size());
+
+    example.setLocation(null);
+    example.setMid("m2");
+
+    //search for mid
+    res = this.mockMvc.perform(post("/api/v1/collections/1/ops/findMatch").content(map.writeValueAsBytes(example)).contentType(MediaType.APPLICATION_JSON)).andDo(print()).andExpect(status().isOk()).andReturn();
+    result = res.getResponse().getContentAsString();
+    members = map.readValue(result, MemberResultSet.class);
+
+    Assert.assertNotNull(members);
+    Assert.assertEquals(1, members.getContents().size());
+
+    example.setMid("666");
+
+    //search for mid with no match
+    res = this.mockMvc.perform(post("/api/v1/collections/1/ops/findMatch").content(map.writeValueAsBytes(example)).contentType(MediaType.APPLICATION_JSON)).andDo(print()).andExpect(status().isOk()).andReturn();
+    result = res.getResponse().getContentAsString();
+    members = map.readValue(result, MemberResultSet.class);
+
+    Assert.assertNotNull(members);
+    Assert.assertTrue(members.getContents().isEmpty());
+
+  }
+
+  @Test
+  public void testOpsFlatten() throws Exception{
+    CollectionProperties collection2_props = CollectionProperties.getDefault();
+    collection2_props.getMemberOf().add("1");
+
+    TestDataCreationHelper.initialize(collectionDao, memberDao).
+            addCollection("1", CollectionProperties.getDefault()).
+            addCollection("2", collection2_props).
+            addCollection("3", CollectionProperties.getDefault()).
+            addMemberItem("1", "m1", "localhost").
+            addMemberItem("1", "m2", "localhost").
+            addMemberItem("1", "2", "localhost").
+            addMemberItem("2", "m3", "localhost").
+            persist();
+    ObjectMapper map = new ObjectMapper();
+
+    MvcResult res = this.mockMvc.perform(get("/api/v1/collections/1/ops/flatten").contentType(MediaType.APPLICATION_JSON)).andDo(print()).andExpect(status().isOk()).andReturn();
+    String result = res.getResponse().getContentAsString();
+    MemberResultSet members = map.readValue(result, MemberResultSet.class);
+
+    Assert.assertNotNull(members);
+    Assert.assertEquals(4, members.getContents().size());
+  }
+
+  @Test
+  public void testOpsUnion() throws Exception{
+    TestDataCreationHelper.initialize(collectionDao, memberDao).
+            addCollection("1", CollectionProperties.getDefault()).
+            addCollection("2", CollectionProperties.getDefault()).
+            addMemberItem("1", "m1", "localhost").
+            addMemberItem("1", "m2", "localhost").
+            addMemberItem("2", "m3", "localhost").
+            addMemberItem("2", "m1", "localhost").
+            persist();
+    ObjectMapper map = new ObjectMapper();
+
+    MvcResult res = this.mockMvc.perform(get("/api/v1/collections/1/ops/union/2").contentType(MediaType.APPLICATION_JSON)).andDo(print()).andExpect(status().isOk()).andReturn();
+    String result = res.getResponse().getContentAsString();
+    MemberResultSet members = map.readValue(result, MemberResultSet.class);
+
+    Assert.assertNotNull(members);
+    Assert.assertEquals(4, members.getContents().size());
+
+    //test left collection not found
+    this.mockMvc.perform(get("/api/v1/collections/666/ops/union/2").contentType(MediaType.APPLICATION_JSON)).andDo(print()).andExpect(status().isNotFound()).andReturn();
+    //test right collection not found
+    this.mockMvc.perform(get("/api/v1/collections/1/ops/union/666").contentType(MediaType.APPLICATION_JSON)).andDo(print()).andExpect(status().isNotFound()).andReturn();
 
   }
 
