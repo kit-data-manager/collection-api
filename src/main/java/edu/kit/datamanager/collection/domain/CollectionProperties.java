@@ -1,6 +1,5 @@
 package edu.kit.datamanager.collection.domain;
 
-import java.util.Objects;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
@@ -17,10 +16,8 @@ import javax.persistence.FetchType;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
-import javax.persistence.OneToMany;
 import org.springframework.validation.annotation.Validated;
 import javax.validation.Valid;
-import javax.validation.constraints.*;
 import lombok.Data;
 
 /**
@@ -32,9 +29,6 @@ import lombok.Data;
 @Entity
 @Data
 public class CollectionProperties{
-//  @JsonProperty("dateCreated")
-//  @JsonDeserialize(using = CustomInstantDeserializer.class)
-//  private OffsetDateTime dateCreated = null;
 
   @Id
   @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -75,9 +69,5 @@ public class CollectionProperties{
   public static CollectionProperties getDefault(){
     CollectionProperties result = new CollectionProperties();
     return result;
-  }
-
-  public void addMemberOfItem(String item){
-    memberOf.add(item);
   }
 }

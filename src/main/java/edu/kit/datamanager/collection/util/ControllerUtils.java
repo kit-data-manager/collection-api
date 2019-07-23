@@ -31,6 +31,12 @@ public class ControllerUtils{
   private static final Logger LOG = LoggerFactory.getLogger(ControllerUtils.class);
 
   /**
+   * Hidden constructor
+   */
+  private ControllerUtils(){
+  }
+
+  /**
    * Check the ETag provided by the caller against the current ETag provided by
    * a resource. If both ETags are not matching, an EtagMismatchException is
    * thrown.

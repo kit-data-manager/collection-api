@@ -109,7 +109,7 @@ public class TestDataCreationHelper{
     if(child.getProperties() == null){
       child.setProperties(CollectionProperties.getDefault());
     }
-    child.getProperties().addMemberOfItem(parentCollectionId);
+    child.getProperties().getMemberOf().add(parentCollectionId);
     return this;
   }
 

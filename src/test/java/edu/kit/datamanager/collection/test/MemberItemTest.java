@@ -58,8 +58,41 @@ public class MemberItemTest{
     Assert.assertEquals(item.getMappings().getMemberRole(), copy.getMappings().getMemberRole());
     Assert.assertEquals(item.getMappings().getDateAdded(), copy.getMappings().getDateAdded());
     Assert.assertEquals(item.getMappings().getDateUpdated(), copy.getMappings().getDateUpdated());
-    
-    
+
+    Assert.assertEquals(item, copy);
+  }
+
+  @Test
+  public void testCopy(){
+    MemberItem item = new MemberItem();
+    item.setId(1l);
+    item.setMid("m1");
+    item.setDescription("Item 1");
+    item.setLocation("localhost");
+    item.setOntology("o1");
+    item.setDatatype("type1");
+    CollectionItemMappingMetadata md = new CollectionItemMappingMetadata();
+    md.setDateAdded(Instant.now());
+    md.setDateUpdated(Instant.now());
+    md.setId(1l);
+    md.setIndex(1);
+    md.setMemberRole("member");
+    item.setMappings(md);
+
+    MemberItem copy = MemberItem.copy(item);
+
+    Assert.assertEquals(item.getId(), copy.getId());
+    Assert.assertEquals(item.getMid(), copy.getMid());
+    Assert.assertEquals(item.getLocation(), copy.getLocation());
+    Assert.assertEquals(item.getDescription(), copy.getDescription());
+    Assert.assertEquals(item.getDatatype(), copy.getDatatype());
+    Assert.assertEquals(item.getOntology(), copy.getOntology());
+    Assert.assertEquals(item.getMappings().getId(), copy.getMappings().getId());
+    Assert.assertEquals(item.getMappings().getIndex(), copy.getMappings().getIndex());
+    Assert.assertEquals(item.getMappings().getMemberRole(), copy.getMappings().getMemberRole());
+    Assert.assertEquals(item.getMappings().getDateAdded(), copy.getMappings().getDateAdded());
+    Assert.assertEquals(item.getMappings().getDateUpdated(), copy.getMappings().getDateUpdated());
+
     Assert.assertEquals(item, copy);
 
   }

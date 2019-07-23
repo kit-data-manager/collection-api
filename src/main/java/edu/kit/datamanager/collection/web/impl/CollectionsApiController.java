@@ -681,7 +681,7 @@ public class CollectionsApiController implements CollectionsApi{
 
     MemberItem item = membershipItem.getMember();
     item.setMappings(mappingMetadata);
-        
+
     ControllerUtils.checkEtag(request, item);
 
     switch(property){
@@ -871,7 +871,7 @@ public class CollectionsApiController implements CollectionsApi{
     }
 
     LOG.trace("Obtaining total element count.");
-    long totalElementCount = helper.getColletionsMembershipsCountByFilters(collectionIdList, null, null, null, null);
+    long totalElementCount = helper.getCollectionIntersectionCount(id, otherId);
 
     LOG.trace("Setting cursor values.");
     resultSet.setNextCursor(PaginationHelper.create(pgbl.getPageNumber(), totalElementCount).withElementsPerPage(pgbl.getPageSize()).getNextPageLink());
