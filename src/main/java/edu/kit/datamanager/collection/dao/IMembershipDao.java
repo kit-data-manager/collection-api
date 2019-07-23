@@ -23,25 +23,4 @@ import org.springframework.data.jpa.repository.JpaRepository;
  * @author jejkal
  */
 public interface IMembershipDao extends JpaRepository<Membership, String>{
-
-//  public Optional<Membership> findByCollectionIdEqualsAndMemberIdEquals(String collectionId, String memberId);
-//
-//  public List<Membership> findByCollectionIdIn(List<String> collectionIds);
-//  
-//  public Long countByCollectionId(String collectionIds);
-//
-//  public Page<Membership> findByMemberIdIn(List<String> memberIds, Pageable pgbl);
-//
-//  public List<Membership> findByMemberIdIn(List<String> memberIds);
-//
-//  public Page<Membership> findByMemberIdInAndCollectionIdIn(List<String> memberIds, List<String> collectionIds, Pageable pgbl);
-//
-//  public Page<Membership> findByIdInAndMemberIdIn(List<Long> ids, List<String> memberIds, Pageable pgbl);
-//
-//  public Page<Membership> findByIdInAndCollectionIdIn(List<Long> ids, List<String> collectionIds, Pageable pgbl);
-//  
-//  
-//  
-  Long countByIdIn(String... ids);
-
 }

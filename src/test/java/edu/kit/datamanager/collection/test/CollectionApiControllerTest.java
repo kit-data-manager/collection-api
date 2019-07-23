@@ -226,16 +226,23 @@ public class CollectionApiControllerTest{
     TestDataCreationHelper.initialize(collectionDao, memberDao).addCollection("1", CollectionProperties.getDefault()).persist();
 
     //get collection with id 1
-    this.mockMvc.perform(get("/api/v1/collections/1")).andDo(print()).andExpect(status().isOk()).andReturn();
+    MvcResult res = this.mockMvc.perform(get("/api/v1/collections/1")).andDo(print()).andExpect(status().isOk()).andReturn();
+    String etag = res.getResponse().getHeader("ETag");
+
+    //delete collection with id 1 with wrong etag
+    this.mockMvc.perform(delete("/api/v1/collections/1").header("If-Match", "\test\"")).andDo(print()).andExpect(status().isPreconditionFailed()).andReturn();
+
+    //delete collection with id 1 with no etag
+    this.mockMvc.perform(delete("/api/v1/collections/1")).andDo(print()).andExpect(status().isPreconditionRequired()).andReturn();
 
     //delete collection with id 1
-    this.mockMvc.perform(delete("/api/v1/collections/1")).andDo(print()).andExpect(status().isOk()).andReturn();
+    this.mockMvc.perform(delete("/api/v1/collections/1").header("If-Match", etag)).andDo(print()).andExpect(status().isOk()).andReturn();
 
     //delete collection with id 1 a second time (should result in 404)
-    this.mockMvc.perform(delete("/api/v1/collections/1")).andDo(print()).andExpect(status().isNotFound()).andReturn();
+    this.mockMvc.perform(delete("/api/v1/collections/1").header("If-Match", etag)).andDo(print()).andExpect(status().isNotFound()).andReturn();
 
     //get collection with id 1 should fail now
-    this.mockMvc.perform(get("/api/v1/collections/1")).andDo(print()).andExpect(status().isNotFound()).andReturn();
+    this.mockMvc.perform(get("/api/v1/collections/1").header("If-Match", etag)).andDo(print()).andExpect(status().isNotFound()).andReturn();
   }
 
   @Test
@@ -272,8 +279,11 @@ public class CollectionApiControllerTest{
     Assert.assertNotNull(result);
     Assert.assertEquals("m1", result.getMid());
 
+    res = this.mockMvc.perform(get("/api/v1/collections/1/members/m1")).andDo(print()).andExpect(status().isOk()).andReturn();
+    String etag = res.getResponse().getHeader("ETag");
+
     //delete membership of member 1 and collection 1
-    this.mockMvc.perform(delete("/api/v1/collections/1/members/m1")).andDo(print()).andExpect(status().isOk()).andReturn();
+    this.mockMvc.perform(delete("/api/v1/collections/1/members/m1").header("If-Match", etag)).andDo(print()).andExpect(status().isOk()).andReturn();
 
     //delete membership of member 1 and collection 1 a second time
     this.mockMvc.perform(delete("/api/v1/collections/1/members/m1")).andDo(print()).andExpect(status().isNotFound()).andReturn();
@@ -281,18 +291,23 @@ public class CollectionApiControllerTest{
     //membership should no longer be found
     this.mockMvc.perform(get("/api/v1/collections/1/members/m1")).andDo(print()).andExpect(status().isNotFound()).andReturn();
 
+    res = this.mockMvc.perform(get("/api/v1/collections/2/members/m2")).andDo(print()).andExpect(status().isOk()).andReturn();
+    etag = res.getResponse().getHeader("ETag");
+
     //delete membership from immutable collection -> return HTTP 403
-    this.mockMvc.perform(delete("/api/v1/collections/2/members/m2")).andDo(print()).andExpect(status().isForbidden()).andReturn();
+    this.mockMvc.perform(delete("/api/v1/collections/2/members/m2").header("If-Match", etag)).andDo(print()).andExpect(status().isForbidden()).andReturn();
+
+    res = this.mockMvc.perform(get("/api/v1/collections/1/members/2")).andDo(print()).andExpect(status().isOk()).andReturn();
+    etag = res.getResponse().getHeader("ETag");
 
     //delete membership with collection from collection -> return with OK
-    this.mockMvc.perform(delete("/api/v1/collections/1/members/2")).andDo(print()).andExpect(status().isOk()).andReturn();
+    this.mockMvc.perform(delete("/api/v1/collections/1/members/2").header("If-Match", etag)).andDo(print()).andExpect(status().isOk()).andReturn();
 
     res = this.mockMvc.perform(get("/api/v1/collections/2")).andDo(print()).andExpect(status().isOk()).andReturn();
     CollectionObject collection2 = map.readValue(res.getResponse().getContentAsString(), CollectionObject.class);
 
     //memberOf list should now be empty
     Assert.assertTrue(collection2.getProperties().getMemberOf().isEmpty());
-
   }
 
   @Test
@@ -325,25 +340,29 @@ public class CollectionApiControllerTest{
 
     for(String element : new String[]{"index", "role", "dateAdded", "dateUpdated"}){
       MvcResult res = this.mockMvc.perform(get("/api/v1/collections/1/members/m1/properties/" + element)).andDo(print()).andExpect(status().isOk()).andReturn();
+      String etag = res.getResponse().getHeader("ETag");
       byte[] result = res.getResponse().getContentAsByteArray();
       Assert.assertNotNull(result);
       Assert.assertNotEquals(0, result.length);
 
-      //delete index property
-      this.mockMvc.perform(delete("/api/v1/collections/1/members/m1/properties/" + element)).andDo(print()).andExpect(status().isOk()).andReturn();
+      //delete property
+      this.mockMvc.perform(delete("/api/v1/collections/1/members/m1/properties/" + element).header("If-Match", etag)).andDo(print()).andExpect(status().isOk()).andReturn();
 
       res = this.mockMvc.perform(get("/api/v1/collections/1/members/m1/properties/" + element)).andDo(print()).andExpect(status().isOk()).andReturn();
       result = res.getResponse().getContentAsByteArray();
       Assert.assertEquals(0, result.length);
     }
 
+    //get current etag
+    MvcResult res = this.mockMvc.perform(get("/api/v1/collections/1/members/m1")).andDo(print()).andExpect(status().isOk()).andReturn();
+    String etag = res.getResponse().getHeader("ETag");
     //get property for invalid membership -> return HTTP 404
     this.mockMvc.perform(get("/api/v1/collections/2/members/m1/properties/index")).andDo(print()).andExpect(status().isNotFound()).andReturn();
 
     //get invalid property for valid membership -> return http 404
     this.mockMvc.perform(get("/api/v1/collections/1/members/m1/properties/invalidProperty")).andDo(print()).andExpect(status().isNotFound()).andReturn();
     //delete invalid property for value membership -> return http 404
-    this.mockMvc.perform(delete("/api/v1/collections/1/members/m1/properties/invalidProperty")).andDo(print()).andExpect(status().isNotFound()).andReturn();
+    this.mockMvc.perform(delete("/api/v1/collections/1/members/m1/properties/invalidProperty").header("If-Match", etag)).andDo(print()).andExpect(status().isNotFound()).andReturn();
     //delete property for invalid membership -> return http 404
     this.mockMvc.perform(delete("/api/v1/collections/2/members/m1/properties/index")).andDo(print()).andExpect(status().isNotFound()).andReturn();
   }
@@ -369,8 +388,11 @@ public class CollectionApiControllerTest{
     //test all valid properties -> should update and return
     Set<Entry<String, String>> entries = propertiesAndValue.entrySet();
     for(Entry<String, String> entry : entries){
+      MvcResult res = this.mockMvc.perform(get("/api/v1/collections/1/members/m1")).andDo(print()).andExpect(status().isOk()).andReturn();
+      String etag = res.getResponse().getHeader("ETag");
+
       //put property 'role'
-      MvcResult res = this.mockMvc.perform(put("/api/v1/collections/1/members/m1/properties/" + entry.getKey()).content(entry.getValue()).contentType(MediaType.APPLICATION_JSON)).andDo(print()).andExpect(status().isOk()).andReturn();
+      res = this.mockMvc.perform(put("/api/v1/collections/1/members/m1/properties/" + entry.getKey()).header("If-Match", etag).content(entry.getValue()).contentType(MediaType.APPLICATION_JSON)).andDo(print()).andExpect(status().isOk()).andReturn();
       String result = res.getResponse().getContentAsString();
       Assert.assertEquals(entry.getValue(), result);
       //check by get operation
@@ -379,18 +401,22 @@ public class CollectionApiControllerTest{
       Assert.assertEquals(entry.getValue(), result);
     }
 
+  
     //put property for invalid membership -> return HTTP 404
     this.mockMvc.perform(put("/api/v1/collections/2/members/m1/properties/index").content("\"2\"").contentType(MediaType.APPLICATION_JSON)).andDo(print()).andExpect(status().isNotFound()).andReturn();
 
+    MvcResult res = this.mockMvc.perform(get("/api/v1/collections/1/members/m1")).andDo(print()).andExpect(status().isOk()).andReturn();
+    String etag = res.getResponse().getHeader("ETag");
+
     //put index property with invalid value -> return HTTP 400
-    this.mockMvc.perform(put("/api/v1/collections/1/members/m1/properties/index").content("\"a\"").contentType(MediaType.APPLICATION_JSON)).andDo(print()).andExpect(status().isBadRequest()).andReturn();
+    this.mockMvc.perform(put("/api/v1/collections/1/members/m1/properties/index").content("\"a\"").header("If-Match", etag).contentType(MediaType.APPLICATION_JSON)).andDo(print()).andExpect(status().isBadRequest()).andReturn();
 
     //put date property with invalid value -> return HTTP 400
-    this.mockMvc.perform(put("/api/v1/collections/1/members/m1/properties/dateAdded").content("\"a\"").contentType(MediaType.APPLICATION_JSON)).andDo(print()).andExpect(status().isBadRequest()).andReturn();
-    this.mockMvc.perform(put("/api/v1/collections/1/members/m1/properties/dateUpdated").content("\"a\"").contentType(MediaType.APPLICATION_JSON)).andDo(print()).andExpect(status().isBadRequest()).andReturn();
+    this.mockMvc.perform(put("/api/v1/collections/1/members/m1/properties/dateAdded").content("\"a\"").header("If-Match", etag).contentType(MediaType.APPLICATION_JSON)).andDo(print()).andExpect(status().isBadRequest()).andReturn();
+    this.mockMvc.perform(put("/api/v1/collections/1/members/m1/properties/dateUpdated").content("\"a\"").header("If-Match", etag).contentType(MediaType.APPLICATION_JSON)).andDo(print()).andExpect(status().isBadRequest()).andReturn();
 
     //put invalid property  -> return HTTP 404
-    this.mockMvc.perform(put("/api/v1/collections/1/members/m1/properties/invalid").content("\"a\"").contentType(MediaType.APPLICATION_JSON)).andDo(print()).andExpect(status().isNotFound()).andReturn();
+    this.mockMvc.perform(put("/api/v1/collections/1/members/m1/properties/invalid").content("\"a\"").header("If-Match", etag).contentType(MediaType.APPLICATION_JSON)).andDo(print()).andExpect(status().isNotFound()).andReturn();
   }
 
   @Test
@@ -703,8 +729,10 @@ public class CollectionApiControllerTest{
     //put with wrong collection id -> returns HTTP 404
     this.mockMvc.perform(put("/api/v1/collections/999").content(map.writeValueAsBytes(collectionTemplate)).contentType(MediaType.APPLICATION_JSON)).andDo(print()).andExpect(status().isNotFound()).andReturn();
 
+    MvcResult res = this.mockMvc.perform(get("/api/v1/collections/1").content(map.writeValueAsBytes(collectionTemplate)).contentType(MediaType.APPLICATION_JSON)).andDo(print()).andExpect(status().isOk()).andReturn();
+    String etag = res.getResponse().getHeader("ETag");
     //put collection -> replace properties with provided values
-    MvcResult res = this.mockMvc.perform(put("/api/v1/collections/1").content(map.writeValueAsBytes(collectionTemplate)).contentType(MediaType.APPLICATION_JSON)).andDo(print()).andExpect(status().isOk()).andReturn();
+    res = this.mockMvc.perform(put("/api/v1/collections/1").content(map.writeValueAsBytes(collectionTemplate)).header("If-Match", etag).contentType(MediaType.APPLICATION_JSON)).andDo(print()).andExpect(status().isOk()).andReturn();
     String result = res.getResponse().getContentAsString();
     CollectionObject collection = map.readValue(result, CollectionObject.class);
     Assert.assertNotNull(collection);
@@ -727,22 +755,19 @@ public class CollectionApiControllerTest{
     Assert.assertTrue(collection.getProperties().getMemberOf().contains("anotherCollection"));
     Assert.assertEquals("myOntology", collection.getProperties().getDescriptionOntology());
 
+    res = this.mockMvc.perform(get("/api/v1/collections/2").content(map.writeValueAsBytes(collectionTemplate)).contentType(MediaType.APPLICATION_JSON)).andDo(print()).andExpect(status().isOk()).andReturn();
+    etag = res.getResponse().getHeader("ETag");
     //update on forbidden caps -> returns HTTP 403
     collectionTemplate.setId("2");
-    this.mockMvc.perform(put("/api/v1/collections/2").content(map.writeValueAsBytes(collectionTemplate)).contentType(MediaType.APPLICATION_JSON)).andDo(print()).andExpect(status().isForbidden()).andReturn();
+    this.mockMvc.perform(put("/api/v1/collections/2").content(map.writeValueAsBytes(collectionTemplate)).header("If-Match", etag).contentType(MediaType.APPLICATION_JSON)).andDo(print()).andExpect(status().isForbidden()).andReturn();
   }
 
   @Test
   public void testPutMember() throws Exception{
     TestDataCreationHelper.initialize(collectionDao, memberDao).
             addCollection("1", CollectionProperties.getDefault()).
-            //addCollection("2", collection2_props).
-            // addCollection("3", CollectionProperties.getDefault()).
             addMemberItem("1", "m1", "localhost").
             addMemberItem("1", "m2", "This is the decription", "customType", "localhost", "ontology", new CollectionItemMappingMetadata()).
-            // addMemberItem("1", "m2", "localhost").
-            // addMemberItem("1", "2", "localhost").
-            // addMemberItem("2", "m3", "localhost").
             persist();
 
     CollectionItemMappingMetadata mappingMetadata = new CollectionItemMappingMetadata();
@@ -764,8 +789,11 @@ public class CollectionApiControllerTest{
     //put with wrong collection id -> returns HTTP 404
     this.mockMvc.perform(put("/api/v1/collections/2/members/m1").content(map.writeValueAsBytes(memberTemplate)).contentType(MediaType.APPLICATION_JSON)).andDo(print()).andExpect(status().isNotFound()).andReturn();
 
+    MvcResult res = this.mockMvc.perform(get("/api/v1/collections/1/members/m1")).andDo(print()).andExpect(status().isOk()).andReturn();
+    String etag = res.getResponse().getHeader("ETag");
+
     //put correct member and set membership metadata directly (membership 1-m1 contains no metadata at the beginning) -> returns HTTP 200 and member
-    MvcResult res = this.mockMvc.perform(put("/api/v1/collections/1/members/m1").content(map.writeValueAsBytes(memberTemplate)).contentType(MediaType.APPLICATION_JSON)).andDo(print()).andExpect(status().isOk()).andReturn();
+    res = this.mockMvc.perform(put("/api/v1/collections/1/members/m1").content(map.writeValueAsBytes(memberTemplate)).header("If-Match", etag).contentType(MediaType.APPLICATION_JSON)).andDo(print()).andExpect(status().isOk()).andReturn();
     String result = res.getResponse().getContentAsString();
     MemberItem member = map.readValue(result, MemberItem.class);
 
@@ -783,8 +811,12 @@ public class CollectionApiControllerTest{
     Assert.assertEquals("guest", member.getMappings().getMemberRole());
 
     memberTemplate.setMid("m2");
+
+    res = this.mockMvc.perform(get("/api/v1/collections/1/members/m2")).andDo(print()).andExpect(status().isOk()).andReturn();
+    etag = res.getResponse().getHeader("ETag");
+
     //put correct member and copy membership metadata attributes -> returns HTTP 200 and member
-    res = this.mockMvc.perform(put("/api/v1/collections/1/members/m2").content(map.writeValueAsBytes(memberTemplate)).contentType(MediaType.APPLICATION_JSON)).andDo(print()).andExpect(status().isOk()).andReturn();
+    res = this.mockMvc.perform(put("/api/v1/collections/1/members/m2").content(map.writeValueAsBytes(memberTemplate)).header("If-Match", etag).contentType(MediaType.APPLICATION_JSON)).andDo(print()).andExpect(status().isOk()).andReturn();
     result = res.getResponse().getContentAsString();
     member = map.readValue(result, MemberItem.class);
 
@@ -932,7 +964,7 @@ public class CollectionApiControllerTest{
     this.mockMvc.perform(get("/api/v1/collections/1/ops/union/666").contentType(MediaType.APPLICATION_JSON)).andDo(print()).andExpect(status().isNotFound()).andReturn();
 
   }
-  
+
   @Test
   public void testOpsIntersection() throws Exception{
     TestDataCreationHelper.initialize(collectionDao, memberDao).

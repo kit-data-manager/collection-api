@@ -13,12 +13,18 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.kit.datamanager.collection.service;
+package edu.kit.datamanager.collection.domain;
 
 /**
  *
  * @author jejkal
  */
-public class IMembersService{
-  
+public interface EtagSupport{
+
+  /**
+   * Returns the Etag of a resource including surrounding quotes.
+   *
+   * @return The Etag of the resource.
+   */
+  String getEtag();
 }

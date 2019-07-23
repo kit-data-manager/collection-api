@@ -1,6 +1,5 @@
 package edu.kit.datamanager.collection.domain;
 
-import java.util.Objects;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
@@ -35,11 +34,6 @@ public class CollectionResultSet{
   @ApiModelProperty(value = "If the service supports pagination, and the resultset is paginated, this will be a cursor which can be used to retrieve the next page in the results.")
   @JsonProperty("prev_cursor")
   private String prevCursor = null;
-
-  public CollectionResultSet contents(List<CollectionObject> contents){
-    this.contents = contents;
-    return this;
-  }
 
   public CollectionResultSet addContentsItem(CollectionObject contentsItem){
     this.contents.add(contentsItem);

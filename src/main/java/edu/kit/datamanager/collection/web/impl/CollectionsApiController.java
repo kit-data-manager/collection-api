@@ -29,8 +29,8 @@ import edu.kit.datamanager.collection.util.JPAQueryHelper;
 import edu.kit.datamanager.collection.domain.CollectionItemMappingMetadata;
 import edu.kit.datamanager.collection.domain.CollectionProperties;
 import edu.kit.datamanager.collection.domain.Membership;
+import edu.kit.datamanager.collection.util.ControllerUtils;
 import edu.kit.datamanager.collection.util.PaginationHelper;
-import edu.kit.datamanager.collection.util.TestDataCreationHelper;
 import java.time.ZoneOffset;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
@@ -69,60 +69,6 @@ public class CollectionsApiController implements CollectionsApi{
     this.objectMapper = objectMapper;
     this.request = request;
   }
-
-//for testing purposes
-//  private void buildData(){
-//    collectionDao.deleteAll();
-//    membershipDao.deleteAll();
-//    CollectionProperties props2 = CollectionProperties.getDefault();
-//    props2.getMemberOf().add("1");
-//    CollectionProperties props3 = CollectionProperties.getDefault();
-//    props3.getMemberOf().add("2");
-//    CollectionProperties props4 = CollectionProperties.getDefault();
-//    props4.getMemberOf().add("3");
-//    props4.getMemberOf().add("1");
-//    CollectionItemMappingMetadata md1 = new CollectionItemMappingMetadata();
-//    md1.setIndex(4);
-//    CollectionItemMappingMetadata md2 = new CollectionItemMappingMetadata();
-//    md2.setIndex(1);
-//    CollectionItemMappingMetadata md3 = new CollectionItemMappingMetadata();
-//    md3.setIndex(3);
-//    CollectionItemMappingMetadata md4 = new CollectionItemMappingMetadata();
-//    md4.setIndex(8);
-//    CollectionItemMappingMetadata md5 = new CollectionItemMappingMetadata();
-//    md5.setIndex(3);
-//    CollectionItemMappingMetadata md6 = new CollectionItemMappingMetadata();
-//    md6.setIndex(4);
-//
-//    CollectionItemMappingMetadata md7 = new CollectionItemMappingMetadata();
-//    md7.setIndex(3);
-//
-////    TestDataCreationHelper.initialize(collectionDao, memberDao).addCollection("1", CollectionProperties.getDefault()).
-////            addCollection("2", props2).
-////            addCollection("3", props3).
-////            // addCollection("4", props4).
-////            addMemberItem("1", "m1", "decription", "type1", "test", "ont1", md1).
-////            addMemberItem("2", "m2", "decription", "type1", "test", "ont1", md2).addMemberItem("2", "m3", "decription", "type1", "test", "ont1", md3).
-////            addMemberItem("3", "m4", "decription", "type1", "test", "ont1", md4).addMemberItem("3", "m5", "decription", "type1", "test", "ont1", md5).addMemberItem("3", "m6", "decription", "type1", "test", "ont1", md6).
-////            //            addMemberItem("4", "m7", "test").
-////            //            addMemberItem("4", "m8", "test").
-////            //            addMemberItem("4", "m9", "test").
-////            //            addMemberItem("4", "m10", "test").
-////            addMemberItem("1", "2", "decription", "type1", "test", "ont1", md7).
-////            // addMemberItem("1", "4", "test").
-////            addMemberItem("2", "3", "test").
-////            addMemberItem("3", "4", "test").
-////            persist();
-//    TestDataCreationHelper.initialize(collectionDao, memberDao).
-//            addCollection("1", CollectionProperties.getDefault()).
-//            addCollection("2", CollectionProperties.getDefault()).
-//            addMemberItem("1", "m1", "localhost").
-//            addMemberItem("1", "m2", "localhost").
-//            addMemberItem("2", "m3", "localhost").
-//            addMemberItem("2", "m1", "localhost").
-//            persist();
-//
-//  }
 
   @Override
   public ResponseEntity<List<CollectionObject>> collectionsPost(@ApiParam(value = "The properties of the collection.", required = true) @Valid @RequestBody List<CollectionObject> content){
@@ -186,7 +132,6 @@ public class CollectionsApiController implements CollectionsApi{
           final UriComponentsBuilder uriBuilder){
     LOG.trace("Calling collectionsGet({}, {}, {}, {}).", fModelType, fMemberType, fOwnership, pgbl);
 
-   // buildData();
     int pageSize = (pgbl != null) ? pgbl.getPageSize() : 20;
     int offset = (pgbl != null) ? pgbl.getPageNumber() * pgbl.getPageSize() : 0;
     JPAQueryHelper helper = new JPAQueryHelper(em);
@@ -220,8 +165,9 @@ public class CollectionsApiController implements CollectionsApi{
       LOG.debug("No collection with id {} found.", id);
       return new ResponseEntity<>(HttpStatus.NOT_FOUND);
     }
+
     LOG.trace("Returning collection capabilities.");
-    return new ResponseEntity<>(result.get(), HttpStatus.OK);
+    return ResponseEntity.ok().eTag(result.get().getEtag()).body(result.get());
   }
 
   @Override
@@ -238,6 +184,9 @@ public class CollectionsApiController implements CollectionsApi{
     }
 
     CollectionObject existing = result.get();
+
+    ControllerUtils.checkEtag(request, existing);
+
     if(content.getDescription() != null){
       LOG.debug("Updating collection description from value {} to value {}.", existing.getDescription(), content.getDescription());
       existing.setDescription(content.getDescription());
@@ -320,6 +269,8 @@ public class CollectionsApiController implements CollectionsApi{
       return new ResponseEntity<>(HttpStatus.NOT_FOUND);
     }
 
+    ControllerUtils.checkEtag(request, result.get());
+
     LOG.trace("Deleting collection with id {}.", id);
     collectionDao.delete(result.get());
 
@@ -337,8 +288,9 @@ public class CollectionsApiController implements CollectionsApi{
       LOG.debug("No collection with id {} found.", id);
       return new ResponseEntity<>(HttpStatus.NOT_FOUND);
     }
+
     LOG.trace("Returning collection capabilities.");
-    return new ResponseEntity<>(result.get().getCapabilities(), HttpStatus.OK);
+    return ResponseEntity.ok().eTag(result.get().getEtag()).body(result.get().getCapabilities());
   }
 
   @Override
@@ -531,7 +483,7 @@ public class CollectionsApiController implements CollectionsApi{
     resultItem.setMappings(membership.get().getMappings());
 
     LOG.trace("Returning member with id {}.", mid);
-    return new ResponseEntity<>(resultItem, HttpStatus.OK);
+    return ResponseEntity.ok().eTag(resultItem.getEtag()).body(resultItem);
   }
 
   @Override
@@ -551,6 +503,9 @@ public class CollectionsApiController implements CollectionsApi{
     Membership m = membership.get();
 
     MemberItem existingMember = m.getMember();
+    existingMember.setMappings(m.getMappings());
+
+    ControllerUtils.checkEtag(request, existingMember);
 
     LOG.trace("Transferring member item properties from provided member item.");
 
@@ -604,6 +559,11 @@ public class CollectionsApiController implements CollectionsApi{
       LOG.debug("No membership for collection with id {} and member with id {} found.", id, mid);
       return new ResponseEntity<>(HttpStatus.NOT_FOUND);
     }
+
+    MemberItem item = membership.get().getMember();
+    item.setMappings(membership.get().getMappings());
+
+    ControllerUtils.checkEtag(request, item);
 
     CollectionObject memberCollection = null;
     LOG.trace("Checking if member id {} is a collection.", mid);
@@ -695,7 +655,10 @@ public class CollectionsApiController implements CollectionsApi{
         return new ResponseEntity<>(HttpStatus.NOT_FOUND);
     }
 
-    return new ResponseEntity<>(value, HttpStatus.OK);
+    MemberItem item = membership.get().getMember();
+    item.setMappings(membership.get().getMappings());
+
+    return ResponseEntity.ok().eTag(item.getEtag()).body(value);
   }
 
   @Override
@@ -704,7 +667,6 @@ public class CollectionsApiController implements CollectionsApi{
           @ApiParam(value = "Identifier for the collection member item.", required = true) @PathVariable("mid") String mid,
           @ApiParam(value = "The name of a property to update", required = true) @PathVariable("property") String property,
           @ApiParam(value = "New property value", required = true) @Valid @RequestBody String content){
-
     LOG.trace("Calling collectionsIdMembersMidPropertiesPropertyPut({}, {}. {}, {}).", id, mid, property, content);
 
     Optional<Membership> membership = new JPAQueryHelper(em).getMembershipByMid(id, mid);
@@ -716,6 +678,11 @@ public class CollectionsApiController implements CollectionsApi{
 
     Membership membershipItem = membership.get();
     CollectionItemMappingMetadata mappingMetadata = membershipItem.getMappings();
+
+    MemberItem item = membershipItem.getMember();
+    item.setMappings(mappingMetadata);
+        
+    ControllerUtils.checkEtag(request, item);
 
     switch(property){
       case "role":
@@ -765,7 +732,6 @@ public class CollectionsApiController implements CollectionsApi{
           @ApiParam(value = "Identifier for the collection", required = true) @PathVariable("id") String id,
           @ApiParam(value = "Identifier for the collection member item.", required = true) @PathVariable("mid") String mid,
           @ApiParam(value = "The name of a property to delete", required = true) @PathVariable("property") String property){
-
     LOG.trace("Calling collectionsIdMembersMidPropertiesPropertyDelete({}, {}, {}).", id, mid, property);
 
     Optional<Membership> membership = new JPAQueryHelper(em).getMembershipByMid(id, mid);
@@ -776,6 +742,12 @@ public class CollectionsApiController implements CollectionsApi{
     }
 
     Membership membershipItem = membership.get();
+
+    MemberItem item = membershipItem.getMember();
+    item.setMappings(membershipItem.getMappings());
+
+    ControllerUtils.checkEtag(request, item);
+
     CollectionItemMappingMetadata mappingMetadata = membershipItem.getMappings();
 
     switch(property){
@@ -814,7 +786,6 @@ public class CollectionsApiController implements CollectionsApi{
           @ApiParam(value = "Identifier for the collection", required = true) @PathVariable("id") String id,
           @ApiParam(value = "The member item properties to use when matching", required = true) @RequestBody MemberItem memberProperties,
           final Pageable pgbl){
-
     LOG.trace("Calling collectionsIdOpsFindMatchPost({}, {}).", id, memberProperties);
     Optional<CollectionObject> result = collectionDao.findById(id);
 
@@ -862,7 +833,6 @@ public class CollectionsApiController implements CollectionsApi{
           @ApiParam(value = "Identifier for the first collection in the operation", required = true) @PathVariable("id") String id,
           @ApiParam(value = "Identifier for the second collection in the operation", required = true) @PathVariable("otherId") String otherId,
           final Pageable pgbl){
-
     LOG.trace("Calling collectionsIdOpsIntersectionOtherIdGet({}, {}).", id, otherId);
 
     Optional<CollectionObject> left = collectionDao.findById(id);

@@ -16,8 +16,6 @@
 package edu.kit.datamanager.collection.dao;
 
 import edu.kit.datamanager.collection.domain.CollectionObject;
-import edu.kit.datamanager.collection.domain.Membership;
-import java.util.Optional;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 

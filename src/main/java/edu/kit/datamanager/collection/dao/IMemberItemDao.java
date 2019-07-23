@@ -16,8 +16,6 @@
 package edu.kit.datamanager.collection.dao;
 
 import edu.kit.datamanager.collection.domain.MemberItem;
-import edu.kit.datamanager.collection.domain.Membership;
-import java.util.List;
 import java.util.Optional;
 import org.springframework.data.jpa.repository.JpaRepository;
 
@@ -27,6 +25,5 @@ import org.springframework.data.jpa.repository.JpaRepository;
  */
 public interface IMemberItemDao extends JpaRepository<MemberItem, String>{
 
-  
    Optional<MemberItem> findByMid(String mid);
 }

@@ -21,7 +21,7 @@ import lombok.Data;
 @Validated
 @javax.annotation.Generated(value = "io.swagger.codegen.languages.SpringCodegen", date = "2019-07-09T15:21:24.632+02:00")
 @Data
-public class MemberItem{
+public class MemberItem implements EtagSupport{
 
   @Id
   @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -70,9 +70,26 @@ public class MemberItem{
     this.datatype = item.datatype;
     this.description = item.description;
     this.id = item.id;
+    this.mid = item.mid;
     this.location = item.location;
     this.mappings = item.mappings;
     this.ontology = item.ontology;
+    if(item.getMappings() != null){
+      CollectionItemMappingMetadata md = new CollectionItemMappingMetadata();
+      md.setId(item.getMappings().getId());
+      md.setIndex(item.getMappings().getIndex());
+      md.setMemberRole(item.getMappings().getMemberRole());
+      md.setDateAdded(item.mappings.getDateAdded());
+      md.setDateUpdated(item.mappings.getDateUpdated());
+      this.mappings = md;
+    }
+
     return this;
+  }
+
+  @Override
+  @JsonIgnore
+  public String getEtag(){
+    return "\"" + hashCode() + "\"";
   }
 }

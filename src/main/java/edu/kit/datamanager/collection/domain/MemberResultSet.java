@@ -36,11 +36,6 @@ public class MemberResultSet{
 
   @ApiModelProperty(required = true, value = "list of Member Items returned in responses to a query")
 
-  public MemberResultSet contents(List<MemberItem> contents){
-    this.contents = contents;
-    return this;
-  }
-
   public MemberResultSet addContentsItem(MemberItem contentsItem){
     this.contents.add(contentsItem);
     return this;
