@@ -13,9 +13,9 @@ In order to build the Collection API you'll need:
 After obtaining the sources change to the folder where the sources are located perform the following steps:
 
 ```
-user@localhost:/home/user/colleciton-api$ ./gradlew build
+user@localhost:/home/user/collection-api$ ./gradlew build
 > Configure project :
-Using release profile for building colleciton-api
+Using release profile for building collection-api
 <-------------> 0% EXECUTING [0s]
 [...]
 user@localhost:/home/user/collection-api$
