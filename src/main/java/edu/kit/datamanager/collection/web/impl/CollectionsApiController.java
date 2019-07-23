@@ -42,10 +42,13 @@ import java.util.Set;
 import java.util.UUID;
 import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
+import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.util.UriComponentsBuilder;
 
 @javax.annotation.Generated(value = "io.swagger.codegen.languages.SpringCodegen", date = "2019-07-09T15:21:24.632+02:00")
 @Controller
+@Api(value = "collections", description = "the collections API")
+@RequestMapping(value = "/api/v1")
 public class CollectionsApiController implements CollectionsApi{
 
   private static final Logger LOG = LoggerFactory.getLogger(CollectionsApiController.class);

@@ -12,12 +12,9 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 
 @javax.annotation.Generated(value = "io.swagger.codegen.languages.SpringCodegen", date = "2019-07-09T15:21:24.632+02:00")
-
-@Api(value = "features", description = "the features API")
-@RequestMapping(value = "/api/v1")
 public interface FeaturesApi{
 
-  @ApiOperation(value = "Gets the service-level features. A successful request returns an HTTP 200 response code with the ServiceFeatures object in the response body.", nickname = "featuresGet", notes = "This request returns the service-level features. Examples of service-level features might include whether or not the service supports assignment of PIDs for collection members, whether it supports pagination and cursors, whether it enforces  access controls, etc.", response = ServiceFeatures.class, tags = {"Service",})
+  @ApiOperation(value = "Gets the service-level features. A successful request returns an HTTP 200 response code with the ServiceFeatures object in the response body.", nickname = "featuresGet", notes = "This request returns the service-level features. Examples of service-level features might include whether or not the service supports assignment of PIDs for collection members, whether it supports pagination and cursors, whether it enforces  access controls, etc.", response = ServiceFeatures.class)
   @ApiResponses(value = {
     @ApiResponse(code = 200, message = "Service Level Features", response = ServiceFeatures.class)})
   @RequestMapping(value = "/features",

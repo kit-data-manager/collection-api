@@ -26,11 +26,9 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.web.util.UriComponentsBuilder;
 
 @javax.annotation.Generated(value = "io.swagger.codegen.languages.SpringCodegen", date = "2019-07-09T15:21:24.632+02:00")
-@Api(value = "collections", description = "the collections API")
-@RequestMapping(value = "/api/v1")
 public interface CollectionsApi{
 
-  @ApiOperation(value = "Get a list of all collections provided by this service. A successful request returns an HTTP 200 response code with a CollectionResultSet object in the response body.", nickname = "collectionsGet", notes = "This request returns a list of the collections provided by this service.  This may be a complete list, or if the service features include support for pagination, the cursors in the response may be used to iterate backwards and forwards through pages of partial results. Query parameters may be used to supply filtering criteria for the response. When combining filters of different types, the boolean AND will be used. When combining multiple instances of filters of the same type, the boolean OR will be used.", response = CollectionResultSet.class, tags = {"Collections",})
+  @ApiOperation(value = "Get a list of all collections provided by this service. A successful request returns an HTTP 200 response code with a CollectionResultSet object in the response body.", nickname = "collectionsGet", notes = "This request returns a list of the collections provided by this service.  This may be a complete list, or if the service features include support for pagination, the cursors in the response may be used to iterate backwards and forwards through pages of partial results. Query parameters may be used to supply filtering criteria for the response. When combining filters of different types, the boolean AND will be used. When combining multiple instances of filters of the same type, the boolean OR will be used.", response = CollectionResultSet.class)
   @ApiResponses(value = {
     @ApiResponse(code = 200, message = "A resultset containing a list of collection objects.", response = CollectionResultSet.class),
     @ApiResponse(code = 400, message = "Invalid Input. The query was malformed.", response = Error.class)})
@@ -50,7 +48,7 @@ public interface CollectionsApi{
           final HttpServletRequest request,
           final UriComponentsBuilder uriBuilder);
 
-  @ApiOperation(value = "Get the capabilities of this collection. A successful request returns an HTTP 200 response code with a CollectionCapabilities object in the response body.", nickname = "collectionsIdCapabilitiesGet", notes = "This request returns the capabilities metadata for the collection identified by the supplied id. The collection capabilities describe the actions and operations that are available for this collection.", response = CollectionCapabilities.class, tags = {"Collections",})
+  @ApiOperation(value = "Get the capabilities of this collection. A successful request returns an HTTP 200 response code with a CollectionCapabilities object in the response body.", nickname = "collectionsIdCapabilitiesGet", notes = "This request returns the capabilities metadata for the collection identified by the supplied id. The collection capabilities describe the actions and operations that are available for this collection.", response = CollectionCapabilities.class)
   @ApiResponses(value = {
     @ApiResponse(code = 200, message = "The collection capabilities metadata.", response = CollectionCapabilities.class),
     @ApiResponse(code = 401, message = "Unauthorized. Request was not authorized.", response = Error.class),
@@ -64,7 +62,7 @@ public interface CollectionsApi{
     @Authorization(value = "oauth", scopes = {
       @AuthorizationScope(scope = "write", description = "Can write collections")
     })
-  }, tags = {"Collections",})
+  })
   @ApiResponses(value = {
     @ApiResponse(code = 200, message = "Successful deletion. Empty response body."),
     @ApiResponse(code = 202, message = "Accepted deletion request. Empty response body. (For asynchronous requests if supported by service features.)"),
@@ -75,7 +73,7 @@ public interface CollectionsApi{
           method = RequestMethod.DELETE)
   ResponseEntity<Void> collectionsIdDelete(@ApiParam(value = "identifier for the collection", required = true) @PathVariable("id") String id);
 
-  @ApiOperation(value = "Get the properties of a specific collection. A successful request returns an HTTP 200 response code with the requested CollectionObject in the response body.", nickname = "collectionsIdGet", notes = "This request returns the Collection Object Properties for the collection identified by the provided id.", response = CollectionObject.class, tags = {"Collections",})
+  @ApiOperation(value = "Get the properties of a specific collection. A successful request returns an HTTP 200 response code with the requested CollectionObject in the response body.", nickname = "collectionsIdGet", notes = "This request returns the Collection Object Properties for the collection identified by the provided id.", response = CollectionObject.class)
   @ApiResponses(value = {
     @ApiResponse(code = 200, message = "The requested collection", response = CollectionObject.class),
     @ApiResponse(code = 401, message = "Unauthorized. Request was not authorized.", response = Error.class),
@@ -85,7 +83,7 @@ public interface CollectionsApi{
           method = RequestMethod.GET)
   ResponseEntity<CollectionObject> collectionsIdGet(@ApiParam(value = "Identifier for the collection", required = true) @PathVariable("id") String id);
 
-  @ApiOperation(value = "Get the members in a collection. A successful request returns an HTTP 200 response code with a MemberResultSet object in the response body.", nickname = "collectionsIdMembersGet", notes = "This request returns the list of members contained in a collection.  This may be a complete list, or if the service features include support for pagination, the cursors in the response may be used to iterate backwards and forwards through pages of partial results. Query parameters may be used to supply filtering criteria for the response. When combining filters of different types, the boolean AND will be used. When combining multiple instances of filters of the same type, the boolean OR will be used.", response = MemberResultSet.class, tags = {"Members",})
+  @ApiOperation(value = "Get the members in a collection. A successful request returns an HTTP 200 response code with a MemberResultSet object in the response body.", nickname = "collectionsIdMembersGet", notes = "This request returns the list of members contained in a collection.  This may be a complete list, or if the service features include support for pagination, the cursors in the response may be used to iterate backwards and forwards through pages of partial results. Query parameters may be used to supply filtering criteria for the response. When combining filters of different types, the boolean AND will be used. When combining multiple instances of filters of the same type, the boolean OR will be used.", response = MemberResultSet.class)
   @ApiResponses(value = {
     @ApiResponse(code = 200, message = "A resultset containing the list of member items in the identified collection.", response = MemberResultSet.class),
     @ApiResponse(code = 400, message = "Invalid input. The filter query was malformed.", response = Error.class),
@@ -112,7 +110,7 @@ public interface CollectionsApi{
     @Authorization(value = "oauth", scopes = {
       @AuthorizationScope(scope = "write", description = "Can write collections")
     })
-  }, tags = {"Members",})
+  })
   @ApiResponses(value = {
     @ApiResponse(code = 200, message = "Successful removal. Empty response body."),
     @ApiResponse(code = 202, message = "Accepted request. Empty response body. (For asynchronous requests, if supported by service features.)"),
@@ -127,7 +125,7 @@ public interface CollectionsApi{
           @ApiParam(value = "Persistent identifier for the collection", required = true) @PathVariable("id") String id,
           @ApiParam(value = "Identifier for the collection member", required = true) @PathVariable("mid") String mid);
 
-  @ApiOperation(value = "Get the properties of a member item in a collection. A successful request returns an HTTP 200 response code with a MemberItem in the response body.", nickname = "collectionsIdMembersMidGet", notes = "This request retrieves the properties of a specific member item from a collection", response = MemberItem.class, tags = {"Members",})
+  @ApiOperation(value = "Get the properties of a member item in a collection. A successful request returns an HTTP 200 response code with a MemberItem in the response body.", nickname = "collectionsIdMembersMidGet", notes = "This request retrieves the properties of a specific member item from a collection", response = MemberItem.class)
   @ApiResponses(value = {
     @ApiResponse(code = 200, message = "The requested member", response = MemberItem.class),
     @ApiResponse(code = 401, message = "Unauthorized. Request was not authorized.", response = Error.class),
@@ -139,7 +137,7 @@ public interface CollectionsApi{
           @ApiParam(value = "Identifier for the collection", required = true) @PathVariable("id") String id,
           @ApiParam(value = "Identifier for the collection member item.", required = true) @PathVariable("mid") String mid);
 
-  @ApiOperation(value = "Delete a named property of a member item in a collection. A successful request returns an HTTP 200 response code and empty response body.", nickname = "collectionsIdMembersMidPropertiesPropertyDelete", notes = "This request deletes a specific named property of a specific member item from a collection", tags = {"Members",})
+  @ApiOperation(value = "Delete a named property of a member item in a collection. A successful request returns an HTTP 200 response code and empty response body.", nickname = "collectionsIdMembersMidPropertiesPropertyDelete", notes = "This request deletes a specific named property of a specific member item from a collection")
   @ApiResponses(value = {
     @ApiResponse(code = 200, message = "Successful deletion. Empty response body."),
     @ApiResponse(code = 202, message = "Accepted delete request. Empty response body. (For asyncrhonous requests, if supported by service features.)"),
@@ -154,7 +152,7 @@ public interface CollectionsApi{
           @ApiParam(value = "Identifier for the collection member item.", required = true) @PathVariable("mid") String mid,
           @ApiParam(value = "the name of a property to update", required = true) @PathVariable("property") String property);
 
-  @ApiOperation(value = "Get a named property of a member item in a collection. A successful request returns an HTTP 200 response code and the requested MemberItem in the response body.", nickname = "collectionsIdMembersMidPropertiesPropertyGet", notes = "This request retrieves a specific named property of a specific member item from a collection", response = MemberItem.class, tags = {"Members",})
+  @ApiOperation(value = "Get a named property of a member item in a collection. A successful request returns an HTTP 200 response code and the requested MemberItem in the response body.", nickname = "collectionsIdMembersMidPropertiesPropertyGet", notes = "This request retrieves a specific named property of a specific member item from a collection", response = MemberItem.class)
   @ApiResponses(value = {
     @ApiResponse(code = 200, message = "The requested member", response = MemberItem.class),
     @ApiResponse(code = 401, message = "Unauthorized. Request was not authorized.", response = Error.class),
@@ -167,7 +165,7 @@ public interface CollectionsApi{
           @ApiParam(value = "Identifier for the collection member item.", required = true) @PathVariable("mid") String mid,
           @ApiParam(value = "the name of a property to retrieve (e.g. index)", required = true) @PathVariable("property") String property);
 
-  @ApiOperation(value = "Update a named property of a member item in a collection. A successful request returns an HTTP 200 response code and the updated MemberItem in the response body.", nickname = "collectionsIdMembersMidPropertiesPropertyPut", notes = "This request updates a specific named property of a specific member item from a collection", response = MemberItem.class, tags = {"Members",})
+  @ApiOperation(value = "Update a named property of a member item in a collection. A successful request returns an HTTP 200 response code and the updated MemberItem in the response body.", nickname = "collectionsIdMembersMidPropertiesPropertyPut", notes = "This request updates a specific named property of a specific member item from a collection", response = MemberItem.class)
   @ApiResponses(value = {
     @ApiResponse(code = 200, message = "Successful update. The updated member item is returned in the response.", response = MemberItem.class),
     @ApiResponse(code = 202, message = "Accepted update request. Empty response body. (For asynchronous requests, if supported by service features.)"),
@@ -187,7 +185,7 @@ public interface CollectionsApi{
     @Authorization(value = "oauth", scopes = {
       @AuthorizationScope(scope = "modify", description = "Can modify collections")
     })
-  }, tags = {"Members",})
+  })
   @ApiResponses(value = {
     @ApiResponse(code = 200, message = "Successful update. The updated CollectionItemMappingMetadata is returned in the response.", response = MemberItem.class),
     @ApiResponse(code = 202, message = "Accepted update request. Empty response body. (For asynchronous requests if supported by service features.)"),
@@ -207,7 +205,7 @@ public interface CollectionsApi{
     @Authorization(value = "oauth", scopes = {
       @AuthorizationScope(scope = "write", description = "Can write collections")
     })
-  }, tags = {"Members",})
+  })
   @ApiResponses(value = {
     @ApiResponse(code = 201, message = "Successful creation", response = MemberItem.class, responseContainer = "List"),
     @ApiResponse(code = 202, message = "Accepted add request. Empty response body. (For asyncrhonous requests,  if supported by the service features)."),
@@ -227,7 +225,7 @@ public interface CollectionsApi{
     @Authorization(value = "oauth", scopes = {
       @AuthorizationScope(scope = "read", description = "Can read collections")
     })
-  }, tags = {"Collections",})
+  })
   @ApiResponses(value = {
     @ApiResponse(code = 200, message = "A resulset containing the matching member items from the two collections.", response = MemberResultSet.class),
     @ApiResponse(code = 401, message = "Unauthorized. Request was not authorized.", response = Error.class),
@@ -249,7 +247,7 @@ public interface CollectionsApi{
     @Authorization(value = "oauth", scopes = {
       @AuthorizationScope(scope = "read", description = "Can read collections")
     })
-  }, tags = {"Collections",})
+  })
   @ApiResponses(value = {
     @ApiResponse(code = 200, message = "A resultset containing the union of member items from the two collections", response = MemberResultSet.class),
     @ApiResponse(code = 401, message = "Unauthorized. Request was not authorized.", response = Error.class),
@@ -270,7 +268,7 @@ public interface CollectionsApi{
     @Authorization(value = "oauth", scopes = {
       @AuthorizationScope(scope = "read", description = "Can read collections")
     })
-  }, tags = {"Collections",})
+  })
   @ApiResponses(value = {
     @ApiResponse(code = 200, message = "A resultset containing the intersection of member items from the two collections.", response = MemberResultSet.class),
     @ApiResponse(code = 401, message = "Unauthorized. Request was not authorized.", response = Error.class),
@@ -292,7 +290,7 @@ public interface CollectionsApi{
     @Authorization(value = "oauth", scopes = {
       @AuthorizationScope(scope = "read", description = "Can read collections")
     })
-  }, tags = {"Collections",})
+  })
   @ApiResponses(value = {
     @ApiResponse(code = 200, message = "A resultset containing the union of member items from the two collections", response = MemberResultSet.class),
     @ApiResponse(code = 401, message = "Unauthorized. Request was not authorized.", response = Error.class),
@@ -314,7 +312,7 @@ public interface CollectionsApi{
     @Authorization(value = "oauth", scopes = {
       @AuthorizationScope(scope = "modify", description = "Can modify collections")
     })
-  }, tags = {"Collections",})
+  })
   @ApiResponses(value = {
     @ApiResponse(code = 200, message = "Successful update, returns the updated collection.", response = CollectionObject.class),
     @ApiResponse(code = 202, message = "Accepted update request. Empty response body. (For asynchronous requests if supported by service features.)"),
@@ -333,7 +331,7 @@ public interface CollectionsApi{
     @Authorization(value = "oauth", scopes = {
       @AuthorizationScope(scope = "write", description = "Can write collections")
     })
-  }, tags = {"Collections",})
+  })
   @ApiResponses(value = {
     @ApiResponse(code = 201, message = "Successful creation", response = CollectionObject.class, responseContainer = "List"),
     @ApiResponse(code = 202, message = "Accepted create request. Empty response body. (For asyncrhonous requests,  if supported by the service features)."),
