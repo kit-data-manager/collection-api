@@ -519,23 +519,21 @@ public class CollectionsApiController implements CollectionsApi{
     CollectionItemMappingMetadata mMetadata = m.getMappings();
     CollectionItemMappingMetadata itemMetadata = content.getMappings();
     LOG.trace("Transferring collection item mapping metadata from provided member item.");
-    if(mMetadata == null){
-      m.setMappings(content.getMappings());
-    } else{
-      if(itemMetadata != null){
-        LOG.trace("Transferring property 'dateAdded'.");
-        mMetadata.setDateAdded(itemMetadata.getDateAdded());
 
-        LOG.trace("Transferring property 'index'.");
-        mMetadata.setIndex(itemMetadata.getIndex());
+    if(itemMetadata != null){
+      LOG.trace("Transferring property 'dateAdded'.");
+      mMetadata.setDateAdded(itemMetadata.getDateAdded());
 
-        LOG.trace("Transferring property 'role'.");
-        mMetadata.setMemberRole(itemMetadata.getMemberRole());
+      LOG.trace("Transferring property 'index'.");
+      mMetadata.setIndex(itemMetadata.getIndex());
 
-        LOG.trace("Transferring property 'dateUpdated'.");
-        mMetadata.setDateUpdated(itemMetadata.getDateUpdated());
-      }
+      LOG.trace("Transferring property 'role'.");
+      mMetadata.setMemberRole(itemMetadata.getMemberRole());
+
+      LOG.trace("Transferring property 'dateUpdated'.");
+      mMetadata.setDateUpdated(itemMetadata.getDateUpdated());
     }
+
     LOG.trace("Persisting updated membership with new collection item metadata.");
     m = membershipDao.save(m);
 

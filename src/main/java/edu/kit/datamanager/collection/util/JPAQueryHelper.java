@@ -215,10 +215,6 @@ public class JPAQueryHelper{
               .where(here));
     }
 
-    if(offset < 0){
-      return typedQuery.getResultList();
-    }
-
     return typedQuery.setFirstResult(offset).setMaxResults(maxResults).getResultList();
   }
 

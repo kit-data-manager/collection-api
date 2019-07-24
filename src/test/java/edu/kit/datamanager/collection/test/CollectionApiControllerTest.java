@@ -921,12 +921,17 @@ public class CollectionApiControllerTest{
 
     CollectionCapabilities c1caps = CollectionCapabilities.getDefault();
     c1caps.setIsOrdered(Boolean.TRUE);
+    CollectionCapabilities c2caps = CollectionCapabilities.getDefault();
+    c2caps.setIsOrdered(Boolean.FALSE);
 
     TestDataCreationHelper.initialize(collectionDao, memberDao).
             addCollection("1", "description", c1caps, CollectionProperties.getDefault()).
+            addCollection("2", "description", c2caps, CollectionProperties.getDefault()).
             addMemberItem("1", "m1", "This is member one", "customType", "localhost", "ontology", m1Mapping).
             addMemberItem("1", "m2", "This is member two", "customType", "localhost", "ontology", m2Mapping).
             addMemberItem("1", "m3", "localhost").
+            addMemberItem("2", "m1", "localhost").
+            addMemberItem("2", "m3", "localhost").
             persist();
     ObjectMapper map = new ObjectMapper();
 
@@ -934,7 +939,7 @@ public class CollectionApiControllerTest{
     example.setDatatype("customType");
 
     //search in invalid collection -> returns HTTP 404
-    this.mockMvc.perform(post("/api/v1/collections/2/ops/findMatch").content(map.writeValueAsBytes(example)).contentType(MediaType.APPLICATION_JSON)).andDo(print()).andExpect(status().isNotFound()).andReturn();
+    this.mockMvc.perform(post("/api/v1/collections/666/ops/findMatch").content(map.writeValueAsBytes(example)).contentType(MediaType.APPLICATION_JSON)).andDo(print()).andExpect(status().isNotFound()).andReturn();
 
     //search for type and return result ordered
     MvcResult res = this.mockMvc.perform(post("/api/v1/collections/1/ops/findMatch").content(map.writeValueAsBytes(example)).contentType(MediaType.APPLICATION_JSON)).andDo(print()).andExpect(status().isOk()).andReturn();
@@ -946,6 +951,20 @@ public class CollectionApiControllerTest{
 
     Assert.assertEquals("m2", members.getContents().get(0).getMid());
     Assert.assertEquals("m1", members.getContents().get(1).getMid());
+
+    example.setDatatype(null);
+    example.setLocation("localhost");
+
+    //search for type and return result not ordered
+    res = this.mockMvc.perform(post("/api/v1/collections/2/ops/findMatch").content(map.writeValueAsBytes(example)).contentType(MediaType.APPLICATION_JSON)).andDo(print()).andExpect(status().isOk()).andReturn();
+    result = res.getResponse().getContentAsString();
+    members = map.readValue(result, MemberResultSet.class);
+
+    Assert.assertNotNull(members);
+    Assert.assertEquals(2, members.getContents().size());
+
+    Assert.assertEquals("m1", members.getContents().get(0).getMid());
+    Assert.assertEquals("m3", members.getContents().get(1).getMid());
 
     example.setDatatype(null);
     example.setDescription("This is member two");
@@ -1073,8 +1092,7 @@ public class CollectionApiControllerTest{
     TestDataCreationHelper.initialize(collectionDao, memberDao).
             addCollection("1", "description", c1caps, CollectionProperties.getDefault()).
             addCollection("2", "description", c2caps, CollectionProperties.getDefault()).
-            addCollection("3", "description", c2caps, CollectionProperties.getDefault()).
-            addCollection("4", "description", c2caps, CollectionProperties.getDefault()).
+            addCollection("3", CollectionProperties.getDefault()).
             addMemberItem("1", "m2", "localhost").
             addMemberItem("1", "m1", "description", "type", "localhost", "o1", m1mapping).
             addMemberItem("2", "m3", "description", "type", "localhost", "o1", m3mapping).
