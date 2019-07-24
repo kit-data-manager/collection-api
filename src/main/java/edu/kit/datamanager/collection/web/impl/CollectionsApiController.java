@@ -5,7 +5,6 @@ import edu.kit.datamanager.collection.domain.CollectionObject;
 import edu.kit.datamanager.collection.domain.CollectionResultSet;
 import edu.kit.datamanager.collection.domain.MemberItem;
 import edu.kit.datamanager.collection.domain.MemberResultSet;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import edu.kit.datamanager.collection.dao.ICollectionObjectDao;
 import edu.kit.datamanager.collection.dao.IMemberItemDao;
 import edu.kit.datamanager.collection.web.CollectionsApi;
@@ -443,7 +442,7 @@ public class CollectionsApiController implements CollectionsApi{
 
     LOG.trace("Obtaining members from collections {}.", collectionIdList);
     List<Membership> itemList = helper.getColletionsMembershipsByFilters(collectionIdList, fDatatype, fIndex, fRole, fDateAdded, result.get().getCapabilities().getIsOrdered(), offset, pageSize);
-
+   
     MemberResultSet resultSet = new MemberResultSet();
     LOG.trace("Filling result set with {} results from result list.", itemList.size());
 

@@ -194,7 +194,7 @@ public class JPAQueryHelper{
       mappingPredicated.add(builder.equal(collectionMember.get("mappings").get("index"), index));
     }
     if(role != null){
-      mappingPredicated.add(builder.equal(collectionMember.get("mappings").get("role"), role));
+      mappingPredicated.add(builder.equal(collectionMember.get("mappings").get("memberRole"), role));
     }
     if(dateAdded != null){
       mappingPredicated.add(builder.equal(collectionMember.get("mappings").get("dateAdded"), dateAdded));
@@ -255,7 +255,7 @@ public class JPAQueryHelper{
       mappingPredicated.add(builder.equal(collectionMember.get("mappings").get("index"), index));
     }
     if(role != null){
-      mappingPredicated.add(builder.equal(collectionMember.get("mappings").get("role"), role));
+      mappingPredicated.add(builder.equal(collectionMember.get("mappings").get("memberRole"), role));
     }
     if(dateAdded != null){
       mappingPredicated.add(builder.equal(collectionMember.get("mappings").get("dateAdded"), dateAdded));

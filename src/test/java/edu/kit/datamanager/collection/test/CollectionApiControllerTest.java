@@ -29,6 +29,8 @@ import edu.kit.datamanager.collection.domain.MemberItem;
 import edu.kit.datamanager.collection.domain.MemberResultSet;
 import edu.kit.datamanager.collection.util.TestDataCreationHelper;
 import java.time.Instant;
+import java.time.ZoneOffset;
+import java.time.format.DateTimeFormatter;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -401,7 +403,6 @@ public class CollectionApiControllerTest{
       Assert.assertEquals(entry.getValue(), result);
     }
 
-  
     //put property for invalid membership -> return HTTP 404
     this.mockMvc.perform(put("/api/v1/collections/2/members/m1/properties/index").content("\"2\"").contentType(MediaType.APPLICATION_JSON)).andDo(print()).andExpect(status().isNotFound()).andReturn();
 
@@ -547,12 +548,25 @@ public class CollectionApiControllerTest{
     CollectionProperties collection2_props = CollectionProperties.getDefault();
     collection2_props.getMemberOf().add("1");
 
+    CollectionItemMappingMetadata m1Mapping = new CollectionItemMappingMetadata();
+    m1Mapping.setIndex(2);
+    m1Mapping.setMemberRole("default");
+    m1Mapping.setDateAdded(Instant.ofEpochMilli(0));
+
+    CollectionItemMappingMetadata m2Mapping = new CollectionItemMappingMetadata();
+    m2Mapping.setIndex(1);
+    m2Mapping.setMemberRole("special");
+    m2Mapping.setDateAdded(Instant.ofEpochMilli(0));
+
+    CollectionCapabilities c1Caps = CollectionCapabilities.getDefault();
+    c1Caps.setIsOrdered(Boolean.TRUE);
+
     TestDataCreationHelper.initialize(collectionDao, memberDao).
-            addCollection("1", CollectionProperties.getDefault()).
+            addCollection("1", "Description", c1Caps, CollectionProperties.getDefault()).
             addCollection("2", collection2_props).
             addCollection("3", CollectionProperties.getDefault()).
-            addMemberItem("1", "m1", "localhost").
-            addMemberItem("1", "m2", "localhost").
+            addMemberItem("1", "m1", "description", "customType", "localhost", "o1", m1Mapping).
+            addMemberItem("1", "m2", "description", "customType", "localhost", "o2", m2Mapping).
             addMemberItem("1", "2", "localhost").
             addMemberItem("2", "m3", "localhost").
             persist();
@@ -581,6 +595,48 @@ public class CollectionApiControllerTest{
     Assert.assertNull(resultSet.getNextCursor());
     Assert.assertNull(resultSet.getPrevCursor());
 
+    ///
+    //Filter Tests
+    ///
+    //find by member type, role and idnex -> expect 1 result
+    res = this.mockMvc.perform(get("/api/v1/collections/1/members").param("f_datatype", "customType").param("f_role", "special").param("f_index", "1")).andDo(print()).andExpect(status().isOk()).andReturn();
+    result = res.getResponse().getContentAsString();
+    resultSet = map.readValue(result, MemberResultSet.class);
+    Assert.assertNotNull(resultSet);
+    Assert.assertEquals(1, resultSet.getContents().size());
+
+    Assert.assertNotNull(IterableUtils.find(resultSet.getContents(), (m) -> {
+      return m.getMid().equals("m2");
+    }));
+
+    //find by dateAdded OR anyRole
+    res = this.mockMvc.perform(get("/api/v1/collections/1/members").param("f_dateAdded", DateTimeFormatter.ISO_DATE_TIME.withZone(ZoneOffset.UTC).format(Instant.ofEpochMilli(0))).param("f_role", "anyRole")).andDo(print()).andExpect(status().isOk()).andReturn();
+    result = res.getResponse().getContentAsString();
+    resultSet = map.readValue(result, MemberResultSet.class);
+    Assert.assertNotNull(resultSet);
+    Assert.assertEquals(2, resultSet.getContents().size());
+
+    Assert.assertNotNull(IterableUtils.find(resultSet.getContents(), (m) -> {
+      return m.getMid().equals("m1");
+    }));
+
+    Assert.assertNotNull(IterableUtils.find(resultSet.getContents(), (m) -> {
+      return m.getMid().equals("m2");
+    }));
+
+    //return ordered
+    res = this.mockMvc.perform(get("/api/v1/collections/1/members")).andDo(print()).andExpect(status().isOk()).andReturn();
+    result = res.getResponse().getContentAsString();
+    resultSet = map.readValue(result, MemberResultSet.class);
+    Assert.assertNotNull(resultSet);
+    Assert.assertEquals(3, resultSet.getContents().size());
+    Assert.assertEquals("2", resultSet.getContents().get(0).getMid());
+    Assert.assertEquals("m2", resultSet.getContents().get(1).getMid());
+    Assert.assertEquals("m1", resultSet.getContents().get(2).getMid());
+
+    ///
+    //Pagination Tests
+    ///
     //check page 0 with page size one -> return one element including next page link
     res = this.mockMvc.perform(get("/api/v1/collections/1/members").param("size", "1")).andDo(print()).andExpect(status().isOk()).andReturn();
     result = res.getResponse().getContentAsString();
