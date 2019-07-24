@@ -2,7 +2,23 @@
 
 This project provides an implementation of the Collection API as it was proposed by the RDA Recommendation on Research Data Collections [doi: 10.15497/RDA00022](https://zenodo.org/record/2428145#.XTbIMZMzbbA). 
 The Collection API is implemented as Spring Boot-based Microservice and can be used for building collections of digital objects in a generic way independent
-from any repository managing the digital objects. 
+from any repository managing the digital objects. The implementation is complete with regard to the recommendations supporting pagination, collection sorting, and listing of sub-collections.
+
+## Differences and Improvements
+
+As some aspects of the Collection API are not clearly defined by the recommendation, this implementation contains some fixes [FIX], additions [ADD] and 
+restrictions [RES]
+marked with the according tag. In all other cases the implementation is expected to behave as recommended.
+
+* [FIX] Return type inconsistencies have been fixed, e.g. in /collections/{id}/members/{mid}
+* [FIX] Delete operations return status 204 (NO_CONTENT) according to the HTTP specification
+* [FIX] Delete operations are realized idempotent following the HTTP specification. This means, that DELETE can be issued multiple times to a resource and returns HTTP 204 in all cases.
+* [FIX] Collection operations allow navigation the same way all other operations do, e.g. via prev and next links.
+* [RES] Listing a collection recursively does not consider the sorting of child elements.
+* [RES] A recursive listing of a collection will also contain member items of expanded collections. The recommendation document was not clear on this.
+* [RES] There is currently no build-in PID support. If no PID are provided with a collection or member, a UUID is assigned.
+* [ADD] Integrated ETag support in order to avoid concurrent modifications.
+* [ADD] Navigation through a result set is realized using default Spring pagination, e.g. supporting page and size query parameters. The cursors (next and prev) of a result set are pointing to the next/prev page link.
 
 ## How to build
 
@@ -32,9 +48,8 @@ libraries and finally build the base-repo microservice itself. As a result, a fa
 
 ### Setup
 Before you are able to start the microservice, you have to modify the file 'application.properties' according to your local setup. 
-Therefor, copy the file 'conf/application.properties' to your project folder and customize it. 
-For the Collection API you just have to adapt the properties of spring.datasource 
-All other properties might be ignored for the time being.
+Therefor, copy the file 'conf/application.properties' to your project folder and customize it. For the Collection API you just have to adapt the properties of 
+spring.datasource and you may change the server.port property. All other properties can be ignored for the time being.
 
 As soon as you finished modifying 'application.properties', you may start the repository microservice by executing the following command inside the project folder, 
 e.g. where the service has been built before:
