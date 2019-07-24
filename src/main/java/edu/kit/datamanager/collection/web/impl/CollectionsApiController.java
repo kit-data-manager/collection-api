@@ -65,7 +65,7 @@ public class CollectionsApiController implements CollectionsApi{
   private EntityManager em;
 
   @org.springframework.beans.factory.annotation.Autowired
-  public CollectionsApiController( HttpServletRequest request){
+  public CollectionsApiController(HttpServletRequest request){
     this.request = request;
   }
 
@@ -442,7 +442,7 @@ public class CollectionsApiController implements CollectionsApi{
 
     LOG.trace("Obtaining members from collections {}.", collectionIdList);
     List<Membership> itemList = helper.getColletionsMembershipsByFilters(collectionIdList, fDatatype, fIndex, fRole, fDateAdded, result.get().getCapabilities().getIsOrdered(), offset, pageSize);
-   
+
     MemberResultSet resultSet = new MemberResultSet();
     LOG.trace("Filling result set with {} results from result list.", itemList.size());
 
@@ -570,15 +570,7 @@ public class CollectionsApiController implements CollectionsApi{
       }
 
       LOG.trace("Obtaining membership collection.");
-      Optional<CollectionObject> optionalCollection = collectionDao.findById(id);
-
-      if(optionalCollection.isEmpty()){
-        //this should never happen due to foreign key constraints
-        LOG.debug("Collection with id {} not found. Inconsistent database error.", id);
-        return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
-      }
-
-      CollectionObject collection = optionalCollection.get();
+      CollectionObject collection = collectionDao.findById(id).get();
 
       if(collection.getCapabilities() != null && !collection.getCapabilities().getMembershipIsMutable()){
         LOG.warn("Memberships of collection with id {} are immutable. Returning HTTP 403.", id);

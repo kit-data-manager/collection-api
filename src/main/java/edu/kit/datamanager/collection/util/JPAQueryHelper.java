@@ -323,10 +323,6 @@ public class JPAQueryHelper{
               .where(here));
     }
 
-    if(offset < 0){
-      return typedQuery.getResultList();
-    }
-
     return typedQuery.setFirstResult(offset).setMaxResults(maxResults).getResultList();
 
   }
@@ -436,7 +432,7 @@ public class JPAQueryHelper{
 
     TypedQuery<Long> typedQuery = entityManager.createQuery(query
             .select(builder.countDistinct(leftJoin))
-            .where(builder.and(matchLeftId, matchRightId, builder.equal(leftJoin.get("member").get("mid"), rightJoin.get("member").get("mid")))).orderBy(builder.asc(leftJoin.get("mappings").get("index")))
+            .where(builder.and(matchLeftId, matchRightId, builder.equal(leftJoin.get("member").get("mid"), rightJoin.get("member").get("mid"))))
     );
 
     return typedQuery.getSingleResult();
