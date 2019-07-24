@@ -32,7 +32,6 @@ import javax.persistence.criteria.CriteriaQuery;
 import javax.persistence.criteria.Join;
 import javax.persistence.criteria.Predicate;
 import javax.persistence.criteria.Root;
-import javax.persistence.criteria.Selection;
 
 /**
  * Query helper in order to manage complex database queries not possible
@@ -221,24 +220,6 @@ public class JPAQueryHelper{
     }
 
     return typedQuery.setFirstResult(offset).setMaxResults(maxResults).getResultList();
-  }
-
-  /**
-   * A helper method calling
-   * {@link #getColletionsMembershipsByFilters(java.lang.String, java.lang.String, java.lang.Integer, java.lang.String, java.time.Instant, int, int)}
-   * without offset and maxResults.
-   *
-   * @param collectionIds A list of collectionsIds to obtain all members from.
-   * @param memberType The memberType property of any member item.
-   * @param index The index of the member in the collection.
-   * @param role The role of the member in the collection.
-   * @param dateAdded The date at which the member was added to the collection.
-   * @param ordered TRUE if the collection is ordered, FALSE otherwise.
-   *
-   * @return A list of memberships.
-   */
-  public List<Membership> getColletionsMembershipsByFilters(List<String> collectionIds, String memberType, Integer index, String role, Instant dateAdded, boolean ordered){
-    return getColletionsMembershipsByFilters(collectionIds, memberType, index, role, dateAdded, ordered, -1, -1);
   }
 
   /**

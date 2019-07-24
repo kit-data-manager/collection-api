@@ -40,6 +40,12 @@ public class TestDataCreationHelper{
   Map<String, CollectionObject> collections = new HashMap<>();
   Map<String, MemberItem> members = new HashMap<>();
 
+  /**
+   * Initialize the builder.
+   *
+   * @param collectionDao DAO interface to store collection.
+   * @param memberDao DAO interface to store members.
+   */
   public static TestDataCreationHelper initialize(ICollectionObjectDao collectionDao, IMemberItemDao memberDao){
     TestDataCreationHelper helper = new TestDataCreationHelper();
     helper.collectionDao = collectionDao;
@@ -47,6 +53,16 @@ public class TestDataCreationHelper{
     return helper;
   }
 
+  /**
+   * Add a new collection.
+   *
+   * @param id The collectionId.
+   * @param description The collection description.
+   * @param caps The CollectionCapabilities.
+   * @param props The CollectionProperties.
+   *
+   * @return this
+   */
   public TestDataCreationHelper addCollection(String id, String description, CollectionCapabilities caps, CollectionProperties props){
     CollectionObject o = new CollectionObject();
     o.setId(id);
@@ -57,14 +73,33 @@ public class TestDataCreationHelper{
     return this;
   }
 
-  public TestDataCreationHelper addCollection(String id, String description, CollectionProperties props){
-    return this.addCollection(id, description, CollectionCapabilities.getDefault(), props);
-  }
-
+  /**
+   * Add a new collection.
+   *
+   * @param id The collectionId.
+   * @param props The CollectionProperties.
+   *
+   * @return this
+   */
   public TestDataCreationHelper addCollection(String id, CollectionProperties props){
     return this.addCollection(id, null, CollectionCapabilities.getDefault(), props);
   }
 
+  /**
+   * Add a new collection member item. In contrast to collections, members are
+   * already persisted at this point in order to obtain a valid database key in
+   * case a member should be part in two collections.
+   *
+   * @param collectionId The collectionId.
+   * @param id The memberId.
+   * @param description The member description.
+   * @param dataType The member datatype.
+   * @param location The member location.
+   * @param ontology The member ontology.
+   * @param mappings The CollectionItemMappingsMetadata.
+   *
+   * @return this
+   */
   public TestDataCreationHelper addMemberItem(String collectionId, String id, String description, String dataType, String location, String ontology, CollectionItemMappingMetadata mappings){
     MemberItem o;
     if(members.containsKey(id)){
@@ -88,37 +123,37 @@ public class TestDataCreationHelper{
     return this;
   }
 
-  public TestDataCreationHelper addMemberItem(String collectionId, String id, String description, String dataType, String location, String ontology){
-    return this.addMemberItem(collectionId, id, description, dataType, location, ontology, null);
-  }
-
-  public TestDataCreationHelper addMemberItem(String collectionId, String id, String description, String dataType, String location){
-    return this.addMemberItem(collectionId, id, description, dataType, location, null, null);
-  }
-
+  /**
+   * Add a new collection member item.
+   *
+   * @param collectionId The collectionId.
+   * @param id The memberId.
+   * @param location The member location.
+   *
+   * @return this
+   */
   public TestDataCreationHelper addMemberItem(String collectionId, String id, String location){
     return this.addMemberItem(collectionId, id, null, null, location, null, null);
   }
 
+  /**
+   * Add a new collection member item.
+   *
+   * @param collectionId The collectionId.
+   * @param id The memberId.
+   * @param dataType The member datatype.
+   * @param location The member location.
+   *
+   * @return this
+   */
   public TestDataCreationHelper addMemberItem(String collectionId, String id, String dataType, String location){
     return this.addMemberItem(collectionId, id, null, dataType, location, null, null);
   }
 
-  public TestDataCreationHelper addCollectionToCollection(String parentCollectionId, String childCollectionId){
-    CollectionObject child = collections.get(childCollectionId);
-    if(child.getProperties() == null){
-      child.setProperties(CollectionProperties.getDefault());
-    }
-    child.getProperties().getMemberOf().add(parentCollectionId);
-    return this;
-  }
-
+  /**
+   * Finalize this builder by persisting all added collections and members..
+   */
   public void persist(){
-//    Set<Entry<String, MemberItem>> memberEntries = members.entrySet();
-//    memberEntries.forEach((entry) -> {
-//      MemberItem result = memberDao.save(entry.getValue());
-//      entry.getValue().setId(result.getId());
-//    });
 
     Set<Entry<String, CollectionObject>> collectionEntries = collections.entrySet();
     collectionEntries.forEach((entry) -> {
