@@ -1,0 +1,3 @@
+[submodule "libraries/service-base"]
+	path = libraries/service-base
+	url = https://github.com/kit-data-manager/service-base.git

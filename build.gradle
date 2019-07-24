@@ -48,6 +48,17 @@ lombok {
    sha256 = ""
 }
 
+
+if (project.hasProperty('travis')) {
+   println 'Using travis profile for building ' + project.getName()
+   apply from: 'gradle/build_dependencies.gradle'
+   apply from: 'gradle/profile-travis.gradle'
+} else if (project.hasProperty('release') || project.hasProperty('clean-release')) {
+   println 'Using release profile for building ' + project.getName()
+   apply from: 'gradle/build_dependencies.gradle'
+   apply from: 'gradle/profile-release.gradle'   
+}
+
 dependencies {
    compile("org.springframework.boot:spring-boot-starter-data-rest")
    compile("org.springframework.boot:spring-boot-starter-data-jpa")
@@ -86,8 +97,8 @@ dependencies {
 
    testCompile('org.springframework.restdocs:spring-restdocs-mockmvc:2.0.2.RELEASE')
    testCompile('org.asciidoctor:asciidoctor-gradle-plugin:1.5.9.2')
-   asciidoctor('org.springframework.restdocs:spring-restdocs-asciidoctor:2.0.2.RELEASE')
-   asciidoctor('com.github.allati.asciidoctor.monotree:asciidoctor-extension-monotree:0.0.1')
+ // asciidoctor('org.springframework.restdocs:spring-restdocs-asciidoctor:2.0.2.RELEASE')
+ // asciidoctor('com.github.allati.asciidoctor.monotree:asciidoctor-extension-monotree:0.0.1')
 }
 
 bootJar {
