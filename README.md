@@ -1,7 +1,4 @@
-# Metrics
-
 # Collection API
-
 
 ![Build Status](https://img.shields.io/travis/kit-data-manager/collection-api.svg)
 ![Code Coverage](https://img.shields.io/coveralls/github/kit-data-manager/collection-api.svg)
