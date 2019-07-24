@@ -236,12 +236,12 @@ public class CollectionApiControllerTest{
     this.mockMvc.perform(delete("/api/v1/collections/1")).andDo(print()).andExpect(status().isPreconditionRequired()).andReturn();
 
     //delete collection with id 1
-    this.mockMvc.perform(delete("/api/v1/collections/1").header("If-Match", etag)).andDo(print()).andExpect(status().isOk()).andReturn();
+    this.mockMvc.perform(delete("/api/v1/collections/1").header("If-Match", etag)).andDo(print()).andExpect(status().isNoContent()).andReturn();
 
-    //delete collection with id 1 a second time (should result in 404)
-    this.mockMvc.perform(delete("/api/v1/collections/1").header("If-Match", etag)).andDo(print()).andExpect(status().isNotFound()).andReturn();
+    //delete collection with id 1 a second time (should result in 204)
+    this.mockMvc.perform(delete("/api/v1/collections/1").header("If-Match", etag)).andDo(print()).andExpect(status().isNoContent()).andReturn();
 
-    //get collection with id 1 should fail now
+    //get collection with id 1 (should result in 404)
     this.mockMvc.perform(get("/api/v1/collections/1").header("If-Match", etag)).andDo(print()).andExpect(status().isNotFound()).andReturn();
   }
 
@@ -283,10 +283,10 @@ public class CollectionApiControllerTest{
     String etag = res.getResponse().getHeader("ETag");
 
     //delete membership of member 1 and collection 1
-    this.mockMvc.perform(delete("/api/v1/collections/1/members/m1").header("If-Match", etag)).andDo(print()).andExpect(status().isOk()).andReturn();
+    this.mockMvc.perform(delete("/api/v1/collections/1/members/m1").header("If-Match", etag)).andDo(print()).andExpect(status().isNoContent()).andReturn();
 
     //delete membership of member 1 and collection 1 a second time
-    this.mockMvc.perform(delete("/api/v1/collections/1/members/m1")).andDo(print()).andExpect(status().isNotFound()).andReturn();
+    this.mockMvc.perform(delete("/api/v1/collections/1/members/m1")).andDo(print()).andExpect(status().isNoContent()).andReturn();
 
     //membership should no longer be found
     this.mockMvc.perform(get("/api/v1/collections/1/members/m1")).andDo(print()).andExpect(status().isNotFound()).andReturn();
@@ -300,8 +300,8 @@ public class CollectionApiControllerTest{
     res = this.mockMvc.perform(get("/api/v1/collections/1/members/2")).andDo(print()).andExpect(status().isOk()).andReturn();
     etag = res.getResponse().getHeader("ETag");
 
-    //delete membership with collection from collection -> return with OK
-    this.mockMvc.perform(delete("/api/v1/collections/1/members/2").header("If-Match", etag)).andDo(print()).andExpect(status().isOk()).andReturn();
+    //delete membership with collection from collection -> return with NO CONTENT
+    this.mockMvc.perform(delete("/api/v1/collections/1/members/2").header("If-Match", etag)).andDo(print()).andExpect(status().isNoContent()).andReturn();
 
     res = this.mockMvc.perform(get("/api/v1/collections/2")).andDo(print()).andExpect(status().isOk()).andReturn();
     CollectionObject collection2 = map.readValue(res.getResponse().getContentAsString(), CollectionObject.class);
@@ -346,7 +346,7 @@ public class CollectionApiControllerTest{
       Assert.assertNotEquals(0, result.length);
 
       //delete property
-      this.mockMvc.perform(delete("/api/v1/collections/1/members/m1/properties/" + element).header("If-Match", etag)).andDo(print()).andExpect(status().isOk()).andReturn();
+      this.mockMvc.perform(delete("/api/v1/collections/1/members/m1/properties/" + element).header("If-Match", etag)).andDo(print()).andExpect(status().isNoContent()).andReturn();
 
       res = this.mockMvc.perform(get("/api/v1/collections/1/members/m1/properties/" + element)).andDo(print()).andExpect(status().isOk()).andReturn();
       result = res.getResponse().getContentAsByteArray();

@@ -53,8 +53,6 @@ public class CollectionsApiController implements CollectionsApi{
 
   private static final Logger LOG = LoggerFactory.getLogger(CollectionsApiController.class);
 
-  private final ObjectMapper objectMapper;
-
   private final HttpServletRequest request;
 
   @Autowired
@@ -68,8 +66,7 @@ public class CollectionsApiController implements CollectionsApi{
   private EntityManager em;
 
   @org.springframework.beans.factory.annotation.Autowired
-  public CollectionsApiController(ObjectMapper objectMapper, HttpServletRequest request){
-    this.objectMapper = objectMapper;
+  public CollectionsApiController( HttpServletRequest request){
     this.request = request;
   }
 
@@ -267,18 +264,17 @@ public class CollectionsApiController implements CollectionsApi{
     LOG.trace("Calling collectionsIdDelete({}).", id);
     Optional<CollectionObject> result = collectionDao.findById(id);
 
-    if(result.isEmpty()){
-      LOG.debug("No collection with id {} found.", id);
-      return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+    if(!result.isEmpty()){
+      ControllerUtils.checkEtag(request, result.get());
+
+      LOG.trace("Deleting collection with id {}.", id);
+      collectionDao.delete(result.get());
+
+      LOG.trace("Returning HTTP 204.");
+    } else{
+      LOG.trace("No collection with id {} found. Returning HTTP 204.", id);
     }
-
-    ControllerUtils.checkEtag(request, result.get());
-
-    LOG.trace("Deleting collection with id {}.", id);
-    collectionDao.delete(result.get());
-
-    LOG.trace("Returning HTTP 200.");
-    return new ResponseEntity<>(HttpStatus.OK);
+    return new ResponseEntity<>(HttpStatus.NO_CONTENT);
   }
 
   @Override
@@ -558,52 +554,52 @@ public class CollectionsApiController implements CollectionsApi{
     LOG.trace("Calling collectionsIdMembersMidDelete({}, {}).", id, mid);
     Optional<Membership> membership = new JPAQueryHelper(em).getMembershipByMid(id, mid);
 
-    if(membership.isEmpty()){
-      LOG.debug("No membership for collection with id {} and member with id {} found.", id, mid);
-      return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+    if(!membership.isEmpty()){
+
+      MemberItem item = membership.get().getMember();
+      item.setMappings(membership.get().getMappings());
+
+      ControllerUtils.checkEtag(request, item);
+
+      CollectionObject memberCollection = null;
+      LOG.trace("Checking if member id {} is a collection.", mid);
+      Optional<CollectionObject> optionalMemberCollection = collectionDao.findById(mid);
+      if(optionalMemberCollection.isPresent()){
+        memberCollection = optionalMemberCollection.get();
+        LOG.trace("Member is a collection. Removing collection id {} from 'memberOf' list of collection with id {}.", id, mid);
+        memberCollection.getProperties().getMemberOf().remove(id);
+      }
+
+      LOG.trace("Obtaining membership collection.");
+      Optional<CollectionObject> optionalCollection = collectionDao.findById(id);
+
+      if(optionalCollection.isEmpty()){
+        //this should never happen due to foreign key constraints
+        LOG.debug("Collection with id {} not found. Inconsistent database error.", id);
+        return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
+      }
+
+      CollectionObject collection = optionalCollection.get();
+
+      if(collection.getCapabilities() != null && !collection.getCapabilities().getMembershipIsMutable()){
+        LOG.warn("Memberships of collection with id {} are immutable. Returning HTTP 403.", id);
+        return new ResponseEntity<>(HttpStatus.FORBIDDEN);
+      }
+
+      LOG.trace("Deleting membership for collection {} and member {}.", id, mid);
+      collection.getMembers().remove(membership.get());
+      LOG.trace("Persisting updated collection with id {}.", id);
+      collectionDao.save(collection);
+      if(memberCollection != null){
+        LOG.trace("Persisting updated member collection with id {}.", mid);
+        collectionDao.save(memberCollection);
+      }
+
+      LOG.trace("Returning HTTP 204.");
+    } else{
+      LOG.trace("No membership for collection with id {} and member with id {} found. Returning HTTP 204.", id, mid);
     }
-
-    MemberItem item = membership.get().getMember();
-    item.setMappings(membership.get().getMappings());
-
-    ControllerUtils.checkEtag(request, item);
-
-    CollectionObject memberCollection = null;
-    LOG.trace("Checking if member id {} is a collection.", mid);
-    Optional<CollectionObject> optionalMemberCollection = collectionDao.findById(mid);
-    if(optionalMemberCollection.isPresent()){
-      memberCollection = optionalMemberCollection.get();
-      LOG.trace("Member is a collection. Removing collection id {} from 'memberOf' list of collection with id {}.", id, mid);
-      memberCollection.getProperties().getMemberOf().remove(id);
-    }
-
-    LOG.trace("Obtaining membership collection.");
-    Optional<CollectionObject> optionalCollection = collectionDao.findById(id);
-
-    if(optionalCollection.isEmpty()){
-      //this should never happen due to foreign key constraints
-      LOG.debug("Collection with id {} not found. Inconsistent database error.", id);
-      return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
-    }
-
-    CollectionObject collection = optionalCollection.get();
-
-    if(collection.getCapabilities() != null && !collection.getCapabilities().getMembershipIsMutable()){
-      LOG.warn("Memberships of collection with id {} are immutable. Returning HTTP 403.", id);
-      return new ResponseEntity<>(HttpStatus.FORBIDDEN);
-    }
-
-    LOG.trace("Deleting membership for collection {} and member {}.", id, mid);
-    collection.getMembers().remove(membership.get());
-    LOG.trace("Persisting updated collection with id {}.", id);
-    collectionDao.save(collection);
-    if(memberCollection != null){
-      LOG.trace("Persisting updated member collection with id {}.", mid);
-      collectionDao.save(memberCollection);
-    }
-
-    LOG.trace("Returning HTTP 200.");
-    return new ResponseEntity<>(HttpStatus.OK);
+    return new ResponseEntity<>(HttpStatus.NO_CONTENT);
   }
 
   @Override
@@ -777,8 +773,8 @@ public class CollectionsApiController implements CollectionsApi{
 
     LOG.trace("Persisting updated membership.");
     membershipDao.save(membershipItem);
-    LOG.trace("Returning HTTP 200.");
-    return new ResponseEntity<>(HttpStatus.OK);
+    LOG.trace("Returning HTTP 204.");
+    return new ResponseEntity<>(HttpStatus.NO_CONTENT);
   }
 ////////////////////////////
 ////COLLECTION OPS
