@@ -108,14 +108,14 @@ public class CollectionApiControllerTest{
 
   @Test
   public void testGetCollectionsD3() throws Exception{
-    TestDataCreationHelper.initialize(collectionDao, memberDao).addCollection("1", CollectionProperties.getDefault()).addCollection("2", CollectionProperties.getDefault()).persist();
+    TestDataCreationHelper.initialize(collectionDao, memberDao).addCollection("1", CollectionProperties.getDefault()).addCollection("2", CollectionProperties.getDefault()).addMemberItem("1", "1", "localhost").addMemberItem("1", "2", "lcalhost").persist();
 
     MvcResult res = this.mockMvc.perform(get("/api/v1/collections/").header("Accept", "application/vnd.datamanager.d3+json")).andDo(print()).andExpect(status().isOk()).andReturn();
     ObjectMapper map = new ObjectMapper();
     DataWrapper result = map.readValue(res.getResponse().getContentAsString(), DataWrapper.class);
     Assert.assertNotNull(result);
     Assert.assertEquals(2, result.getNodes().size());
-    Assert.assertEquals(0, result.getLinks().size());
+    Assert.assertEquals(2, result.getLinks().size());
   }
 
   @Test
