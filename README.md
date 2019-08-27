@@ -1,10 +1,8 @@
-# Metrics
+# Collection API
 
 ![Build Status](https://img.shields.io/travis/kit-data-manager/collection-api.svg)
 ![Code Coverage](https://img.shields.io/coveralls/github/kit-data-manager/collection-api.svg)
 ![License](https://img.shields.io/github/license/kit-data-manager/collection-api.svg)
-
-# Collection API
 
 This project provides an implementation of the Collection API as it was proposed by the RDA Recommendation on Research Data Collections [doi: 10.15497/RDA00022](https://zenodo.org/record/2428145#.XTbIMZMzbbA). 
 The Collection API is implemented as Spring Boot-based Microservice and can be used for building collections of digital objects in a generic way independent
