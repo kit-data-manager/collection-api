@@ -1,0 +1,319 @@
+<!DOCTYPE html>
+<head>
+   <style>
+      .flex-container {
+         display: flex;
+         flex-direction: column;
+         flex-wrap: wrap;
+         flex-flow: column wrap;
+         /*width: 100%;*/
+         align-content: center;
+         margin: 0 15px;
+      }
+
+      .flex-container-horizontal {
+         display: flex;
+         flex-direction: column;
+         width: 90%;
+         flex-grow: 1;
+         justify-content: flex-start;
+         align-items: stretch;
+      }
+
+
+      form ul
+      {
+         font-size:100%;
+         list-style-type:none;
+         margin:0;
+         padding:0;
+         width:100%;
+      }
+
+      .search_field{
+         padding: 20px 0px 20px 0px;
+      }
+
+      .drawing_pane
+      {
+         background: #EEEEEE;
+      }
+
+   </style>
+   <link rel="stylesheet" href="https://unpkg.com/purecss@1.0.1/build/pure-min.css" crossorigin="anonymous">
+   <link rel="stylesheet" href="jsonform/bootstrap.css" />
+
+   <!--link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bulma/0.7.5/css/bulma.css" crossorigin="anonymous"-->
+
+   <title>Collection API Overview</title>
+</head>
+
+<body>
+
+   <div class="flex-container">
+      <div class="flex-item"> 
+         <svg id='drawing' class='drawing_pane' width="100%" height="600"></svg></div>
+      <div class="flex-container-horizontal">
+         <div class='search_field'>
+            <label for='search'>Search</label>
+            <div class='controls'>
+               <input id="search" title="Add a search pattern and press Return." name="Search" onchange="doSearch()"/>
+            </div>
+         </div>
+         <form id='form-collection' style='display:none'></form>
+         <form id='form-item' style='display:none'></form>        
+      </div>
+   </div>
+
+   <script type="text/javascript" src="http://d3js.org/d3.v4.min.js"></script>
+   <script type="text/javascript" src="https://d3js.org/d3-selection-multi.v1.min.js"></script>
+   <script type="text/javascript" src="https://d3js.org/d3-color.v1.min.js"></script>
+   <script type="text/javascript" src="https://d3js.org/d3-interpolate.v1.min.js"></script>
+   <script type="text/javascript" src="https://d3js.org/d3-scale-chromatic.v1.min.js"></script>
+   <script type="text/javascript" src="jsonform/jquery.min.js"></script>
+   <script type="text/javascript" src="jsonform/underscore.js"></script>
+   <script type="text/javascript" src="jsonform/jsv.js"></script>
+   <script type="text/javascript" src="jsonform/jsonform.js"></script>
+
+   <script>
+                  $.getJSON("https://api.myjson.com/bins/6l52j", function (json) {
+                     $('#form-collection').jsonForm(json);
+                  });
+
+                  $.getJSON("https://api.myjson.com/bins/i4irv", function (json) {
+                     $('#form-item').jsonForm(json);
+                  });
+
+
+                  var locked = null;
+                  var update = false;
+                  var collectionFormId = 'jsonform-1';
+                  var fileFormId = 'jsonform-2';
+
+                  if (document.getElementById('jsonform-2-elt-location') === null) {
+                     collectionFormId = 'jsonform-2';
+                     fileFormId = 'jsonform-1';
+                  }
+
+                  console.log(collectionFormId + " , " + fileFormId);
+
+                  var colorScale = d3.scaleOrdinal(d3.schemeCategory10);
+
+                  function showInformation(d, i) {
+                     if (locked !== null && !update) {
+                        //element selected, check if selected element is locked
+                        return;
+                     }
+
+                     update = false;
+                     if (d.__proto__.type === "COLLECTION") {
+                        document.getElementById('form-item').style.display = 'none';
+                        document.getElementById('form-collection').style.display = 'block';
+
+                        document.getElementById(collectionFormId + '-elt-id').value = d.id;
+                        document.getElementById(collectionFormId + '-elt-description').value = d.description;
+
+                        document.getElementById(collectionFormId + '-elt-collection_properties.dateCreated').value = d.__proto__.properties.dateCreated;
+                        document.getElementById(collectionFormId + '-elt-collection_properties.ownership').value = d.__proto__.properties.ownership;
+                        document.getElementById(collectionFormId + '-elt-collection_properties.license').value = d.__proto__.properties.license;
+                        document.getElementById(collectionFormId + '-elt-collection_properties.modelType').value = d.__proto__.properties.modelType;
+                        document.getElementById(collectionFormId + '-elt-collection_properties.descriptionOntology').value = d.__proto__.properties.descriptionOntology;
+                        document.getElementById(collectionFormId + '-elt-collection_properties.hasAccessRestrictions').value = d.__proto__.properties.hasAccessRestrictions;
+
+                        document.getElementById(collectionFormId + '-elt-collection_capabilities.isOrdered').checked = d.__proto__.capabilities.isOrdered;
+                        document.getElementById(collectionFormId + '-elt-collection_capabilities.appendsToEnd').checked = d.__proto__.capabilities.appendsToEnd;
+                        document.getElementById(collectionFormId + '-elt-collection_capabilities.supportsRoles').checked = d.__proto__.capabilities.supportsRoles;
+                        document.getElementById(collectionFormId + '-elt-collection_capabilities.membershipIsMutable').checked = d.__proto__.capabilities.membershipIsMutable;
+                        document.getElementById(collectionFormId + '-elt-collection_capabilities.propertiesAreMutable').checked = d.__proto__.capabilities.propertiesAreMutable;
+                        document.getElementById(collectionFormId + '-elt-collection_capabilities.restrictedToType').value = d.__proto__.capabilities.restrictedToType;
+                        document.getElementById(collectionFormId + '-elt-collection_capabilities.maxLength').value = d.__proto__.capabilities.maxLength;
+                     } else {
+                        document.getElementById('form-item').style.display = 'block';
+                        document.getElementById('form-collection').style.display = 'none';
+
+                        document.getElementById(fileFormId + '-elt-id').value = d.id;
+                        document.getElementById(fileFormId + '-elt-description').value = d.description;
+                        document.getElementById(fileFormId + '-elt-location').value = d.location;
+                        document.getElementById(fileFormId + '-elt-datatype').value = d.dataType;
+                        document.getElementById(fileFormId + '-elt-ontology').value = d.ontology;
+
+                        document.getElementById(fileFormId + '-elt-mapping.role').value = d.__proto__.mapping.memberRole;
+                        document.getElementById(fileFormId + '-elt-mapping.index').value = d.__proto__.mapping.index;
+                        document.getElementById(fileFormId + '-elt-mapping.dateAdded').value = d.__proto__.mapping.dateAdded;
+                        document.getElementById(fileFormId + '-elt-mapping.dateUpdated').value = d.__proto__.mapping.dateUpdated;
+                     }
+                  }
+
+                  function hideInformation() {
+                     if (locked === null) {
+                        document.getElementById('form-item').style.display = 'none';
+                        document.getElementById('form-collection').style.display = 'none';
+                        $("fieldset").removeClass('expanded');
+                        $("fieldset > div").css('display', 'none');
+                     }
+                  }
+
+
+                  function lockInformation(d, i) {
+                     d3.select("svg").selectAll("circle").attr("fill", function (d, i_i) {
+                        if (i_i === locked) {
+                           return colorScale(d.type);
+                        }
+                        if (i_i !== i) {
+                           return d3.select(this).attr("fill");
+                        }
+
+                        return "#FF0000";
+                     });
+
+                     if (i === locked) {
+                        locked = null;
+                     } else {
+                        locked = i;
+                        update = true;
+                        showInformation(d, i);
+                     }
+
+                  }
+
+                  function doSearch() {
+                     var searchValue = document.getElementById("search").value;
+
+                     //set color of all circles
+                     d3.select("svg").selectAll("circle").attr("fill", function (d, i) {
+                        if (searchValue === null) {
+                           return colorScale(d.type);
+                        }
+                        return "#EEE";
+                     });
+
+                     d3.select("svg").selectAll("line").attr("opacity", function (d1, i) {
+                        if (searchValue === null) {
+                           return 1.0;
+                        }
+                        //check if id of source or target are matching search term
+                        if (d1.__proto__.source.includes(searchValue) || d1.__proto__.target.includes(searchValue)) {
+                           //check all circles for being start or end of current line
+                           d3.select("svg").selectAll("circle").attr("fill", function (d, i) {
+                              if (i === d1.source.index || i === d1.target.index) {
+                                 //show matching circle at full color
+                                 return colorScale(d.type);
+                              } else {
+                                 //show not matching circle at faded color
+                                 return d3.select(this).attr("fill");
+                              }
+                           });
+                           //full line opacity for matching connection 
+                           return 1.0;
+                        } else {
+                           //reduced line opacity for not matching connection
+                           return .2;
+                        }
+                     });
+                  }
+
+                  d3.request("http://localhost:8070/api/v1/collections/").header("Accept", "application/vnd.datamanager.d3+json").get(function (data) {
+
+                     var data = JSON.parse(data.response);
+
+                     const links = data.links.map(d => Object.create(d));
+                     const nodes = data.nodes.map(d => Object.create(d));
+
+                     drag = simulation => {
+
+                        function dragstarted(d) {
+                           if (!d3.event.active)
+                              simulation.alphaTarget(0.1).restart();
+                           d.fx = d.x;
+                           d.fy = d.y;
+                        }
+
+                        function dragged(d) {
+                           d.fx = d3.event.x;
+                           d.fy = d3.event.y;
+                        }
+
+                        function dragended(d) {
+                           if (!d3.event.active)
+                              simulation.alphaTarget(0);
+                           d.fx = null;
+                           d.fy = null;
+                        }
+
+                        return d3.drag()
+                                .on("start", dragstarted)
+                                .on("drag", dragged)
+                                .on("end", dragended);
+                     };
+
+                     const simulation = d3.forceSimulation(nodes)
+                             .force("link", d3.forceLink(links).id(d => d.id))
+                             //  .force("link", d3.forceLink(links).distance(function(d) {return d.distance;}).strength(0.4))
+                             .force("charge", d3.forceManyBody())
+                             //.force("collide", d3.forceCollide(5))
+                             .force("x", d3.forceX())
+                             .force("y", d3.forceY());
+
+                     var svg = d3.select("svg"),
+                             // width = +svg.attr("width"),
+                             width = document.body.offsetWidth,
+                             height = +svg.attr("height");
+
+                     var graphic = svg.append("g");
+                     svg = svg.call(d3.zoom().on("zoom", function () {
+                        graphic.attr("transform", d3.event.transform);
+                     })).attr("viewBox", [-width / 2, -height / 2, width, height]);
+
+                     d3.select("#drawing").attr("align", "center");
+
+                     const link = graphic
+                             .selectAll("line")
+                             .data(links)
+                             .enter().append("line")
+                             .attr("stroke-width", function (d, i) {
+                                return (d.target.type === "collection") ? 3 : 1;
+                             }).attr("stroke", "#999").attr("stroke-opacity", 0.6);
+
+                     const node = graphic
+                             .attr("stroke", "#fff")
+                             .attr("stroke-width", 1.5)
+                             .selectAll("circle")
+                             .data(nodes)
+                             .enter().append("circle")
+                             .attr("r", function (d, i) {
+                                return d.radius;
+                             })
+                             .attr("fill", function (d, i) {
+                                if (locked === i) {
+                                   return 'red';
+                                }
+                                return colorScale(d.type);
+                             })
+                             .on('mouseover', function (d, i) {
+                                showInformation(d, i);
+                             })
+                             .on('mouseout', function (d, i) {
+                                hideInformation();
+                             })
+                             .on('click', function (d, i) {
+                                lockInformation(d, i);
+                             })
+
+                             .call(drag(simulation));
+
+                     simulation.on("tick", () => {
+                        link
+                                .attr("x1", d => d.source.x)
+                                .attr("y1", d => d.source.y)
+                                .attr("x2", d => d.target.x)
+                                .attr("y2", d => d.target.y);
+
+                        node
+                                .attr("cx", d => d.x)
+                                .attr("cy", d => d.y);
+                     });
+
+                  });
+
+   </script>
+</body>

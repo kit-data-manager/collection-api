@@ -10,6 +10,7 @@ import edu.kit.datamanager.collection.domain.CollectionObject;
 import edu.kit.datamanager.collection.domain.CollectionResultSet;
 import edu.kit.datamanager.collection.domain.MemberItem;
 import edu.kit.datamanager.collection.domain.MemberResultSet;
+import edu.kit.datamanager.collection.domain.d3.DataWrapper;
 import io.swagger.annotations.*;
 import java.time.Instant;
 import org.springframework.http.ResponseEntity;
@@ -18,7 +19,6 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
-
 import javax.validation.Valid;
 import java.util.List;
 import javax.servlet.http.HttpServletRequest;
@@ -45,6 +45,17 @@ public interface CollectionsApi{
           @ApiParam(value = "Filter response by the data type of contained collection member. A collection will meet this requirement if any of its members are of the requested type.") @Valid @RequestParam(value = "f_memberType", required = false) String fMemberType,
           @ApiParam(value = "Filter response by the ownership property of the collection") @Valid @RequestParam(value = "f_ownership", required = false) String fOwnership,
           final Pageable pgbl,
+          final HttpServletRequest request,
+          final UriComponentsBuilder uriBuilder);
+
+  @ApiOperation(value = "Get a list of all collections provided by this service. A successful request returns an HTTP 200 response code with a CollectionResultSet object in the response body.", nickname = "collectionsGetD3", notes = "This request returns a list of the collections provided by this service.  This may be a complete list, or if the service features include support for pagination, the cursors in the response may be used to iterate backwards and forwards through pages of partial results. Query parameters may be used to supply filtering criteria for the response. When combining filters of different types, the boolean AND will be used. When combining multiple instances of filters of the same type, the boolean OR will be used.", response = CollectionResultSet.class)
+  @ApiResponses(value = {
+    @ApiResponse(code = 200, message = "A resultset containing a list of collection objects.", response = CollectionResultSet.class),
+    @ApiResponse(code = 400, message = "Invalid Input. The query was malformed.", response = Error.class)})
+  @RequestMapping(value = "/collections",
+          produces = {"application/vnd.datamanager.d3+json"},
+          method = RequestMethod.GET)
+  ResponseEntity<DataWrapper> collectionsGetD3(
           final HttpServletRequest request,
           final UriComponentsBuilder uriBuilder);
 

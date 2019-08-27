@@ -27,6 +27,7 @@ import edu.kit.datamanager.collection.domain.CollectionProperties;
 import edu.kit.datamanager.collection.domain.CollectionResultSet;
 import edu.kit.datamanager.collection.domain.MemberItem;
 import edu.kit.datamanager.collection.domain.MemberResultSet;
+import edu.kit.datamanager.collection.domain.d3.DataWrapper;
 import edu.kit.datamanager.collection.util.TestDataCreationHelper;
 import java.time.Instant;
 import java.time.ZoneOffset;
@@ -103,6 +104,18 @@ public class CollectionApiControllerTest{
     Assert.assertNull(result.getNextCursor());
     Assert.assertNull(result.getPrevCursor());
     Assert.assertEquals(2, result.getContents().size());
+  }
+
+  @Test
+  public void testGetCollectionsD3() throws Exception{
+    TestDataCreationHelper.initialize(collectionDao, memberDao).addCollection("1", CollectionProperties.getDefault()).addCollection("2", CollectionProperties.getDefault()).persist();
+
+    MvcResult res = this.mockMvc.perform(get("/api/v1/collections/").header("Accept", "application/vnd.datamanager.d3+json")).andDo(print()).andExpect(status().isOk()).andReturn();
+    ObjectMapper map = new ObjectMapper();
+    DataWrapper result = map.readValue(res.getResponse().getContentAsString(), DataWrapper.class);
+    Assert.assertNotNull(result);
+    Assert.assertEquals(2, result.getNodes().size());
+    Assert.assertEquals(0, result.getLinks().size());
   }
 
   @Test

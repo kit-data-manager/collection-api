@@ -28,12 +28,19 @@ import edu.kit.datamanager.collection.util.JPAQueryHelper;
 import edu.kit.datamanager.collection.domain.CollectionItemMappingMetadata;
 import edu.kit.datamanager.collection.domain.CollectionProperties;
 import edu.kit.datamanager.collection.domain.Membership;
+import edu.kit.datamanager.collection.domain.d3.CollectionNode;
+import edu.kit.datamanager.collection.domain.d3.DataWrapper;
+import edu.kit.datamanager.collection.domain.d3.Link;
+import edu.kit.datamanager.collection.domain.d3.MemberItemNode;
+import edu.kit.datamanager.collection.domain.d3.Node;
 import edu.kit.datamanager.collection.util.ControllerUtils;
 import edu.kit.datamanager.collection.util.PaginationHelper;
+import edu.kit.datamanager.collection.util.TestDataCreationHelper;
 import java.time.ZoneOffset;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
@@ -130,7 +137,6 @@ public class CollectionsApiController implements CollectionsApi{
           final HttpServletRequest request,
           final UriComponentsBuilder uriBuilder){
     LOG.trace("Calling collectionsGet({}, {}, {}, {}).", fModelType, fMemberType, fOwnership, pgbl);
-
     int pageSize = (pgbl != null) ? pgbl.getPageSize() : 20;
     int offset = (pgbl != null) ? pgbl.getPageNumber() * pgbl.getPageSize() : 0;
     JPAQueryHelper helper = new JPAQueryHelper(em);
@@ -155,7 +161,77 @@ public class CollectionsApiController implements CollectionsApi{
   }
 
   @Override
+  public ResponseEntity<DataWrapper> collectionsGetD3(HttpServletRequest request, UriComponentsBuilder uriBuilder){
+    LOG.trace("Calling collectionsGetD3().");
+
+    DataWrapper wrapper = new DataWrapper();
+    List<String> collectionIds = new ArrayList<>();
+    JPAQueryHelper helper = new JPAQueryHelper(em);
+
+    List<CollectionObject> collections = collectionDao.findAll();
+    for(CollectionObject o : collections){
+      CollectionNode n = new CollectionNode();
+      n.setId(o.getId());
+      n.setRadius(8 + o.getProperties().getMemberOf().size());
+      n.setDescription(o.getDescription());
+      n.setProperties(o.getProperties());
+      n.setCapabilities(o.getCapabilities());
+      wrapper.getNodes().add(n);
+      collectionIds.add(o.getId());
+    }
+
+    for(CollectionObject o : collections){
+      List<Membership> memberships = helper.getColletionsMembershipsByFilters(Arrays.asList(o.getId()), null, null, null, null, false, 0, 20);
+      for(Membership m : memberships){
+        if(!collectionIds.contains(m.getMember().getMid())){
+          MemberItemNode n_m = new MemberItemNode();
+          n_m.setId(m.getMember().getMid());
+          n_m.setRadius(5);
+          n_m.setDescription(m.getMember().getDescription());
+          n_m.setLocation(m.getMember().getLocation());
+          n_m.setMapping(m.getMappings());
+          wrapper.getNodes().add(n_m);
+        }
+        Link l = new Link();
+        l.setSource(o.getId());
+        l.setTarget(m.getMember().getMid());
+        l.setDistance((int) Math.rint(Math.random() * 40.0));
+        wrapper.getLinks().add(l);
+      }
+    }
+
+    return new ResponseEntity<>(wrapper, HttpStatus.OK);
+  }
+
+  @Override
   public ResponseEntity<CollectionObject> collectionsIdGet(@ApiParam(value = "Identifier for the collection", required = true) @PathVariable("id") String id){
+
+//test data creation
+//    collectionDao.deleteAll();
+//    membershipDao.deleteAll();
+//
+//    TestDataCreationHelper testHelper = TestDataCreationHelper.initialize(collectionDao, memberDao);
+//    for(int i = 0; i < 20; i++){
+//      testHelper = testHelper.addCollection("c" + i, CollectionProperties.getDefault());
+//    }
+//
+//    for(int i = 0; i < 20; i++){
+//      for(int j = 0; j < 20; j++){
+//        testHelper = testHelper.addMemberItem("c" + i, "m" + i + "-" + j, "localhost");
+//      }
+//    }
+//
+//    testHelper = testHelper.addMemberItem("c2", "c1", "localhost");
+//    testHelper = testHelper.addMemberItem("c3", "c1", "localhost");
+//    testHelper = testHelper.addMemberItem("c2", "c4", "localhost");
+//    testHelper = testHelper.addMemberItem("c4", "c5", "localhost");
+//    testHelper = testHelper.addMemberItem("c8", "c12", "localhost");
+//    testHelper = testHelper.addMemberItem("c1", "c18", "localhost");
+//    testHelper = testHelper.addMemberItem("c15", "c17", "localhost");
+//    testHelper = testHelper.addMemberItem("c9", "c19", "localhost");
+//    testHelper = testHelper.addMemberItem("c9", "c5", "localhost");
+//
+//    testHelper.persist();
     LOG.trace("Calling collectionsIdGet({}).", id);
 
     Optional<CollectionObject> result = collectionDao.findById(id);
