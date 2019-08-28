@@ -77,10 +77,16 @@ As soon as the microservice is started, you can browse to
 
 http://localhost:8070/swagger-ui.html
 
-in order to see available RESTful endpoints and their documentation. Furthermore, you can use this Web interface to test single API calls in order to get familiar with the 
-service. A small documentation guiding you through the first steps of using the RESTful API you can find at
+in order to see available RESTful endpoints and their documentation. You may have to adapt the port according to your local settings.
+Furthermore, you can use this Web interface to test single API calls in order to get familiar with the service. A small documentation guiding you through the 
+first steps of using the RESTful API you can find at
 
-http://localhost:8090/static/docs/documentation.html
+http://localhost:8070/static/docs/documentation.html
+
+Furthermore, the Collection API offers a graphical web frontend in order to visualize managed collections, collection items and relationships between them as well as associated metadata. 
+In addition it allows a simple search for elements in order to visualize linked nodes. To access the web frontend, open the following link in your browser:
+
+http://localhost:8070/static/overview.html
 
 ## More Information
 
