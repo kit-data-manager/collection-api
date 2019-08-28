@@ -567,6 +567,8 @@ public class CollectionsApiController implements CollectionsApi{
           @ApiParam(value = "Member item metadata", required = true) @Valid @RequestBody MemberItem content){
     LOG.trace("Calling collectionsIdMembersMidPut({}, {}, {}).", id, mid, content);
 
+    //handle issue when mid == id
+    
     Optional<Membership> membership = new JPAQueryHelper(em).getMembershipByMid(id, mid);
 
     if(membership.isEmpty()){

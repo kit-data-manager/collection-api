@@ -114,7 +114,7 @@ public class CollectionApiControllerTest{
     ObjectMapper map = new ObjectMapper();
     DataWrapper result = map.readValue(res.getResponse().getContentAsString(), DataWrapper.class);
     Assert.assertNotNull(result);
-    Assert.assertEquals(2, result.getNodes().size());
+    Assert.assertEquals(3, result.getNodes().size());
     Assert.assertEquals(2, result.getLinks().size());
   }
 
