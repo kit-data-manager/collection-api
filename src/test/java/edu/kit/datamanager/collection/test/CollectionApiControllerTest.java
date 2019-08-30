@@ -554,6 +554,11 @@ public class CollectionApiControllerTest{
     Assert.assertEquals("m1", members[0].getMid());
     //check description to prove that it's the same member
     Assert.assertEquals("First member", members[0].getDescription());
+
+    //add collection itself as its member -> should fail with BAD_REQUEST
+    item = new MemberItem();
+    item.setMid("2");
+    this.mockMvc.perform(post("/api/v1/collections/2/members").content(map.writeValueAsBytes(new MemberItem[]{item})).contentType(MediaType.APPLICATION_JSON)).andDo(print()).andExpect(status().isBadRequest()).andReturn();
   }
 
   @Test
@@ -921,7 +926,7 @@ public class CollectionApiControllerTest{
 
     Assert.assertEquals(Integer.valueOf(5), member.getMappings().getIndex());
     Assert.assertEquals("guest", member.getMappings().getMemberRole());
-
+   
   }
 
   @Test

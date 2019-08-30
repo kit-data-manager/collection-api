@@ -1,5 +1,6 @@
 package edu.kit.datamanager.collection.web.impl;
 
+import com.google.common.base.Objects;
 import edu.kit.datamanager.collection.domain.CollectionCapabilities;
 import edu.kit.datamanager.collection.domain.CollectionObject;
 import edu.kit.datamanager.collection.domain.CollectionResultSet;
@@ -32,10 +33,8 @@ import edu.kit.datamanager.collection.domain.d3.CollectionNode;
 import edu.kit.datamanager.collection.domain.d3.DataWrapper;
 import edu.kit.datamanager.collection.domain.d3.Link;
 import edu.kit.datamanager.collection.domain.d3.MemberItemNode;
-import edu.kit.datamanager.collection.domain.d3.Node;
 import edu.kit.datamanager.collection.util.ControllerUtils;
 import edu.kit.datamanager.collection.util.PaginationHelper;
-import edu.kit.datamanager.collection.util.TestDataCreationHelper;
 import java.time.ZoneOffset;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
@@ -406,6 +405,11 @@ public class CollectionsApiController implements CollectionsApi{
 
     LOG.trace("Checking {} member items for proper type, assigned ids and membership conflicts.");
     for(MemberItem item : content){
+      if(Objects.equal(id, item.getMid())){
+        LOG.error("Unable to add collection {} as member to itself.", id);
+        return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
+      }
+
       if(restrictedToType != null && !restrictedToType.equals(item.getDatatype())){
         LOG.error("Member has invalid type. Collection with id {} only supports type {}, but member provided type {}.", restrictedToType, item.getDatatype());
         return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
@@ -567,8 +571,6 @@ public class CollectionsApiController implements CollectionsApi{
           @ApiParam(value = "Member item metadata", required = true) @Valid @RequestBody MemberItem content){
     LOG.trace("Calling collectionsIdMembersMidPut({}, {}, {}).", id, mid, content);
 
-    //handle issue when mid == id
-    
     Optional<Membership> membership = new JPAQueryHelper(em).getMembershipByMid(id, mid);
 
     if(membership.isEmpty()){
