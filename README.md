@@ -42,7 +42,7 @@ user@localhost:/home/user/collection-api$
 ```
 
 The Gradle wrapper will now take care of downloading the configured version of Gradle, checking out all required libraries, build these
-libraries and finally build the base-repo microservice itself. As a result, a fat jar containing the entire service is created at 'build/jars/colleciton-api.jar'.
+libraries and finally build the collection-api microservice itself. As a result, a fat jar containing the entire service is created at 'build/jars/collection-api.jar'.
 
 ## How to start
 
@@ -55,7 +55,7 @@ Before you are able to start the microservice, you have to modify the file 'appl
 Therefor, copy the file 'conf/application.properties' to your project folder and customize it. For the Collection API you just have to adapt the properties of 
 spring.datasource and you may change the server.port property. All other properties can be ignored for the time being.
 
-As soon as you finished modifying 'application.properties', you may start the repository microservice by executing the following command inside the project folder, 
+As soon as you finished modifying 'application.properties', you may start the collection-api microservice by executing the following command inside the project folder, 
 e.g. where the service has been built before:
 
 ```
@@ -78,12 +78,9 @@ As soon as the microservice is started, you can browse to
 http://localhost:8070/swagger-ui.html
 
 in order to see available RESTful endpoints and their documentation. You may have to adapt the port according to your local settings.
-Furthermore, you can use this Web interface to test single API calls in order to get familiar with the service. A small documentation guiding you through the 
-first steps of using the RESTful API you can find at
+Furthermore, you can use this Web interface to test single API calls in order to get familiar with the service. 
 
-http://localhost:8070/static/docs/documentation.html
-
-Furthermore, the Collection API offers a graphical web frontend in order to visualize managed collections, collection items and relationships between them as well as associated metadata. 
+The Collection API offers a graphical web frontend in order to visualize managed collections, collection items and relationships between them as well as associated metadata. 
 In addition it allows a simple search for elements in order to visualize linked nodes. To access the web frontend, open the following link in your browser:
 
 http://localhost:8070/static/overview.html
