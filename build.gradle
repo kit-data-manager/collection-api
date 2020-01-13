@@ -6,16 +6,15 @@ buildscript {
 
    }
    dependencies {
-      classpath("org.springframework.boot:spring-boot-gradle-plugin:2.1.4.RELEASE")
+      classpath("org.springframework.boot:spring-boot-gradle-plugin:2.2.2.RELEASE")
       classpath 'org.asciidoctor:asciidoctor-gradle-plugin:1.5.9.2'
    }
 }
 
 plugins { 
    id 'io.franzbecker.gradle-lombok' version '1.14'
-   id "io.spring.dependency-management" version "1.0.7.RELEASE" 
+   id "io.spring.dependency-management" version "1.0.8.RELEASE" 
    id "com.github.kt3k.coveralls" version "2.8.1" 
-
    id "org.owasp.dependencycheck" version "3.1.2"
    id "org.asciidoctor.convert" version "1.5.3"
 }
@@ -34,6 +33,7 @@ repositories {
    mavenLocal() 
    jcenter()
    mavenCentral()
+   maven { url 'http://oss.jfrog.org/artifactory/oss-snapshot-local/' }
 }
 
 sourceCompatibility = 1.8
@@ -44,7 +44,7 @@ configurations {
 }
 
 lombok {
-   version = '1.18.4'
+   version = '1.18.10'
    sha256 = ""
 }
 
@@ -60,43 +60,42 @@ if (project.hasProperty('travis')) {
 }
 
 dependencies {
-   compile("org.springframework.boot:spring-boot-starter-data-rest")
-   compile("org.springframework.boot:spring-boot-starter-data-jpa")
+   implementation("org.springframework.boot:spring-boot-starter-data-rest")
+   implementation("org.springframework.boot:spring-boot-starter-data-jpa")
 
-   compile("org.javers:javers-spring-boot-starter-sql:3.9.0")
-   compile("io.springfox:springfox-swagger2:2.9.0")
+   implementation("org.javers:javers-spring-boot-starter-sql:3.9.0")
+   implementation("io.springfox:springfox-swagger2:3.0.0-SNAPSHOT")
 
-   compile("io.springfox:springfox-swagger-ui:2.9.0")
+   implementation("io.springfox:springfox-swagger-ui:3.0.0-SNAPSHOT")
    
-   compile("edu.kit.datamanager:service-base:0.1")
+   implementation("edu.kit.datamanager:service-base:0.1")
 
-   compile("com.monitorjbl:spring-json-view:0.16")
-   compile("org.postgresql:postgresql:42.2.1")
-   compile("org.apache.tika:tika-core:1.18") 
-   compile ("org.javers:javers-core:5.3.2")
+   implementation("org.postgresql:postgresql:42.2.1")
+   implementation("org.apache.tika:tika-core:1.18") 
+   implementation ("org.javers:javers-core:5.3.2")
 
    //Java 11 Support 
-   compile('javax.xml.bind:jaxb-api:2.2.11')
-   compile('com.sun.xml.bind:jaxb-core:2.2.11')
-   compile('com.sun.xml.bind:jaxb-impl:2.2.11')
-   compile('javax.activation:activation:1.1.1')
-   compile('org.javassist:javassist:3.23.1-GA')
+   implementation('javax.xml.bind:jaxb-api:2.2.11')
+   implementation('com.sun.xml.bind:jaxb-core:2.2.11')
+   implementation('com.sun.xml.bind:jaxb-impl:2.2.11')
+   implementation('javax.activation:activation:1.1.1')
+   implementation('org.javassist:javassist:3.23.1-GA')
     
-   compileOnly('org.apache.httpcomponents:httpclient:4.5.6')
+   implementation('org.apache.httpcomponents:httpclient:4.5.6')
 
-   testCompile("com.h2database:h2:1.4.194") 
-   testCompile("org.springframework.restdocs:spring-restdocs-mockmvc")
-   testCompile("org.springframework.boot:spring-boot-starter-test")
-   testCompile("org.springframework:spring-test")
-   testCompile("org.springframework.security:spring-security-test")
+   testImplementation("com.h2database:h2:1.4.194") 
+   testImplementation("org.springframework.restdocs:spring-restdocs-mockmvc")
+   testImplementation("org.springframework.boot:spring-boot-starter-test")
+   testImplementation("org.springframework:spring-test")
+   testImplementation("org.springframework.security:spring-security-test")
    
    //Java 11 Support 
-   testCompile("org.mockito:mockito-core:2.18.0")
-   testCompile("org.powermock:powermock-module-junit4:2.0.0-beta.5")
-   testCompile("org.powermock:powermock-api-mockito2:2.0.0-beta.5")
+   testImplementation("org.mockito:mockito-core:2.18.0")
+   testImplementation("org.powermock:powermock-module-junit4:2.0.0-beta.5")
+   testImplementation("org.powermock:powermock-api-mockito2:2.0.0-beta.5")
 
-   testCompile('org.springframework.restdocs:spring-restdocs-mockmvc:2.0.2.RELEASE')
-   testCompile('org.asciidoctor:asciidoctor-gradle-plugin:1.5.9.2')
+   testImplementation('org.springframework.restdocs:spring-restdocs-mockmvc:2.0.2.RELEASE')
+   testImplementation('org.asciidoctor:asciidoctor-gradle-plugin:1.5.9.2')
    // asciidoctor('org.springframework.restdocs:spring-restdocs-asciidoctor:2.0.2.RELEASE')
    // asciidoctor('com.github.allati.asciidoctor.monotree:asciidoctor-extension-monotree:0.0.1')
 }
