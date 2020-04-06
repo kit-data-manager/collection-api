@@ -130,12 +130,12 @@ jacocoTestReport {
    }
    afterEvaluate {
       //exclude some classes/package from code coverage report
-      classDirectories = files(classDirectories.files.collect {
+      classDirectories.setFrom(files(classDirectories.files.collect {
             fileTree(dir: it, exclude: [\
             'edu/kit/datamanager/collection/configuration/**', \
             'edu/kit/datamanager/collection/filters/**', \
             'edu/kit/datamanager/collection/Application*'
                ])
-         })
+         }))
    }
 }
