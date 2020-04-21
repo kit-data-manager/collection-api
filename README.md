@@ -59,7 +59,7 @@ As soon as you finished modifying 'application.properties', you may start the co
 e.g. where the service has been built before:
 
 ```
-user@localhost:/home/user/collection-api$ ./build/libs/collection-api.jar
+user@localhost:/home/user/collection-api$ ./build/libs/collection-registry.jar
 
   .   ____          _            __ _ _
  /\\ / ___'_ __ _ _(_)_ __  __ _ \ \ \ \
