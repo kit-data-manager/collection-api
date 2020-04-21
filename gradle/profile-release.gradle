@@ -8,10 +8,7 @@ test {
    outputs.dir snippetsDir
 }
 
-dependencies {
-   compile("edu.kit.datamanager:generic-message-consumer:0.1.0")
-}
-   
+  
 asciidoctor {
    attributes "snippets": snippetsDir,
             "version": jar.version,
