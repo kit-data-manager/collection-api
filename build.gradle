@@ -3,8 +3,7 @@ buildscript {
       mavenLocal()
       jcenter()
       mavenCentral()
-
-   }
+ }
    dependencies {
       classpath("org.springframework.boot:spring-boot-gradle-plugin:2.2.2.RELEASE")
       classpath 'org.asciidoctor:asciidoctor-gradle-plugin:1.5.9.2'
@@ -20,6 +19,7 @@ plugins {
 }
 
 apply plugin: 'java'
+apply plugin: 'java-library'
 apply plugin: 'jacoco'
 apply plugin: 'org.springframework.boot'
 apply plugin: 'io.spring.dependency-management'
@@ -33,7 +33,6 @@ repositories {
    mavenLocal() 
    jcenter()
    mavenCentral()
-   maven { url 'http://oss.jfrog.org/artifactory/oss-snapshot-local/' }
 }
 
 sourceCompatibility = 1.8
@@ -62,12 +61,9 @@ if (project.hasProperty('travis')) {
 dependencies {
    implementation("org.springframework.boot:spring-boot-starter-data-rest")
    implementation("org.springframework.boot:spring-boot-starter-data-jpa")
-
    implementation("org.javers:javers-spring-boot-starter-sql:3.9.0")
-   implementation("io.springfox:springfox-swagger2:3.0.0-SNAPSHOT")
-
-   implementation("io.springfox:springfox-swagger-ui:3.0.0-SNAPSHOT")
-   
+   api("org.springdoc:springdoc-openapi-data-rest:1.2.31")
+  
    implementation("edu.kit.datamanager:service-base:0.1")
 
    implementation("org.postgresql:postgresql:42.2.1")
