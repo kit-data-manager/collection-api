@@ -411,7 +411,7 @@ public class CollectionsApiController implements CollectionsApi {
             }
 
             if (restrictedToType != null && !restrictedToType.equals(item.getDatatype())) {
-                LOG.error("Member has invalid type. Collection with id {} only supports type {}, but member provided type {}.", restrictedToType, item.getDatatype());
+                LOG.error("Member has invalid type. Collection with id {} only supports type {}, but member provided type {}.", id, restrictedToType, item.getDatatype());
                 return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
             }
 
