@@ -466,14 +466,13 @@ public class CollectionsApiController implements CollectionsApi {
                 LOG.trace("Skip persisting existing member with id {}.", item.getId());
                 membershipMember = existingMembers.get(item.getMid());
                 item.copyFrom(membershipMember);
-                mappingMetadata = new CollectionItemMappingMetadata();
             }
 
             LOG.trace("Setting metadata property 'dateAdded' to now().");
             mappingMetadata.setDateAdded(Instant.now());
 
             Membership m = new Membership();
-            m.setMember(membershipMember);
+            m.setMember(item);
             m.setMappings(mappingMetadata);
 
             existing.getMembers().add(m);
