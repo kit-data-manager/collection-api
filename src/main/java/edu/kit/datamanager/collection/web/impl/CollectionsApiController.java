@@ -987,9 +987,10 @@ public class CollectionsApiController implements CollectionsApi {
 
         for (Membership membership : itemList) {
             //we have to copy the item in case an item is in multiple collections, in that case the same item  pointer is returned multiple times pointing to the same memory location
-            MemberItem item = membership.getMember();
-            item.setMappings(membership.getMappings());
-            resultSet.addContentsItem(item);
+             MemberItem item = membership.getMember();
+             MemberItem copyItem = MemberItem.copy(item);
+            copyItem.setMappings(membership.getMappings());
+            resultSet.addContentsItem(copyItem);
         }
 
         LOG.trace("Obtaining total element count.");
