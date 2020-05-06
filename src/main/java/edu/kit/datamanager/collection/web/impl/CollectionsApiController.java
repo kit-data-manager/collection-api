@@ -432,6 +432,10 @@ public class CollectionsApiController implements CollectionsApi {
                     //might be another existing member?
                     Optional<MemberItem> optionalMember = memberDao.findByMid(item.getMid());
                     if (optionalMember.isPresent()) {
+                        if (!restrictedToType.equals(optionalMember.get().getDatatype())){
+                            LOG.error("Member has invalid type. Collection with id {} only supports type {}, but member provided type {}.", id, restrictedToType, optionalMember.get().getDatatype());
+                            return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
+                        }
                         //existing member found, do not persist member, only membership
                         LOG.trace("Existing member found for mid {}.", item.getMid());
                         existingMembers.put(item.getMid(), optionalMember.get());
