@@ -600,8 +600,6 @@ public class CollectionsApiController implements CollectionsApi {
         LOG.trace("Transferring collection item mapping metadata from provided member item.");
 
         if (itemMetadata != null) {
-            LOG.trace("Transferring property 'dateAdded'.");
-            mMetadata.setDateAdded(itemMetadata.getDateAdded());
 
             LOG.trace("Transferring property 'index'.");
             mMetadata.setIndex(itemMetadata.getIndex());
@@ -609,8 +607,8 @@ public class CollectionsApiController implements CollectionsApi {
             LOG.trace("Transferring property 'role'.");
             mMetadata.setMemberRole(itemMetadata.getMemberRole());
 
-            LOG.trace("Transferring property 'dateUpdated'.");
-            mMetadata.setDateUpdated(itemMetadata.getDateUpdated());
+            LOG.trace("Setting property 'dateUpdated'.");
+            mMetadata.setDateUpdated(Instant.now());
         }
 
         LOG.trace("Persisting updated membership with new collection item metadata.");
