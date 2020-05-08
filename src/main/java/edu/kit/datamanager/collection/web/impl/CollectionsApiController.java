@@ -428,6 +428,14 @@ public class CollectionsApiController implements CollectionsApi {
                     LOG.trace("Provided member with id {} represents an existing collection. Adding parent collection id {} to memberOf property.", item.getMid(), id);
                     CollectionObject collection = optionalCollection.get();
                     collection.getProperties().getMemberOf().add(id);
+                    
+                    //a collection might have already a memberItem
+                    Optional<MemberItem> optionalMember = memberDao.findByMid(item.getMid());
+                    if (optionalMember.isPresent()) {
+                        //existing member item of a collection found, do not persist member, only membership
+                        LOG.trace("Existing member found for mid {}.", item.getMid());
+                        existingMembers.put(item.getMid(), optionalMember.get());
+                    }
                 } else {
                     //might be another existing member?
                     Optional<MemberItem> optionalMember = memberDao.findByMid(item.getMid());
