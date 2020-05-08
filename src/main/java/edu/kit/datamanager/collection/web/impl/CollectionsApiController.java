@@ -40,6 +40,7 @@ import java.time.format.DateTimeParseException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
@@ -341,10 +342,35 @@ public class CollectionsApiController implements CollectionsApi {
         if (!result.isEmpty()) {
             ControllerUtils.checkEtag(request, result.get());
 
+            Set<Membership> memberships = result.get().getMembers();
+            Set<MemberItem> memberItems = new HashSet<>();
+            memberships.forEach(membership -> {
+                memberItems.add(membership.getMember());
+            });
             LOG.trace("Deleting collection with id {}.", id);
             collectionDao.delete(result.get());
 
             LOG.trace("Returning HTTP 204.");
+            
+            memberItems.forEach(memberItem -> {
+                Optional<Membership> membership = membershipDao.findByMember(memberItem);
+                Optional<CollectionObject> collection = collectionDao.findById(memberItem.getMid());
+                
+                //delete id of the deleted collection from MemberOf
+                if (!collection.isEmpty()){
+                    LOG.trace("Deleting the id of the deleted collection {} from MemberOf of the collection with id {}", id, collection.get().getId());
+                    collection.get().getProperties().getMemberOf().remove(id);
+                    collectionDao.save(collection.get());
+                }
+                //delete memberItem if it has no memberships
+                if (membership.isEmpty()){
+                    LOG.trace("Deleting MemberItem with id {} having no membership", memberItem.getMid());
+                    memberDao.delete(memberItem);
+                    LOG.trace("Returning HTTP 204.");
+                }
+                
+            });     
+            
         } else {
             LOG.trace("No collection with id {} found. Returning HTTP 204.", id);
         }

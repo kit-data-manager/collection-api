@@ -10,6 +10,7 @@ import javax.persistence.Entity;
 import javax.persistence.Id;
 import javax.persistence.OneToMany;
 import javax.persistence.OneToOne;
+import javax.persistence.PreRemove;
 import org.springframework.validation.annotation.Validated;
 import javax.validation.Valid;
 import javax.validation.constraints.*;
@@ -59,5 +60,10 @@ public class CollectionObject implements EtagSupport{
   public String getEtag(){
     return "\"" + hashCode() + "\"";
   }
-
+  @PreRemove    
+  private void preRemove() {
+      members.forEach((member) -> {
+            member.setMember(null);
+        });
+    }
 }
