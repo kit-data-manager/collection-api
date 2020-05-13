@@ -451,8 +451,12 @@ public class CollectionsApiController implements CollectionsApi {
                 //check if id is collection
                 Optional<CollectionObject> optionalCollection = collectionDao.findById(item.getMid());
                 if (optionalCollection.isPresent()) {
-                    LOG.trace("Provided member with id {} represents an existing collection. Adding parent collection id {} to memberOf property.", item.getMid(), id);
                     CollectionObject collection = optionalCollection.get();
+                    if (!collection.getCapabilities().getRestrictedToType().equals(existing.getCapabilities().getRestrictedToType())){
+                        LOG.error("Collection has invalid resctricted Type. Collection with id {} only supports type {}, but member collection provided type {}.", id, existing.getCapabilities().getRestrictedToType(), collection.getCapabilities().getRestrictedToType());
+                        return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
+                    }
+                    LOG.trace("Provided member with id {} represents an existing collection. Adding parent collection id {} to memberOf property.", item.getMid(), id);
                     collection.getProperties().getMemberOf().add(id);
                     
                     //a collection might have already a memberItem
