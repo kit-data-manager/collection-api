@@ -99,6 +99,12 @@ public class CollectionsApiController implements CollectionsApi {
             return new ResponseEntity<>(HttpStatus.CONFLICT);
         }
 
+        Long existingMemberCount = memberDao.countByMidIn(ids.toArray(new String[]{}));
+        if (existingMemberCount > 0){
+             LOG.debug("There is already a member at least one of the following ids: {}.", ids);
+            return new ResponseEntity<>(HttpStatus.CONFLICT);
+        }
+        
         LOG.trace("Checking properties and creating collections.");
         for (CollectionObject collection : content) {
             LOG.trace("Checking collection properties.");
@@ -399,7 +405,6 @@ public class CollectionsApiController implements CollectionsApi {
         LOG.trace("Calling collectionsIdMembersPost({}).", id);
 
         Optional<CollectionObject> result = collectionDao.findById(id);
-
         if (result.isEmpty()) {
             LOG.debug("No collection with id {} found.", id);
             return new ResponseEntity<>(HttpStatus.NOT_FOUND);

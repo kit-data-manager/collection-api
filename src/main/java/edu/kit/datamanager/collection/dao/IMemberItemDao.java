@@ -26,4 +26,5 @@ import org.springframework.data.jpa.repository.JpaRepository;
 public interface IMemberItemDao extends JpaRepository<MemberItem, String>{
 
    Optional<MemberItem> findByMid(String mid);
+   Long countByMidIn(String... ids);
 }
