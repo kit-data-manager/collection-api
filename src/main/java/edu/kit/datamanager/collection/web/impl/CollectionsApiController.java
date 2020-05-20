@@ -353,6 +353,7 @@ public class CollectionsApiController implements CollectionsApi {
             memberships.forEach(membership -> {
                 memberItems.add(membership.getMember());
             });
+            Set<String> collectionMemberOfs = result.get().getProperties().getMemberOf();
             LOG.trace("Deleting collection with id {}.", id);
             collectionDao.delete(result.get());
 
@@ -375,8 +376,23 @@ public class CollectionsApiController implements CollectionsApi {
                     LOG.trace("Returning HTTP 204.");
                 }
                 
-            });     
-            
+            });   
+            //delete the member Item which is a collection id from the parent collection
+            for (String collectionId: collectionMemberOfs){
+                Optional<CollectionObject> collection = collectionDao.findById(collectionId);
+                if (!collection.isEmpty()){
+                    memberships = collection.get().getMembers();
+                    for (Membership membershipToDelete: memberships){
+                        MemberItem memberItemToDelete = membershipToDelete.getMember();
+                        if (memberItemToDelete.getMid().equals(id)){
+                             LOG.trace("Deleting MemberItem with id {} from Collection with id {}", id, collectionId);
+                            collection.get().getMembers().remove(membershipToDelete);
+                            collectionDao.save(collection.get());
+                            membershipDao.delete(membershipToDelete); 
+                        }
+                    }
+                }
+            }
         } else {
             LOG.trace("No collection with id {} found. Returning HTTP 204.", id);
         }
