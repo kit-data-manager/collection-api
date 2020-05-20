@@ -1,6 +1,8 @@
 package edu.kit.datamanager.collection.domain;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import io.swagger.v3.oas.annotations.media.Schema;
 import javax.persistence.Entity;
@@ -51,6 +53,7 @@ public class MemberItem implements EtagSupport{
 
   @Schema(description = "Metadata on an item which is available by mapping from capabilities")
   @JsonProperty("mappings")
+  @JsonInclude(Include.NON_NULL)
   @Transient
   private CollectionItemMappingMetadata mappings = null;
 
