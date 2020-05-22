@@ -725,6 +725,13 @@ public class CollectionsApiController implements CollectionsApi {
             collection.getMembers().remove(membership.get());
             LOG.trace("Persisting updated collection with id {}.", id);
             collectionDao.save(collection);
+            MemberItem memberItemToDelete = membership.get().getMember();
+            membership.get().setMember(null);
+            membershipDao.delete(membership.get());
+            if (membershipDao.findByMember(item).isEmpty()){
+                memberDao.delete(memberItemToDelete);
+            }
+            
             if (memberCollection != null) {
                 LOG.trace("Persisting updated member collection with id {}.", mid);
                 collectionDao.save(memberCollection);
