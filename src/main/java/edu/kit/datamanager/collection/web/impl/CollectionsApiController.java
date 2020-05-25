@@ -1,6 +1,7 @@
 package edu.kit.datamanager.collection.web.impl;
 
 import com.google.common.base.Objects;
+import edu.kit.datamanager.collection.configuration.CollectionRegistryConfig;
 import edu.kit.datamanager.collection.domain.CollectionCapabilities;
 import edu.kit.datamanager.collection.domain.CollectionObject;
 import edu.kit.datamanager.collection.domain.CollectionResultSet;
@@ -31,6 +32,7 @@ import edu.kit.datamanager.collection.domain.d3.CollectionNode;
 import edu.kit.datamanager.collection.domain.d3.DataWrapper;
 import edu.kit.datamanager.collection.domain.d3.Link;
 import edu.kit.datamanager.collection.domain.d3.MemberItemNode;
+import edu.kit.datamanager.collection.exceptions.CircularDependencyException;
 import edu.kit.datamanager.collection.util.ControllerUtils;
 import edu.kit.datamanager.collection.util.PaginationHelper;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -68,6 +70,9 @@ public class CollectionsApiController implements CollectionsApi {
     @Autowired
     private IMembershipDao membershipDao;
 
+    @Autowired
+    private CollectionRegistryConfig collectionRegistry;
+    
     @PersistenceContext
     private EntityManager em;
 
@@ -128,6 +133,8 @@ public class CollectionsApiController implements CollectionsApi {
 
             LOG.trace("Persisting new collection.");
             collectionDao.save(collection);
+            
+            collectionRegistry.getCollectionGraph().addEdge(collection.getId(), new HashSet<String>());
         }
 
         LOG.trace("Returning created collections.");
@@ -163,6 +170,9 @@ public class CollectionsApiController implements CollectionsApi {
         resultSet.setNextCursor(PaginationHelper.create(pgbl.getPageNumber(), totalElementCount).withElementsPerPage(pgbl.getPageSize()).getNextPageLink());
         resultSet.setPrevCursor(PaginationHelper.create(pgbl.getPageNumber(), totalElementCount).withElementsPerPage(pgbl.getPageSize()).getPrevPageLink());
         LOG.trace("Returning result set.");
+        
+        LOG.trace("Structure of Collections");
+       LOG.trace("{}",collectionRegistry.getCollectionGraph().toString());
         return new ResponseEntity<>(resultSet, HttpStatus.OK);
     }
 
@@ -399,6 +409,8 @@ public class CollectionsApiController implements CollectionsApi {
             memberItemsToDelete.forEach((memberItem) -> {
                 memberDao.delete(memberItem);
             });
+        //delete collection id from the structure of collections
+        collectionRegistry.getCollectionGraph().removeCollection(id);
         } else {
             LOG.trace("No collection with id {} found. Returning HTTP 204.", id);
         }
@@ -483,6 +495,13 @@ public class CollectionsApiController implements CollectionsApi {
                         LOG.error("Collection has invalid resctricted Type. Collection with id {} only supports type {}, but member collection provided type {}.", id, existing.getCapabilities().getRestrictedToType(), collection.getCapabilities().getRestrictedToType());
                         return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
                     }
+                    //check if the graph is circular when adding a new member
+                    try{
+                        collectionRegistry.getCollectionGraph().isCircular(id, item.getMid());
+                    }catch (CircularDependencyException e){
+                        LOG.error("Member cannot be added. {}", e.getMessage());
+                        return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
+                    }
                     LOG.trace("Provided member with id {} represents an existing collection. Adding parent collection id {} to memberOf property.", item.getMid(), id);
                     collection.getProperties().getMemberOf().add(id);
                     
@@ -549,6 +568,10 @@ public class CollectionsApiController implements CollectionsApi {
             LOG.trace("Persisting new membership between collection {} and member item {}.", id, item.getId());
             collectionDao.save(existing);
 
+            Optional<CollectionObject> optionalCollection = collectionDao.findById(item.getMid());
+            if (optionalCollection.isPresent()) {
+                    collectionRegistry.getCollectionGraph().addEdge(item.getMid(), id);
+            }
             item.setMappings(mappingMetadata);
         }
 
@@ -737,6 +760,7 @@ public class CollectionsApiController implements CollectionsApi {
                 collectionDao.save(memberCollection);
             }
 
+            collectionRegistry.getCollectionGraph().removeParentFromChild(id, mid);
             LOG.trace("Returning HTTP 204.");
         } else {
             LOG.trace("No membership for collection with id {} and member with id {} found. Returning HTTP 204.", id, mid);
