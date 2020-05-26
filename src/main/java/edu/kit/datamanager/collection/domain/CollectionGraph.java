@@ -30,11 +30,12 @@ public class CollectionGraph {
     
     public void addEdge(String collection, Set<String> parents) { 
         LOG.trace("Structure of collection graph before adding the parents {} to the collection {}: {}", parents, collection, collectionGraph.toString());
-        if (collectionGraph.containsKey(collection)){
-            parents.addAll(collectionGraph.get(collection));
-            collectionGraph.put(collection, parents);
+        Set<String> edges = collectionGraph.get(collection);
+        if(edges == null){
+            edges = new HashSet<>();
+            collectionGraph.put(collection, edges);
         }
-        collectionGraph.put(collection, parents); 
+        edges.addAll(parents);
          LOG.trace("Structure of collection graph after adding the parents {} to the collection {}: {}", parents, collection, collectionGraph.toString());
     } 
      public void addEdge(String collection, String parent) { 
@@ -56,7 +57,9 @@ public class CollectionGraph {
     
     public void removeParentFromChild(String parentId, String childId){
         LOG.trace("Structure of Collection graph before deleting the relationship between {} and {}: {} ", parentId, childId, collectionGraph.toString());
-        collectionGraph.get(childId).remove(parentId);
+        if (collectionGraph.get(childId) != null){
+            collectionGraph.get(childId).remove(parentId);
+        }
         LOG.trace("Structure of Collection graph after deleting the relationship between {} and {}: {} ", parentId, childId, collectionGraph.toString());
     }
     
