@@ -42,7 +42,7 @@ public class CollectionItemMappingMetadata{
   @JsonProperty("dateAdded")
   @JsonDeserialize(using = CustomInstantDeserializer.class)
   @JsonSerialize(using = CustomInstantSerializer.class)
-  private Instant dateAdded = null;
+  private Instant dateAdded = Instant.now();
 
   @Schema(description = "The date the item's metadata were last updated.")
   @JsonProperty("dateUpdated")

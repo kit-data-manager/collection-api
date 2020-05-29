@@ -491,7 +491,7 @@ public class CollectionsApiController implements CollectionsApi {
                 Optional<CollectionObject> optionalCollection = collectionDao.findById(item.getMid());
                 if (optionalCollection.isPresent()) {
                     CollectionObject collection = optionalCollection.get();
-                    if (!collection.getCapabilities().getRestrictedToType().equals(existing.getCapabilities().getRestrictedToType())){
+                    if (collection.getCapabilities().getRestrictedToType() != null && !collection.getCapabilities().getRestrictedToType().equals(existing.getCapabilities().getRestrictedToType())){
                         LOG.error("Collection has invalid resctricted Type. Collection with id {} only supports type {}, but member collection provided type {}.", id, existing.getCapabilities().getRestrictedToType(), collection.getCapabilities().getRestrictedToType());
                         return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
                     }
@@ -516,7 +516,7 @@ public class CollectionsApiController implements CollectionsApi {
                     //might be another existing member?
                     Optional<MemberItem> optionalMember = memberDao.findByMid(item.getMid());
                     if (optionalMember.isPresent()) {
-                        if (!restrictedToType.equals(optionalMember.get().getDatatype())){
+                        if (restrictedToType != null && !restrictedToType.equals(optionalMember.get().getDatatype())){
                             LOG.error("Member has invalid type. Collection with id {} only supports type {}, but member provided type {}.", id, restrictedToType, optionalMember.get().getDatatype());
                             return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
                         }
@@ -555,9 +555,6 @@ public class CollectionsApiController implements CollectionsApi {
                 membershipMember = existingMembers.get(item.getMid());
                 item.copyFrom(membershipMember);
             }
-
-            LOG.trace("Setting metadata property 'dateAdded' to now().");
-            mappingMetadata.setDateAdded(Instant.now());
 
             Membership m = new Membership();
             m.setMember(item);
