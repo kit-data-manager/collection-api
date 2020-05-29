@@ -33,6 +33,7 @@ import java.time.Instant;
 import java.time.ZoneOffset;
 import java.time.format.DateTimeFormatter;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
@@ -86,11 +87,12 @@ public class CollectionApiControllerTest {
     private ICollectionObjectDao collectionDao;
     @Autowired
     private IMembershipDao membershipDao;
-
+    
     @Before
     public void setUp() throws JsonProcessingException {
         collectionDao.deleteAll();
         membershipDao.deleteAll();
+        memberDao.deleteAll();
     }
 
     @Test
@@ -258,6 +260,42 @@ public class CollectionApiControllerTest {
 
         //get collection with id 1 (should result in 404)
         this.mockMvc.perform(get("/api/v1/collections/1").header("If-Match", etag)).andDo(print()).andExpect(status().isNotFound()).andReturn();
+
+        //add 2 collections one of them is a subcollection
+        TestDataCreationHelper.initialize(collectionDao, memberDao).addCollection("1", CollectionProperties.getDefault()).
+            addCollection("2", CollectionProperties.getDefault()).
+            addCollection("3", CollectionProperties.getDefault()).
+            addMemberItem("1", "2", "localhost").
+            addMemberItem("2", "3", "localhost").persist();
+
+        //get collection with id 1
+        res = this.mockMvc.perform(get("/api/v1/collections/1")).andDo(print()).andExpect(status().isOk()).andReturn();
+        etag = res.getResponse().getHeader("ETag");
+        
+        //delete collection with id 1
+        this.mockMvc.perform(delete("/api/v1/collections/1").header("If-Match", etag)).andDo(print()).andExpect(status().isNoContent()).andReturn();
+        
+        //get collection with id 2
+        res = this.mockMvc.perform(get("/api/v1/collections/2")).andDo(print()).andExpect(status().isOk()).andReturn();
+        ObjectMapper map = new ObjectMapper();
+        CollectionObject collections = map.readValue(res.getResponse().getContentAsString(), CollectionObject.class);
+        Assert.assertEquals(0,collections.getProperties().getMemberOf().size());
+        //Assert.assertEquals(1,collections.getMembers().size());
+        //get collection with id 3
+        res = this.mockMvc.perform(get("/api/v1/collections/3")).andDo(print()).andExpect(status().isOk()).andReturn();
+        etag = res.getResponse().getHeader("ETag");
+
+        //delete collection with id 3
+        this.mockMvc.perform(delete("/api/v1/collections/3").header("If-Match", etag)).andDo(print()).andExpect(status().isNoContent()).andReturn();
+        
+        //get collection with id 2
+        map = new ObjectMapper();
+        res = this.mockMvc.perform(get("/api/v1/collections/2")).andDo(print()).andExpect(status().isOk()).andReturn();
+        collections = map.readValue(res.getResponse().getContentAsString(), CollectionObject.class);
+        
+        Assert.assertEquals(0,collections.getMembers().size());
+        Assert.assertEquals(true, memberDao.findByMid("3").isEmpty());
+        
     }
 
     @Test
@@ -762,6 +800,19 @@ public class CollectionApiControllerTest {
         Assert.assertEquals(1, collections.length);
         Assert.assertNotNull(collections[0].getProperties());
         Assert.assertNotNull(collections[0].getCapabilities());
+        
+        //post a new collection with same id as an existing member --> should fail
+        TestDataCreationHelper.initialize(collectionDao, memberDao)
+                .addCollection("c5", CollectionProperties.getDefault()).
+                addMemberItem("c5", "member1", "localhost").persist();
+        
+        collection = new CollectionObject();
+        collection.setId("member1");
+        collection.setDescription("This is the second collection");
+        collection.setCapabilities(CollectionCapabilities.getDefault());
+        collection.setProperties(CollectionProperties.getDefault());
+        this.mockMvc.perform(post("/api/v1/collections/").content(map.writeValueAsBytes(new CollectionObject[]{collection})).contentType(MediaType.APPLICATION_JSON)).andDo(print()).andExpect(status().isConflict()).andReturn();
+        
     }
 
     @Test
