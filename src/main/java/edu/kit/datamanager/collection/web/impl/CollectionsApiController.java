@@ -475,11 +475,6 @@ public class CollectionsApiController implements CollectionsApi {
                 return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
             }
 
-            if (restrictedToType != null && !restrictedToType.equals(item.getDatatype())) {
-                LOG.error("Member has invalid type. Collection with id {} only supports type {}, but member provided type {}.", id, restrictedToType, item.getDatatype());
-                return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
-            }
-
             LOG.trace("Checking member for existing id.");
 
             if (item.getMid() == null) {
@@ -523,6 +518,9 @@ public class CollectionsApiController implements CollectionsApi {
                         //existing member found, do not persist member, only membership
                         LOG.trace("Existing member found for mid {}.", item.getMid());
                         existingMembers.put(item.getMid(), optionalMember.get());
+                    }else if(restrictedToType != null && !restrictedToType.equals(item.getDatatype())){
+                        LOG.error("Member has invalid type. Collection with id {} only supports type {}, but member provided type {}.", id, restrictedToType, item.getDatatype());
+                        return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
                     }
                 }
             }

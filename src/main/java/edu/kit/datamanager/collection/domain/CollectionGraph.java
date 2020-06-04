@@ -10,6 +10,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
+import lombok.Getter;
 import lombok.ToString;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -19,6 +20,7 @@ import org.slf4j.LoggerFactory;
  * @author chelbi
  */
 @ToString
+@Getter
 public class CollectionGraph {
  
     private  Map<String,Set<String>> collectionGraph; 
