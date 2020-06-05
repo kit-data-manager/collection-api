@@ -1307,5 +1307,16 @@ public class CollectionApiControllerTest {
         item= new MemberItem();
         item.setMid("1");
         this.mockMvc.perform(post("/api/v1/collections/3/members").content(map.writeValueAsBytes(new MemberItem[]{item})).contentType(MediaType.APPLICATION_JSON)).andDo(print()).andExpect(status().isBadRequest()).andReturn();
+        
+        MvcResult res = this.mockMvc.perform(get("/api/v1/collections/2/members/3")).andDo(print()).andExpect(status().isOk()).andReturn();
+        String etag = res.getResponse().getHeader("ETag");
+
+        //delete membership of member 3 and collection 2
+        this.mockMvc.perform(delete("/api/v1/collections/2/members/3").header("If-Match", etag)).andDo(print()).andExpect(status().isNoContent()).andReturn();
+        
+        //add memberitem 1 to collection 3
+        item= new MemberItem();
+        item.setMid("1");
+        this.mockMvc.perform(post("/api/v1/collections/3/members").content(map.writeValueAsBytes(new MemberItem[]{item})).contentType(MediaType.APPLICATION_JSON)).andDo(print()).andExpect(status().isCreated()).andReturn();
     }
 }
