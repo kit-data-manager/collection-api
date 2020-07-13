@@ -165,7 +165,7 @@ public class CollectionsApiController implements CollectionsApi {
         resultList.forEach((o) -> {
             resultSet.addContentsItem(o);
         });
-
+        
         LOG.trace("Setting cursor values.");
         resultSet.setNextCursor(PaginationHelper.create(pgbl.getPageNumber(), totalElementCount).withElementsPerPage(pgbl.getPageSize()).getNextPageLink());
         resultSet.setPrevCursor(PaginationHelper.create(pgbl.getPageNumber(), totalElementCount).withElementsPerPage(pgbl.getPageSize()).getPrevPageLink());
@@ -182,6 +182,7 @@ public class CollectionsApiController implements CollectionsApi {
 
         DataWrapper wrapper = new DataWrapper();
         List<String> collectionIds = new ArrayList<>();
+        List<String> memberIds = new ArrayList<>();
         JPAQueryHelper helper = new JPAQueryHelper(em);
 
         List<CollectionObject> collections = collectionDao.findAll();
@@ -199,7 +200,7 @@ public class CollectionsApiController implements CollectionsApi {
         for (CollectionObject o : collections) {
             List<Membership> memberships = helper.getColletionsMembershipsByFilters(Arrays.asList(o.getId()), null, null, null, null, false, 0, 20);
             for (Membership m : memberships) {
-                if (!collectionIds.contains(m.getMember().getMid())) {
+            if (!collectionIds.contains(m.getMember().getMid()) && !memberIds.contains(m.getMember().getMid())) {
                     MemberItemNode n_m = new MemberItemNode();
                     n_m.setId(m.getMember().getMid());
                     n_m.setRadius(5);
@@ -207,6 +208,7 @@ public class CollectionsApiController implements CollectionsApi {
                     n_m.setLocation(m.getMember().getLocation());
                     n_m.setMapping(m.getMappings());
                     wrapper.getNodes().add(n_m);
+                    memberIds.add(n_m.getId());
                 }
                 Link l = new Link();
                 l.setSource(o.getId());
