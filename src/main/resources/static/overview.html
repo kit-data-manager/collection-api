@@ -38,7 +38,16 @@
       {
          background: #EEEEEE;
       }
-
+      
+      label
+      {
+          margin-right: 20px;
+          padding-top: 5px;
+      }
+      .collection-properties, .collection-capabilities, .member-mapping
+      {
+          margin-left: 20px;
+      }
    </style>
    <link rel="stylesheet" href="https://unpkg.com/purecss@1.0.1/build/pure-min.css" crossorigin="anonymous">
    <link rel="stylesheet" href="jsonform/bootstrap.css" />
@@ -76,24 +85,25 @@
    <script type="text/javascript" src="jsonform/jsonform.js"></script>
 
    <script>
-                  $.getJSON("https://api.myjson.com/bins/6l52j", function (json) {
+             
+                  $.getJSON("app/collection.json", function (json) {
                      $('#form-collection').jsonForm(json);
                   });
 
-                  $.getJSON("https://api.myjson.com/bins/i4irv", function (json) {
+
+                  $.getJSON("app/member.json", function (json) {
                      $('#form-item').jsonForm(json);
                   });
-
 
                   var locked = null;
                   var update = false;
                   var collectionFormId = 'jsonform-1';
                   var fileFormId = 'jsonform-2';
 
-                  if (document.getElementById('jsonform-2-elt-location') === null) {
-                     collectionFormId = 'jsonform-2';
-                     fileFormId = 'jsonform-1';
-                  }
+//                  if (document.getElementById('jsonform-2-elt-location') === null) {
+//                     collectionFormId = 'jsonform-2';
+//                     fileFormId = 'jsonform-1';
+//                  }
 
                   console.log(collectionFormId + " , " + fileFormId);
 
@@ -113,20 +123,20 @@
                         document.getElementById(collectionFormId + '-elt-id').value = d.id;
                         document.getElementById(collectionFormId + '-elt-description').value = d.description;
 
-                        document.getElementById(collectionFormId + '-elt-collection_properties.dateCreated').value = d.__proto__.properties.dateCreated;
-                        document.getElementById(collectionFormId + '-elt-collection_properties.ownership').value = d.__proto__.properties.ownership;
-                        document.getElementById(collectionFormId + '-elt-collection_properties.license').value = d.__proto__.properties.license;
-                        document.getElementById(collectionFormId + '-elt-collection_properties.modelType').value = d.__proto__.properties.modelType;
-                        document.getElementById(collectionFormId + '-elt-collection_properties.descriptionOntology').value = d.__proto__.properties.descriptionOntology;
-                        document.getElementById(collectionFormId + '-elt-collection_properties.hasAccessRestrictions').value = d.__proto__.properties.hasAccessRestrictions;
+                        document.getElementById(collectionFormId + '-elt-collection_propertiesdateCreated').value = d.__proto__.properties.dateCreated;
+                        document.getElementById(collectionFormId + '-elt-collection_propertiesownership').value = d.__proto__.properties.ownership;
+                        document.getElementById(collectionFormId + '-elt-collection_propertieslicense').value = d.__proto__.properties.license;
+                        document.getElementById(collectionFormId + '-elt-collection_propertiesmodelType').value = d.__proto__.properties.modelType;
+                        document.getElementById(collectionFormId + '-elt-collection_propertiesdescriptionOntology').value = d.__proto__.properties.descriptionOntology;
+                        document.getElementById(collectionFormId + '-elt-collection_propertieshasAccessRestrictions').value = d.__proto__.properties.hasAccessRestrictions;
 
-                        document.getElementById(collectionFormId + '-elt-collection_capabilities.isOrdered').checked = d.__proto__.capabilities.isOrdered;
-                        document.getElementById(collectionFormId + '-elt-collection_capabilities.appendsToEnd').checked = d.__proto__.capabilities.appendsToEnd;
-                        document.getElementById(collectionFormId + '-elt-collection_capabilities.supportsRoles').checked = d.__proto__.capabilities.supportsRoles;
-                        document.getElementById(collectionFormId + '-elt-collection_capabilities.membershipIsMutable').checked = d.__proto__.capabilities.membershipIsMutable;
-                        document.getElementById(collectionFormId + '-elt-collection_capabilities.propertiesAreMutable').checked = d.__proto__.capabilities.propertiesAreMutable;
-                        document.getElementById(collectionFormId + '-elt-collection_capabilities.restrictedToType').value = d.__proto__.capabilities.restrictedToType;
-                        document.getElementById(collectionFormId + '-elt-collection_capabilities.maxLength').value = d.__proto__.capabilities.maxLength;
+                        document.getElementById(collectionFormId + '-elt-collection_capabilitiesisOrdered').checked = d.__proto__.capabilities.isOrdered;
+                        document.getElementById(collectionFormId + '-elt-collection_capabilitiesappendsToEnd').checked = d.__proto__.capabilities.appendsToEnd;
+                        document.getElementById(collectionFormId + '-elt-collection_capabilitiessupportsRoles').checked = d.__proto__.capabilities.supportsRoles;
+                        document.getElementById(collectionFormId + '-elt-collection_capabilitiesmembershipIsMutable').checked = d.__proto__.capabilities.membershipIsMutable;
+                        document.getElementById(collectionFormId + '-elt-collection_capabilitiespropertiesAreMutable').checked = d.__proto__.capabilities.propertiesAreMutable;
+                        document.getElementById(collectionFormId + '-elt-collection_capabilitiesrestrictedToType').value = d.__proto__.capabilities.restrictedToType;
+                        document.getElementById(collectionFormId + '-elt-collection_capabilitiesmaxLength').value = d.__proto__.capabilities.maxLength;
                      } else {
                         document.getElementById('form-item').style.display = 'block';
                         document.getElementById('form-collection').style.display = 'none';
@@ -137,10 +147,10 @@
                         document.getElementById(fileFormId + '-elt-datatype').value = d.dataType;
                         document.getElementById(fileFormId + '-elt-ontology').value = d.ontology;
 
-                        document.getElementById(fileFormId + '-elt-mapping.role').value = d.__proto__.mapping.memberRole;
-                        document.getElementById(fileFormId + '-elt-mapping.index').value = d.__proto__.mapping.index;
-                        document.getElementById(fileFormId + '-elt-mapping.dateAdded').value = d.__proto__.mapping.dateAdded;
-                        document.getElementById(fileFormId + '-elt-mapping.dateUpdated').value = d.__proto__.mapping.dateUpdated;
+                        document.getElementById(fileFormId + '-elt-mappingrole').value = d.__proto__.mapping.memberRole;
+                        document.getElementById(fileFormId + '-elt-mappingindex').value = d.__proto__.mapping.index;
+                        document.getElementById(fileFormId + '-elt-mappingdateAdded').value = d.__proto__.mapping.dateAdded;
+                        document.getElementById(fileFormId + '-elt-mappingdateUpdated').value = d.__proto__.mapping.dateUpdated;
                      }
                   }
 
