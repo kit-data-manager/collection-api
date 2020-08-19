@@ -1,7 +1,6 @@
 package edu.kit.datamanager.collection.domain;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-import edu.kit.datamanager.collection.domain.MemberItem;
 import io.swagger.v3.oas.annotations.media.Schema;
 import java.util.ArrayList;
 import java.util.List;

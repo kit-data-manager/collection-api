@@ -32,16 +32,16 @@ import org.springframework.scheduling.annotation.EnableScheduling;
 @SpringBootApplication
 @EnableScheduling
 @ComponentScan({"edu.kit.datamanager.collection"})
-public class Application{
+public class Application {
 
-  @Bean
-  @Scope("prototype")
-  public Logger logger(InjectionPoint injectionPoint){
-    Class<?> targetClass = injectionPoint.getMember().getDeclaringClass();
-    return LoggerFactory.getLogger(targetClass.getCanonicalName());
-  }
+    @Bean
+    @Scope("prototype")
+    public Logger logger(InjectionPoint injectionPoint) {
+        Class<?> targetClass = injectionPoint.getMember().getDeclaringClass();
+        return LoggerFactory.getLogger(targetClass.getCanonicalName());
+    }
 
-  public static void main(String[] args){
-    SpringApplication.run(Application.class, args);
-  }
+    public static void main(String[] args) {
+        SpringApplication.run(Application.class, args);
+    }
 }
