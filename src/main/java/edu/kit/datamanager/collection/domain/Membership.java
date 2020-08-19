@@ -20,6 +20,7 @@ import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
+import javax.persistence.ManyToOne;
 import javax.persistence.OneToOne;
 import lombok.Data;
 
@@ -35,10 +36,11 @@ public class Membership{
   @GeneratedValue(strategy = GenerationType.IDENTITY)
   private Long id;
 
-  @OneToOne(orphanRemoval = true)
+  @ManyToOne (cascade = CascadeType.ALL)
   private MemberItem member;
+  
 
   @OneToOne(cascade = CascadeType.ALL)
   private CollectionItemMappingMetadata mappings = null;
-
+  
 }

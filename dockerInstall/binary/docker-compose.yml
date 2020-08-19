@@ -1,0 +1,19 @@
+version: '3'
+services:
+   postgresql:
+      build: ./postgres
+      container_name: postgresql
+      environment:
+         - PGPASSWORD=docker
+         - POSTGRES_USER=docker
+         - POSTGRES_PASSWORD=docker
+         - POSTGRES_DB=kitdm20
+   collection:
+      build: ./collection
+      container_name: collection
+      ports: 
+        - "8070:8080"
+      links:
+        - postgresql
+      environment:
+        - DATABASE_PORT_5432_TCP_ADDR=postgresql

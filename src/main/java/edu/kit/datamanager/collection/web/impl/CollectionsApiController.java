@@ -1,6 +1,7 @@
 package edu.kit.datamanager.collection.web.impl;
 
 import com.google.common.base.Objects;
+import edu.kit.datamanager.collection.configuration.CollectionRegistryConfig;
 import edu.kit.datamanager.collection.domain.CollectionCapabilities;
 import edu.kit.datamanager.collection.domain.CollectionObject;
 import edu.kit.datamanager.collection.domain.CollectionResultSet;
@@ -31,6 +32,7 @@ import edu.kit.datamanager.collection.domain.d3.CollectionNode;
 import edu.kit.datamanager.collection.domain.d3.DataWrapper;
 import edu.kit.datamanager.collection.domain.d3.Link;
 import edu.kit.datamanager.collection.domain.d3.MemberItemNode;
+import edu.kit.datamanager.collection.exceptions.CircularDependencyException;
 import edu.kit.datamanager.collection.util.ControllerUtils;
 import edu.kit.datamanager.collection.util.PaginationHelper;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -40,6 +42,7 @@ import java.time.format.DateTimeParseException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
@@ -67,6 +70,9 @@ public class CollectionsApiController implements CollectionsApi {
     @Autowired
     private IMembershipDao membershipDao;
 
+    @Autowired
+    private CollectionRegistryConfig collectionRegistry;
+    
     @PersistenceContext
     private EntityManager em;
 
@@ -98,6 +104,12 @@ public class CollectionsApiController implements CollectionsApi {
             return new ResponseEntity<>(HttpStatus.CONFLICT);
         }
 
+        Long existingMemberCount = memberDao.countByMidIn(ids.toArray(new String[]{}));
+        if (existingMemberCount > 0){
+             LOG.debug("There is already a member at least one of the following ids: {}.", ids);
+            return new ResponseEntity<>(HttpStatus.CONFLICT);
+        }
+        
         LOG.trace("Checking properties and creating collections.");
         for (CollectionObject collection : content) {
             LOG.trace("Checking collection properties.");
@@ -121,6 +133,8 @@ public class CollectionsApiController implements CollectionsApi {
 
             LOG.trace("Persisting new collection.");
             collectionDao.save(collection);
+            
+            collectionRegistry.getCollectionGraph().addEdge(collection.getId(), new HashSet<String>());
         }
 
         LOG.trace("Returning created collections.");
@@ -151,11 +165,14 @@ public class CollectionsApiController implements CollectionsApi {
         resultList.forEach((o) -> {
             resultSet.addContentsItem(o);
         });
-
+        
         LOG.trace("Setting cursor values.");
         resultSet.setNextCursor(PaginationHelper.create(pgbl.getPageNumber(), totalElementCount).withElementsPerPage(pgbl.getPageSize()).getNextPageLink());
         resultSet.setPrevCursor(PaginationHelper.create(pgbl.getPageNumber(), totalElementCount).withElementsPerPage(pgbl.getPageSize()).getPrevPageLink());
         LOG.trace("Returning result set.");
+        
+        LOG.trace("Structure of Collections");
+       LOG.trace("{}",collectionRegistry.getCollectionGraph().toString());
         return new ResponseEntity<>(resultSet, HttpStatus.OK);
     }
 
@@ -165,6 +182,7 @@ public class CollectionsApiController implements CollectionsApi {
 
         DataWrapper wrapper = new DataWrapper();
         List<String> collectionIds = new ArrayList<>();
+        List<String> memberIds = new ArrayList<>();
         JPAQueryHelper helper = new JPAQueryHelper(em);
 
         List<CollectionObject> collections = collectionDao.findAll();
@@ -182,7 +200,7 @@ public class CollectionsApiController implements CollectionsApi {
         for (CollectionObject o : collections) {
             List<Membership> memberships = helper.getColletionsMembershipsByFilters(Arrays.asList(o.getId()), null, null, null, null, false, 0, 20);
             for (Membership m : memberships) {
-                if (!collectionIds.contains(m.getMember().getMid())) {
+            if (!collectionIds.contains(m.getMember().getMid()) && !memberIds.contains(m.getMember().getMid())) {
                     MemberItemNode n_m = new MemberItemNode();
                     n_m.setId(m.getMember().getMid());
                     n_m.setRadius(5);
@@ -190,6 +208,7 @@ public class CollectionsApiController implements CollectionsApi {
                     n_m.setLocation(m.getMember().getLocation());
                     n_m.setMapping(m.getMappings());
                     wrapper.getNodes().add(n_m);
+                    memberIds.add(n_m.getId());
                 }
                 Link l = new Link();
                 l.setSource(o.getId());
@@ -341,10 +360,59 @@ public class CollectionsApiController implements CollectionsApi {
         if (!result.isEmpty()) {
             ControllerUtils.checkEtag(request, result.get());
 
+            Set<Membership> memberships = result.get().getMembers();
+            Set<MemberItem> memberItems = new HashSet<>();
+            memberships.forEach(membership -> {
+                memberItems.add(membership.getMember());
+            });  
+            Set<String> collectionMemberOfs = result.get().getProperties().getMemberOf();
             LOG.trace("Deleting collection with id {}.", id);
             collectionDao.delete(result.get());
 
             LOG.trace("Returning HTTP 204.");
+            
+            memberItems.forEach(memberItem -> {
+                Optional<Membership> membership = membershipDao.findByMember(memberItem);
+                Optional<CollectionObject> collection = collectionDao.findById(memberItem.getMid());
+                
+                //delete id of the deleted collection from MemberOf
+                if (!collection.isEmpty()){
+                    LOG.trace("Deleting the id of the deleted collection {} from MemberOf of the collection with id {}", id, collection.get().getId());
+                    collection.get().getProperties().getMemberOf().remove(id);
+                    collectionDao.save(collection.get());
+                }
+                //delete memberItem if it has no memberships
+                if (membership.isEmpty()){
+                    LOG.trace("Deleting MemberItem with id {} having no membership", memberItem.getMid());
+                    memberDao.delete(memberItem);
+                    LOG.trace("Returning HTTP 204.");
+                }
+                
+            });   
+            //delete the member Item which is a collection id from the parent collection
+            Set<MemberItem> memberItemsToDelete= new HashSet<>();
+            for (String collectionId: collectionMemberOfs){
+                Optional<CollectionObject> collection = collectionDao.findById(collectionId);
+                if (!collection.isEmpty()){
+                    memberships = collection.get().getMembers();
+                    for (Membership membershipToDelete: memberships){
+                        MemberItem memberItemToDelete = membershipToDelete.getMember();
+                        if (memberItemToDelete.getMid().equals(id)){
+                             LOG.trace("Deleting MemberItem with id {} from Collection with id {}", id, collectionId);
+                            collection.get().getMembers().remove(membershipToDelete);
+                            collectionDao.save(collection.get());
+                            memberItemsToDelete.add(memberItemToDelete);
+                            membershipToDelete.setMember(null);
+                            membershipDao.delete(membershipToDelete); 
+                        }
+                    }
+                }
+            }
+            memberItemsToDelete.forEach((memberItem) -> {
+                memberDao.delete(memberItem);
+            });
+        //delete collection id from the structure of collections
+        collectionRegistry.getCollectionGraph().removeCollection(id);
         } else {
             LOG.trace("No collection with id {} found. Returning HTTP 204.", id);
         }
@@ -373,7 +441,6 @@ public class CollectionsApiController implements CollectionsApi {
         LOG.trace("Calling collectionsIdMembersPost({}).", id);
 
         Optional<CollectionObject> result = collectionDao.findById(id);
-
         if (result.isEmpty()) {
             LOG.debug("No collection with id {} found.", id);
             return new ResponseEntity<>(HttpStatus.NOT_FOUND);
@@ -410,11 +477,6 @@ public class CollectionsApiController implements CollectionsApi {
                 return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
             }
 
-            if (restrictedToType != null && !restrictedToType.equals(item.getDatatype())) {
-                LOG.error("Member has invalid type. Collection with id {} only supports type {}, but member provided type {}.", restrictedToType, item.getDatatype());
-                return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
-            }
-
             LOG.trace("Checking member for existing id.");
 
             if (item.getMid() == null) {
@@ -425,16 +487,42 @@ public class CollectionsApiController implements CollectionsApi {
                 //check if id is collection
                 Optional<CollectionObject> optionalCollection = collectionDao.findById(item.getMid());
                 if (optionalCollection.isPresent()) {
-                    LOG.trace("Provided member with id {} represents an existing collection. Adding parent collection id {} to memberOf property.", item.getMid(), id);
                     CollectionObject collection = optionalCollection.get();
+                    if (collection.getCapabilities().getRestrictedToType() != null && !collection.getCapabilities().getRestrictedToType().equals(existing.getCapabilities().getRestrictedToType())){
+                        LOG.error("Collection has invalid resctricted Type. Collection with id {} only supports type {}, but member collection provided type {}.", id, existing.getCapabilities().getRestrictedToType(), collection.getCapabilities().getRestrictedToType());
+                        return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
+                    }
+                    //check if the graph is circular when adding a new member
+                    try{
+                        collectionRegistry.getCollectionGraph().isCircular(id, item.getMid());
+                    }catch (CircularDependencyException e){
+                        LOG.error("Member cannot be added. {}", e.getMessage());
+                        return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
+                    }
+                    LOG.trace("Provided member with id {} represents an existing collection. Adding parent collection id {} to memberOf property.", item.getMid(), id);
                     collection.getProperties().getMemberOf().add(id);
+                    
+                    //a collection might have already a memberItem
+                    Optional<MemberItem> optionalMember = memberDao.findByMid(item.getMid());
+                    if (optionalMember.isPresent()) {
+                        //existing member item of a collection found, do not persist member, only membership
+                        LOG.trace("Existing member found for mid {}.", item.getMid());
+                        existingMembers.put(item.getMid(), optionalMember.get());
+                    }
                 } else {
                     //might be another existing member?
                     Optional<MemberItem> optionalMember = memberDao.findByMid(item.getMid());
                     if (optionalMember.isPresent()) {
+                        if (restrictedToType != null && !restrictedToType.equals(optionalMember.get().getDatatype())){
+                            LOG.error("Member has invalid type. Collection with id {} only supports type {}, but member provided type {}.", id, restrictedToType, optionalMember.get().getDatatype());
+                            return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
+                        }
                         //existing member found, do not persist member, only membership
                         LOG.trace("Existing member found for mid {}.", item.getMid());
                         existingMembers.put(item.getMid(), optionalMember.get());
+                    }else if(restrictedToType != null && !restrictedToType.equals(item.getDatatype())){
+                        LOG.error("Member has invalid type. Collection with id {} only supports type {}, but member provided type {}.", id, restrictedToType, item.getDatatype());
+                        return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
                     }
                 }
             }
@@ -466,14 +554,10 @@ public class CollectionsApiController implements CollectionsApi {
                 LOG.trace("Skip persisting existing member with id {}.", item.getId());
                 membershipMember = existingMembers.get(item.getMid());
                 item.copyFrom(membershipMember);
-                mappingMetadata = new CollectionItemMappingMetadata();
             }
 
-            LOG.trace("Setting metadata property 'dateAdded' to now().");
-            mappingMetadata.setDateAdded(Instant.now());
-
             Membership m = new Membership();
-            m.setMember(membershipMember);
+            m.setMember(item);
             m.setMappings(mappingMetadata);
 
             existing.getMembers().add(m);
@@ -481,6 +565,10 @@ public class CollectionsApiController implements CollectionsApi {
             LOG.trace("Persisting new membership between collection {} and member item {}.", id, item.getId());
             collectionDao.save(existing);
 
+            Optional<CollectionObject> optionalCollection = collectionDao.findById(item.getMid());
+            if (optionalCollection.isPresent()) {
+                    collectionRegistry.getCollectionGraph().addEdge(item.getMid(), id);
+            }
             item.setMappings(mappingMetadata);
         }
 
@@ -601,8 +689,6 @@ public class CollectionsApiController implements CollectionsApi {
         LOG.trace("Transferring collection item mapping metadata from provided member item.");
 
         if (itemMetadata != null) {
-            LOG.trace("Transferring property 'dateAdded'.");
-            mMetadata.setDateAdded(itemMetadata.getDateAdded());
 
             LOG.trace("Transferring property 'index'.");
             mMetadata.setIndex(itemMetadata.getIndex());
@@ -610,8 +696,8 @@ public class CollectionsApiController implements CollectionsApi {
             LOG.trace("Transferring property 'role'.");
             mMetadata.setMemberRole(itemMetadata.getMemberRole());
 
-            LOG.trace("Transferring property 'dateUpdated'.");
-            mMetadata.setDateUpdated(itemMetadata.getDateUpdated());
+            LOG.trace("Setting property 'dateUpdated'.");
+            mMetadata.setDateUpdated(Instant.now());
         }
 
         LOG.trace("Persisting updated membership with new collection item metadata.");
@@ -659,11 +745,19 @@ public class CollectionsApiController implements CollectionsApi {
             collection.getMembers().remove(membership.get());
             LOG.trace("Persisting updated collection with id {}.", id);
             collectionDao.save(collection);
+            MemberItem memberItemToDelete = membership.get().getMember();
+            membership.get().setMember(null);
+            membershipDao.delete(membership.get());
+            if (membershipDao.findByMember(item).isEmpty()){
+                memberDao.delete(memberItemToDelete);
+            }
+            
             if (memberCollection != null) {
                 LOG.trace("Persisting updated member collection with id {}.", mid);
                 collectionDao.save(memberCollection);
             }
 
+            collectionRegistry.getCollectionGraph().removeParentFromChild(id, mid);
             LOG.trace("Returning HTTP 204.");
         } else {
             LOG.trace("No membership for collection with id {} and member with id {} found. Returning HTTP 204.", id, mid);
@@ -986,9 +1080,10 @@ public class CollectionsApiController implements CollectionsApi {
 
         for (Membership membership : itemList) {
             //we have to copy the item in case an item is in multiple collections, in that case the same item  pointer is returned multiple times pointing to the same memory location
-            MemberItem item = membership.getMember();
-            item.setMappings(membership.getMappings());
-            resultSet.addContentsItem(item);
+             MemberItem item = membership.getMember();
+             MemberItem copyItem = MemberItem.copy(item);
+            copyItem.setMappings(membership.getMappings());
+            resultSet.addContentsItem(copyItem);
         }
 
         LOG.trace("Obtaining total element count.");

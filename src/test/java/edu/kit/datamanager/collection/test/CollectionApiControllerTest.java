@@ -17,6 +17,7 @@ package edu.kit.datamanager.collection.test;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import edu.kit.datamanager.collection.configuration.CollectionRegistryConfig;
 import edu.kit.datamanager.collection.dao.ICollectionObjectDao;
 import edu.kit.datamanager.collection.dao.IMemberItemDao;
 import edu.kit.datamanager.collection.dao.IMembershipDao;
@@ -32,7 +33,9 @@ import edu.kit.datamanager.collection.util.TestDataCreationHelper;
 import java.time.Instant;
 import java.time.ZoneOffset;
 import java.time.format.DateTimeFormatter;
+import java.util.Arrays;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
@@ -87,16 +90,23 @@ public class CollectionApiControllerTest {
     @Autowired
     private IMembershipDao membershipDao;
 
+    @Autowired
+    private CollectionRegistryConfig collectionRegistry;
+
     @Before
     public void setUp() throws JsonProcessingException {
         collectionDao.deleteAll();
         membershipDao.deleteAll();
+        memberDao.deleteAll();
+        collectionRegistry.getCollectionGraph().getCollectionGraph().clear();
     }
 
     @Test
     public void testGetCollections() throws Exception {
         TestDataCreationHelper.initialize(collectionDao, memberDao).addCollection("1", CollectionProperties.getDefault()).addCollection("2", CollectionProperties.getDefault()).persist();
 
+        collectionRegistry.getCollectionGraph().addEdge("1", new HashSet<>());
+        collectionRegistry.getCollectionGraph().addEdge("2", new HashSet<>());
         MvcResult res = this.mockMvc.perform(get("/api/v1/collections/")).andDo(print()).andExpect(status().isOk()).andReturn();
         ObjectMapper map = new ObjectMapper();
         CollectionResultSet result = map.readValue(res.getResponse().getContentAsString(), CollectionResultSet.class);
@@ -110,6 +120,8 @@ public class CollectionApiControllerTest {
     public void testGetCollectionsD3() throws Exception {
         TestDataCreationHelper.initialize(collectionDao, memberDao).addCollection("1", CollectionProperties.getDefault()).addCollection("2", CollectionProperties.getDefault()).addMemberItem("1", "m1", "localhost").addMemberItem("1", "2", "lcalhost").persist();
 
+        collectionRegistry.getCollectionGraph().addEdge("1", new HashSet<>());
+        collectionRegistry.getCollectionGraph().addEdge("2", "1");
         MvcResult res = this.mockMvc.perform(get("/api/v1/collections/").header("Accept", "application/vnd.datamanager.d3+json")).andDo(print()).andExpect(status().isOk()).andReturn();
         ObjectMapper map = new ObjectMapper();
         DataWrapper result = map.readValue(res.getResponse().getContentAsString(), DataWrapper.class);
@@ -163,6 +175,11 @@ public class CollectionApiControllerTest {
                 addMemberItem("4", "m2", "document", "somedoc").
                 persist();
 
+        collectionRegistry.getCollectionGraph().addEdge("1", new HashSet<>());
+        collectionRegistry.getCollectionGraph().addEdge("2", new HashSet<>());
+        collectionRegistry.getCollectionGraph().addEdge("3", new HashSet<>());
+        collectionRegistry.getCollectionGraph().addEdge("4", new HashSet<>());
+        
         ObjectMapper map = new ObjectMapper();
 
         //get collection with ownership 'test' -> should be collection #1
@@ -213,6 +230,8 @@ public class CollectionApiControllerTest {
         restricted.setPropertiesAreMutable(Boolean.FALSE);
 
         TestDataCreationHelper.initialize(collectionDao, memberDao).addCollection("1", CollectionProperties.getDefault()).addCollection("2", "description", restricted, CollectionProperties.getDefault()).persist();
+        collectionRegistry.getCollectionGraph().addEdge("1", new HashSet<>());
+        collectionRegistry.getCollectionGraph().addEdge("2", new HashSet<>());
         ObjectMapper map = new ObjectMapper();
 
         //get default collection capabilities
@@ -240,6 +259,7 @@ public class CollectionApiControllerTest {
     public void testDeleteCollection() throws Exception {
         TestDataCreationHelper.initialize(collectionDao, memberDao).addCollection("1", CollectionProperties.getDefault()).persist();
 
+        collectionRegistry.getCollectionGraph().addEdge("1", new HashSet<>());
         //get collection with id 1
         MvcResult res = this.mockMvc.perform(get("/api/v1/collections/1")).andDo(print()).andExpect(status().isOk()).andReturn();
         String etag = res.getResponse().getHeader("ETag");
@@ -258,12 +278,51 @@ public class CollectionApiControllerTest {
 
         //get collection with id 1 (should result in 404)
         this.mockMvc.perform(get("/api/v1/collections/1").header("If-Match", etag)).andDo(print()).andExpect(status().isNotFound()).andReturn();
+
+        //add 2 collections one of them is a subcollection
+        TestDataCreationHelper.initialize(collectionDao, memberDao).addCollection("1", CollectionProperties.getDefault()).
+            addCollection("2", CollectionProperties.getDefault()).
+            addCollection("3", CollectionProperties.getDefault()).
+            addMemberItem("1", "2", "localhost").
+            addMemberItem("2", "3", "localhost").persist();
+        collectionRegistry.getCollectionGraph().addEdge("2", "1");
+        collectionRegistry.getCollectionGraph().addEdge("3", "2");
+
+        //get collection with id 1
+        res = this.mockMvc.perform(get("/api/v1/collections/1")).andDo(print()).andExpect(status().isOk()).andReturn();
+        etag = res.getResponse().getHeader("ETag");
+        
+        //delete collection with id 1
+        this.mockMvc.perform(delete("/api/v1/collections/1").header("If-Match", etag)).andDo(print()).andExpect(status().isNoContent()).andReturn();
+        
+        //get collection with id 2
+        res = this.mockMvc.perform(get("/api/v1/collections/2")).andDo(print()).andExpect(status().isOk()).andReturn();
+        ObjectMapper map = new ObjectMapper();
+        CollectionObject collections = map.readValue(res.getResponse().getContentAsString(), CollectionObject.class);
+        Assert.assertEquals(0,collections.getProperties().getMemberOf().size());
+        //Assert.assertEquals(1,collections.getMembers().size());
+        //get collection with id 3
+        res = this.mockMvc.perform(get("/api/v1/collections/3")).andDo(print()).andExpect(status().isOk()).andReturn();
+        etag = res.getResponse().getHeader("ETag");
+
+        //delete collection with id 3
+        this.mockMvc.perform(delete("/api/v1/collections/3").header("If-Match", etag)).andDo(print()).andExpect(status().isNoContent()).andReturn();
+        
+        //get collection with id 2
+        map = new ObjectMapper();
+        res = this.mockMvc.perform(get("/api/v1/collections/2")).andDo(print()).andExpect(status().isOk()).andReturn();
+        collections = map.readValue(res.getResponse().getContentAsString(), CollectionObject.class);
+        
+        Assert.assertEquals(0,collections.getMembers().size());
+        Assert.assertEquals(true, memberDao.findByMid("3").isEmpty());
+        
     }
 
     @Test
     public void testGetCollectionById() throws Exception {
         TestDataCreationHelper.initialize(collectionDao, memberDao).addCollection("1", CollectionProperties.getDefault()).persist();
 
+        collectionRegistry.getCollectionGraph().addEdge("1", new HashSet<>());
         //get collection with id 1
         this.mockMvc.perform(get("/api/v1/collections/1")).andDo(print()).andExpect(status().isOk()).andReturn();
 
@@ -286,6 +345,8 @@ public class CollectionApiControllerTest {
                 addMemberItem("2", "m2", "localhost").
                 addMemberItem("1", "2", "localhost").
                 persist();
+        collectionRegistry.getCollectionGraph().addEdge("1", new HashSet<>());
+        collectionRegistry.getCollectionGraph().addEdge("2", "1");
         ObjectMapper map = new ObjectMapper();
 
         //get membership of member 1 and collection 1
@@ -330,6 +391,7 @@ public class CollectionApiControllerTest {
         TestDataCreationHelper.initialize(collectionDao, memberDao).addCollection("1", CollectionProperties.getDefault()).addMemberItem("1", "m1", "localhost").persist();
         ObjectMapper map = new ObjectMapper();
 
+        collectionRegistry.getCollectionGraph().addEdge("1", new HashSet<>());
         //get membership of member 1 and collection 1
         MvcResult res = this.mockMvc.perform(get("/api/v1/collections/1/members/m1")).andDo(print()).andExpect(status().isOk()).andReturn();
         MemberItem result = map.readValue(res.getResponse().getContentAsString(), MemberItem.class);
@@ -351,8 +413,9 @@ public class CollectionApiControllerTest {
         props.setDateAdded(Instant.now());
         props.setDateUpdated(Instant.now());
         TestDataCreationHelper.initialize(collectionDao, memberDao).addCollection("1", CollectionProperties.getDefault()).addCollection("2", CollectionProperties.getDefault()).addMemberItem("1", "m1", null, null, "localhost", null, props).persist();
-        ObjectMapper map = new ObjectMapper();
 
+        collectionRegistry.getCollectionGraph().addEdge("1", new HashSet<>());
+        collectionRegistry.getCollectionGraph().addEdge("2", new HashSet<>());
         for (String element : new String[]{"index", "role", "dateAdded", "dateUpdated"}) {
             MvcResult res = this.mockMvc.perform(get("/api/v1/collections/1/members/m1/properties/" + element)).andDo(print()).andExpect(status().isOk()).andReturn();
             String etag = res.getResponse().getHeader("ETag");
@@ -391,8 +454,9 @@ public class CollectionApiControllerTest {
         props.setDateUpdated(Instant.now());
 
         TestDataCreationHelper.initialize(collectionDao, memberDao).addCollection("1", CollectionProperties.getDefault()).addCollection("2", CollectionProperties.getDefault()).addMemberItem("1", "m1", null, null, "localhost", null, props).persist();
-        ObjectMapper map = new ObjectMapper();
 
+        collectionRegistry.getCollectionGraph().addEdge("1", new HashSet<>());
+        collectionRegistry.getCollectionGraph().addEdge("2", new HashSet<>());
         String theDate = "2019-07-19T07:25:37Z";
         Map<String, String> propertiesAndValue = new HashMap<>();
         propertiesAndValue.put("role", "\"guest\"");
@@ -444,14 +508,26 @@ public class CollectionApiControllerTest {
         CollectionCapabilities caps_type_restriction = CollectionCapabilities.getDefault();
         caps_type_restriction.setRestrictedToType("special");
 
+        CollectionCapabilities type_restriction = CollectionCapabilities.getDefault();
+        type_restriction.setRestrictedToType("text");
+        
         TestDataCreationHelper.initialize(collectionDao, memberDao).
                 addCollection("1", CollectionProperties.getDefault()).
                 addCollection("2", CollectionProperties.getDefault()).
+                addCollection("3", "Type-restricted collection", type_restriction, CollectionProperties.getDefault()).
+                addCollection("4", CollectionProperties.getDefault()).
                 addCollection("immutable", "Immutable collection", caps_immutable, CollectionProperties.getDefault()).
                 addCollection("zero_length", "Zero-length collection", caps_zero_length, CollectionProperties.getDefault()).
                 addCollection("type_restricted", "Type-restricted collection", caps_type_restriction, CollectionProperties.getDefault()).
                 persist();
 
+                collectionRegistry.getCollectionGraph().addEdge("1", new HashSet<>());
+                collectionRegistry.getCollectionGraph().addEdge("2", new HashSet<>());
+                collectionRegistry.getCollectionGraph().addEdge("3", new HashSet<>());
+                collectionRegistry.getCollectionGraph().addEdge("immutable", new HashSet<>());
+                collectionRegistry.getCollectionGraph().addEdge("zero_length", new HashSet<>());
+                collectionRegistry.getCollectionGraph().addEdge("type_restricted", new HashSet<>());
+                collectionRegistry.getCollectionGraph().addEdge("4", new HashSet<>());
         ObjectMapper map = new ObjectMapper();
         CollectionItemMappingMetadata props = new CollectionItemMappingMetadata();
         props.setMemberRole("member");
@@ -559,6 +635,29 @@ public class CollectionApiControllerTest {
         item = new MemberItem();
         item.setMid("2");
         this.mockMvc.perform(post("/api/v1/collections/2/members").content(map.writeValueAsBytes(new MemberItem[]{item})).contentType(MediaType.APPLICATION_JSON)).andDo(print()).andExpect(status().isBadRequest()).andReturn();
+        
+        item = new MemberItem();
+        item.setMid("m5");
+        item.setDatatype("image");
+        item.setLocation("http://localhost/api/v1/localhost");
+        
+        this.mockMvc.perform(post("/api/v1/collections/2/members").content(map.writeValueAsBytes(new MemberItem[]{item})).contentType(MediaType.APPLICATION_JSON)).andDo(print()).andExpect(status().isCreated()).andReturn();
+        
+        item.setDatatype("text");
+        this.mockMvc.perform(post("/api/v1/collections/3/members").content(map.writeValueAsBytes(new MemberItem[]{item})).contentType(MediaType.APPLICATION_JSON)).andDo(print()).andExpect(status().isBadRequest()).andReturn();
+        
+        //add a collection to two other collections --> only one member should be created in the database 
+        item = new MemberItem();
+        item.setMid("2");
+        this.mockMvc.perform(post("/api/v1/collections/1/members").content(map.writeValueAsBytes(new MemberItem[]{item})).contentType(MediaType.APPLICATION_JSON)).andDo(print()).andExpect(status().isCreated()).andReturn();
+        Assert.assertEquals(Long.valueOf(1), memberDao.countByMidIn("2"));
+        this.mockMvc.perform(post("/api/v1/collections/4/members").content(map.writeValueAsBytes(new MemberItem[]{item})).contentType(MediaType.APPLICATION_JSON)).andDo(print()).andExpect(status().isCreated()).andReturn();
+        Assert.assertEquals(Long.valueOf(1), memberDao.countByMidIn("2"));
+        
+        //add collection 3 to restricted type
+        item = new MemberItem();
+        item.setMid("3");
+        this.mockMvc.perform(post("/api/v1/collections/type_restricted/members").content(map.writeValueAsBytes(new MemberItem[]{item})).contentType(MediaType.APPLICATION_JSON)).andDo(print()).andExpect(status().isBadRequest()).andReturn();
     }
 
     @Test
@@ -589,6 +688,9 @@ public class CollectionApiControllerTest {
                 addMemberItem("2", "m3", "localhost").
                 persist();
 
+        collectionRegistry.getCollectionGraph().addEdge("1", new HashSet<>());
+        collectionRegistry.getCollectionGraph().addEdge("2", "1");
+        collectionRegistry.getCollectionGraph().addEdge("3", new HashSet<>());
         ObjectMapper map = new ObjectMapper();
 
         //get members of collection which does not exist -> should fail with HTTP 404
@@ -762,6 +864,19 @@ public class CollectionApiControllerTest {
         Assert.assertEquals(1, collections.length);
         Assert.assertNotNull(collections[0].getProperties());
         Assert.assertNotNull(collections[0].getCapabilities());
+        
+        //post a new collection with same id as an existing member --> should fail
+        TestDataCreationHelper.initialize(collectionDao, memberDao)
+                .addCollection("c5", CollectionProperties.getDefault()).
+                addMemberItem("c5", "member1", "localhost").persist();
+        
+        collection = new CollectionObject();
+        collection.setId("member1");
+        collection.setDescription("This is the second collection");
+        collection.setCapabilities(CollectionCapabilities.getDefault());
+        collection.setProperties(CollectionProperties.getDefault());
+        this.mockMvc.perform(post("/api/v1/collections/").content(map.writeValueAsBytes(new CollectionObject[]{collection})).contentType(MediaType.APPLICATION_JSON)).andDo(print()).andExpect(status().isConflict()).andReturn();
+        
     }
 
     @Test
@@ -775,6 +890,10 @@ public class CollectionApiControllerTest {
                 addCollection("3", "This is an invalid collection", null, CollectionProperties.getDefault()).
                 persist();
 
+        collectionRegistry.getCollectionGraph().addEdge("1", new HashSet<>());
+        collectionRegistry.getCollectionGraph().addEdge("2", new HashSet<>());
+        collectionRegistry.getCollectionGraph().addEdge("3", new HashSet<>());
+        
         CollectionCapabilities newCaps = CollectionCapabilities.getDefault();
         newCaps.setIsOrdered(true);
         newCaps.setAppendsToEnd(false);
@@ -855,6 +974,7 @@ public class CollectionApiControllerTest {
                 addMemberItem("1", "m3", "This is the decription", "customType", "localhost", "ontology", null).
                 persist();
 
+        collectionRegistry.getCollectionGraph().addEdge("1", new HashSet<>());
         CollectionItemMappingMetadata mappingMetadata = new CollectionItemMappingMetadata();
         mappingMetadata.setDateAdded(Instant.now());
         mappingMetadata.setDateUpdated(Instant.now());
@@ -951,6 +1071,8 @@ public class CollectionApiControllerTest {
                 addMemberItem("2", "m1", "localhost").
                 addMemberItem("2", "m3", "localhost").
                 persist();
+        collectionRegistry.getCollectionGraph().addEdge("1", new HashSet<>());
+        collectionRegistry.getCollectionGraph().addEdge("2", new HashSet<>());
         ObjectMapper map = new ObjectMapper();
 
         MemberItem example = new MemberItem();
@@ -981,8 +1103,9 @@ public class CollectionApiControllerTest {
         Assert.assertNotNull(members);
         Assert.assertEquals(2, members.getContents().size());
 
-        Assert.assertEquals("m1", members.getContents().get(0).getMid());
-        Assert.assertEquals("m3", members.getContents().get(1).getMid());
+        Set<String> memberItems = new HashSet<>(Arrays.asList("m3", "m1"));
+        Assert.assertEquals(true, memberItems.contains(members.getContents().get(0).getMid()));
+        Assert.assertEquals(true, memberItems.contains(members.getContents().get(1).getMid()));
 
         example.setDatatype(null);
         example.setDescription("This is member two");
@@ -1054,6 +1177,10 @@ public class CollectionApiControllerTest {
                 addMemberItem("1", "2", "localhost").
                 addMemberItem("2", "m3", "localhost").
                 persist();
+
+        collectionRegistry.getCollectionGraph().addEdge("1", new HashSet<>());
+        collectionRegistry.getCollectionGraph().addEdge("2", "1");
+        collectionRegistry.getCollectionGraph().addEdge("3", new HashSet<>());
         ObjectMapper map = new ObjectMapper();
 
         MvcResult res = this.mockMvc.perform(get("/api/v1/collections/1/ops/flatten").contentType(MediaType.APPLICATION_JSON)).andDo(print()).andExpect(status().isOk()).andReturn();
@@ -1075,6 +1202,8 @@ public class CollectionApiControllerTest {
                 addMemberItem("2", "m1", "localhost").
                 persist();
 
+        collectionRegistry.getCollectionGraph().addEdge("1", new HashSet<>());
+        collectionRegistry.getCollectionGraph().addEdge("2", new HashSet<>());
         ObjectMapper map = new ObjectMapper();
 
         MvcResult res = this.mockMvc.perform(get("/api/v1/collections/1/ops/union/2").contentType(MediaType.APPLICATION_JSON)).andDo(print()).andExpect(status().isOk()).andReturn();
@@ -1121,6 +1250,9 @@ public class CollectionApiControllerTest {
                 addMemberItem("3", "m3", "localhost").
                 persist();
 
+        collectionRegistry.getCollectionGraph().addEdge("1", new HashSet<>());
+        collectionRegistry.getCollectionGraph().addEdge("2", new HashSet<>());
+        collectionRegistry.getCollectionGraph().addEdge("3", new HashSet<>());
         ObjectMapper map = new ObjectMapper();
 
         MvcResult res = this.mockMvc.perform(get("/api/v1/collections/1/ops/intersection/2").contentType(MediaType.APPLICATION_JSON)).andDo(print()).andExpect(status().isOk()).andReturn();
@@ -1152,4 +1284,39 @@ public class CollectionApiControllerTest {
 
     }
 
+     @Test
+    public void testCircularDependency() throws Exception {
+        TestDataCreationHelper.initialize(collectionDao, memberDao).
+                addCollection("1", CollectionProperties.getDefault()).
+                addCollection("2", CollectionProperties.getDefault()).
+                addCollection("3", CollectionProperties.getDefault()).
+                addMemberItem("1", "2", "localhost").
+                persist();
+        collectionRegistry.getCollectionGraph().addEdge("1", new HashSet<>());
+        collectionRegistry.getCollectionGraph().addEdge("2", "1");
+        collectionRegistry.getCollectionGraph().addEdge("3", new HashSet<>());
+        ObjectMapper map = new ObjectMapper();
+        MemberItem item= new MemberItem();
+        item.setMid("1");
+        this.mockMvc.perform(post("/api/v1/collections/2/members").content(map.writeValueAsBytes(new MemberItem[]{item})).contentType(MediaType.APPLICATION_JSON)).andDo(print()).andExpect(status().isBadRequest()).andReturn();
+        
+        item= new MemberItem();
+        item.setMid("3");
+        this.mockMvc.perform(post("/api/v1/collections/2/members").content(map.writeValueAsBytes(new MemberItem[]{item})).contentType(MediaType.APPLICATION_JSON)).andDo(print()).andExpect(status().isCreated()).andReturn();
+        
+        item= new MemberItem();
+        item.setMid("1");
+        this.mockMvc.perform(post("/api/v1/collections/3/members").content(map.writeValueAsBytes(new MemberItem[]{item})).contentType(MediaType.APPLICATION_JSON)).andDo(print()).andExpect(status().isBadRequest()).andReturn();
+        
+        MvcResult res = this.mockMvc.perform(get("/api/v1/collections/2/members/3")).andDo(print()).andExpect(status().isOk()).andReturn();
+        String etag = res.getResponse().getHeader("ETag");
+
+        //delete membership of member 3 and collection 2
+        this.mockMvc.perform(delete("/api/v1/collections/2/members/3").header("If-Match", etag)).andDo(print()).andExpect(status().isNoContent()).andReturn();
+        
+        //add memberitem 1 to collection 3
+        item= new MemberItem();
+        item.setMid("1");
+        this.mockMvc.perform(post("/api/v1/collections/3/members").content(map.writeValueAsBytes(new MemberItem[]{item})).contentType(MediaType.APPLICATION_JSON)).andDo(print()).andExpect(status().isCreated()).andReturn();
+    }
 }

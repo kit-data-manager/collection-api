@@ -1,0 +1,75 @@
+{
+  "schema": {
+    "id": {
+      "type": "string",
+      "title": "Identifier",
+      "readOnly": true
+    },
+      "description": {
+      "type": "string",
+      "title": "Description",
+      "readOnly": true
+    },
+      "location": {
+      "type": "string",
+      "title": "Location",
+      "readOnly": true
+    },
+      "datatype": {
+      "type": "string",
+      "title": "Datatype",
+      "readOnly": true
+    },
+      "ontology": {
+      "type": "string",
+      "title": "Ontology",
+      "readOnly": true
+    },
+      "mappingrole": {
+      "type": "string",
+      "title": "Role",
+      "readOnly": true
+    },
+      "mappingindex": {
+      "type": "string",
+      "title": "Index",
+      "readOnly": true
+    },
+      "mappingdateAdded": {
+      "type": "string",
+      "title": "Date Added",
+      "readOnly": true
+    },
+      "mappingdateUpdated": {
+      "type": "string",
+      "title": "Date Updated",
+      "readOnly": true
+    }
+  }, 
+    "form": [
+    {
+      "type": "fieldset",
+      "title": "Member info",
+      "expandable": true,
+      "items": [
+        "id",
+        "description",
+        "location",
+         "datatype",
+         "ontology",
+          {  
+        "type": "fieldset",
+            "title": "Mapping",
+            "htmlClass":"member-mapping",
+            "expandable": true,
+            "items": [
+             "mappingrole",
+             "mappingindex",
+             "mappingdateAdded",
+             "mappingdateUpdated"
+             ]
+          }
+          ]
+      }
+      ]
+}

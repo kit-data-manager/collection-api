@@ -15,7 +15,9 @@
  */
 package edu.kit.datamanager.collection.dao;
 
+import edu.kit.datamanager.collection.domain.MemberItem;
 import edu.kit.datamanager.collection.domain.Membership;
+import java.util.Optional;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 /**
@@ -23,4 +25,5 @@ import org.springframework.data.jpa.repository.JpaRepository;
  * @author jejkal
  */
 public interface IMembershipDao extends JpaRepository<Membership, String>{
+    Optional<Membership> findByMember(MemberItem memberItem);
 }

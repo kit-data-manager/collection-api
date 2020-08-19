@@ -1,6 +1,7 @@
 package edu.kit.datamanager.collection.domain;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+import edu.kit.datamanager.collection.configuration.ApplicationProperties;
 import io.swagger.v3.oas.annotations.media.Schema;
 import java.util.ArrayList;
 import java.util.List;
@@ -63,7 +64,7 @@ public class ServiceFeatures{
     ServiceFeatures features = new ServiceFeatures();
     features.setProvidesCollectionPids(false);
     features.setCollectionPidProviderType(null);
-    features.setMaxExpansionDepth(-1);
+    features.setMaxExpansionDepth(ApplicationProperties.maxExpansionDepth);
     features.setSupportedCollectionOperations(null);
     features.setEnforcesAccess(false);
     features.setProvidesVersioning(false);

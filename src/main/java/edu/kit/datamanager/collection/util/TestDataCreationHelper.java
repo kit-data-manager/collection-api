@@ -112,6 +112,9 @@ public class TestDataCreationHelper{
       o.setLocation(location);
       o.setOntology(ontology);
       o.setMappings((mappings != null) ? mappings : CollectionItemMappingMetadata.getDefault());
+      if (collections.containsKey(id)){
+        addMemberOfToCollection(id, collectionId);
+      }
       o = memberDao.save(o);
       members.put(id, o);
     }
@@ -121,6 +124,20 @@ public class TestDataCreationHelper{
     collections.get(collectionId).getMembers().add(m);
 
     return this;
+  }
+  
+  /**
+   * Add the parent collection id as a value to the memberOf key.
+   * @param collectionId The collectionId 
+   * @param memberOfId The parent collectionId
+   */
+  private void addMemberOfToCollection(String collectionId, String memberOfId){
+    CollectionObject collectionObject = collections.get(collectionId);
+    if (collectionObject != null){
+        Set<String> memberOfs = collectionObject.getProperties().getMemberOf();
+        memberOfs.add(memberOfId);
+        collectionObject.getProperties().setMemberOf(memberOfs);
+    }
   }
 
   /**

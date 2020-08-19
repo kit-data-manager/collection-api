@@ -1,0 +1,119 @@
+{
+  "schema": {
+    "id": {
+      "type": "string",
+      "title": "Identifier",
+      "readOnly": true
+    },
+    "description": {
+      "type": "string",
+      "title": "Description",
+       "readOnly": true
+    },
+    "collection_propertiesdateCreated": {
+      "type": "string",
+      "title": "Date Created",
+       "readOnly": true
+    },
+      "collection_propertiesownership": {
+      "type": "string",
+      "title": "Ownership",
+       "readOnly": true
+    },
+    "collection_propertieslicense": {
+      "type": "string",
+      "title": "License",
+       "readOnly": true
+    },
+     "collection_propertiesmodelType": {
+      "type": "string",
+      "title": "Model Type",
+       "readOnly": true
+    },
+     "collection_propertiesdescriptionOntology": {
+      "type": "string",
+      "title": "Description Ontology",
+       "readOnly": true
+    },
+    "collection_propertieshasAccessRestrictions": {
+      "type": "boolean",
+      "title": "hasAccessRestrictions",
+       "readOnly": true
+    },
+    "collection_capabilitiesisOrdered": {
+      "type": "boolean",
+      "title": "isOrdered",
+       "readOnly": true
+    },
+    "collection_capabilitiesappendsToEnd": {
+      "type": "boolean",
+      "title": "appendsToEnd",
+       "readOnly": true
+    },
+    "collection_capabilitiessupportsRoles": {
+      "type": "boolean",
+      "title": "supportsRoles",
+       "readOnly": true
+    },
+    "collection_capabilitiesmembershipIsMutable": {
+      "type": "boolean",
+      "title": "membershipIsMutable",
+       "readOnly": true
+    },
+     "collection_capabilitiespropertiesAreMutable": {
+      "type": "boolean",
+      "title": "propertiesAreMutable",
+       "readOnly": true
+    },
+     "collection_capabilitiesrestrictedToType": {
+      "type": "string",
+      "title": "restrictedToType",
+       "readOnly": true
+    },
+    "collection_capabilitiesmaxLength": {
+      "type": "number",
+      "title": "maxLength",
+       "readOnly": true
+    }
+  },
+  "form": [
+    {
+      "type": "fieldset",
+      "title": "Collection info",
+      "expandable": true,
+      "items": [
+        "id",
+        "description",
+         {
+            "type": "fieldset",
+            "title": "properties",
+            "htmlClass":"collection-properties",
+            "expandable": true,
+            "items": [
+              "collection_propertiesdateCreated",
+              "collection_propertiesownership",
+              "collection_propertieslicense",
+              "collection_propertiesmodelType",
+              "collection_propertiesdescriptionOntology",
+              "collection_propertieshasAccessRestrictions"  
+            ]
+        },
+         {
+            "type": "fieldset",
+            "title": "capabilities",
+            "htmlClass":"collection-capabilities",
+            "expandable": true,
+            "items": [
+              "collection_capabilitiesisOrdered",
+              "collection_capabilitiesappendsToEnd",
+              "collection_capabilitiessupportsRoles",
+              "collection_capabilitiesmembershipIsMutable",
+              "collection_capabilitiespropertiesAreMutable",
+              "collection_capabilitiesrestrictedToType",
+               "collection_capabilitiesmaxLength"         
+            ]
+        }
+      ]
+    }
+  ]
+}
