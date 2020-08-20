@@ -12,7 +12,7 @@ services:
       build: ./collection
       container_name: collection
       ports: 
-        - "8070:8080"
+        - "8080:8080"
       links:
         - postgresql
       environment:
