@@ -27,7 +27,7 @@ apply plugin: 'io.spring.dependency-management'
 
 jar {
     baseName = 'collection-api'
-    version =  '0.1'
+    version =  System.getenv('version')
 }
 
 repositories {
@@ -48,14 +48,11 @@ lombok {
     sha256 = ""
 }
 
-
 if (project.hasProperty('travis')) {
     println 'Using travis profile for building ' + project.getName()
-    //apply from: 'gradle/build_dependencies.gradle'
     apply from: 'gradle/profile-travis.gradle'
 } else if (project.hasProperty('release') || project.hasProperty('clean-release')) {
     println 'Using release profile for building ' + project.getName()
-    //apply from: 'gradle/build_dependencies.gradle'
     apply from: 'gradle/profile-release.gradle'   
 }
 
@@ -71,7 +68,7 @@ dependencies {
     implementation("de.codecentric:spring-boot-admin-starter-client:2.1.6")
 
     implementation("org.postgresql:postgresql:42.2.1")
-    implementation("org.hsqldb:hsqldb:2.4.0")
+    implementation("com.h2database:h2:1.4.194")
 
     //Java 11 Support 
     implementation('javax.xml.bind:jaxb-api:2.2.11')
@@ -95,8 +92,6 @@ dependencies {
 
     testImplementation('org.springframework.restdocs:spring-restdocs-mockmvc:2.0.2.RELEASE')
     testImplementation('org.asciidoctor:asciidoctor-gradle-plugin:1.5.9.2')
-    // asciidoctor('org.springframework.restdocs:spring-restdocs-asciidoctor:2.0.2.RELEASE')
-    // asciidoctor('com.github.allati.asciidoctor.monotree:asciidoctor-extension-monotree:0.0.1')
 }
 
 springBoot  {
