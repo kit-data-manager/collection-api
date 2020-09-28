@@ -107,6 +107,7 @@ bootJar {
         into 'static/docs'
     }
     launchScript()
+    archiveFileName = "${archiveBaseName.get()}.${archiveExtension.get()}"
 }
 
 test {
