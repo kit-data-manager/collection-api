@@ -3,6 +3,5 @@
 /.nb-gradle/
 /.nb-gradle-properties
 /.settings/
-/config/
 /lib/
 **/application.properties
