@@ -222,7 +222,7 @@
                      });
                   }
 
-                  d3.request("http://localhost:8070/api/v1/collections/").header("Accept", "application/vnd.datamanager.d3+json").get(function (data) {
+                  d3.request("/api/v1/collections/").header("Accept", "application/vnd.datamanager.d3+json").get(function (data) {
 
                      var data = JSON.parse(data.response);
 
