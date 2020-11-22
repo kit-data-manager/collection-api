@@ -77,7 +77,7 @@
                 $('#form').metadataeditor(inputs, function onSubmitValid(value) {
                     $.ajax({
                         type: "DELETE",
-                        url: "/api/v1/collections/" + JSON.parse(value).id,
+                        url: "/api/v1/collections/" + value.id,
                         dataType: "json",
                         contentType: "application/json",
                         "headers": {

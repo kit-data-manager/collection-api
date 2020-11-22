@@ -101,10 +101,10 @@ editorDefinition.prototype.render = function (callback) {
         this.generateFormWithoutValues(callback);
     }
     if (this.renderType === renderTypeEnum.FORM && this.operation === operationEnum.UPDATE) {
-        this.generateFormFilledWithValues(callback, "false");
+        this.generateFormForUpdate(callback);
     }
     if (this.renderType === renderTypeEnum.FORM && this.operation === operationEnum.DELETE) {
-        this.generateFormFilledWithValues(callback, "true");
+        this.generateFormForDelete(callback);
     }
 };
 
@@ -135,7 +135,7 @@ editorDefinition.prototype.generateFormWithoutValues = function (callback) {
  * @param {type} readonly
  * @returns {undefined}
  */
-editorDefinition.prototype.generateFormFilledWithValues = function (callback, readonly) {
+editorDefinition.prototype.generateFormForUpdate = function (callback) {
     if (!this.resource) {
         throw new Error('JSON resource is missing');
     }
@@ -149,11 +149,34 @@ editorDefinition.prototype.generateFormFilledWithValues = function (callback, re
             }
         ],
         value: this.resource,
-        readonly: readonly,
 
         //submit without validation
         "onSubmitValid": function (values) {
             callback(JSON.stringify(values, null, '\t'));
+        }
+    });
+}
+
+editorDefinition.prototype.generateFormForDelete = function (callback) {
+    var copyResource = this.resource;
+    if (!this.resource) {
+        throw new Error('JSON resource is missing');
+    }
+    this.renderElt.jsonForm({
+        schema: this.dataModel,
+        form: [
+            this.uiForm,
+            {
+                "type": "submit",
+                "title": this.operation
+            }
+        ],
+        value: this.resource,
+        readonly: "true",
+
+        //submit without validation
+        "onSubmit": function () {
+            callback(copyResource);
         }
     });
 }
