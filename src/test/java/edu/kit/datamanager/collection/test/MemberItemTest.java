@@ -18,6 +18,7 @@ package edu.kit.datamanager.collection.test;
 import edu.kit.datamanager.collection.domain.CollectionItemMappingMetadata;
 import edu.kit.datamanager.collection.domain.MemberItem;
 import java.time.Instant;
+import java.time.temporal.ChronoUnit;
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -37,8 +38,8 @@ public class MemberItemTest{
     item.setOntology("o1");
     item.setDatatype("type1");
     CollectionItemMappingMetadata md = new CollectionItemMappingMetadata();
-    md.setDateAdded(Instant.now());
-    md.setDateUpdated(Instant.now());
+    md.setDateAdded(Instant.now().truncatedTo( ChronoUnit.MILLIS ));
+    md.setDateUpdated(Instant.now().truncatedTo( ChronoUnit.MILLIS ));
     md.setId(1l);
     md.setIndex(1);
     md.setMemberRole("member");
@@ -72,8 +73,8 @@ public class MemberItemTest{
     item.setOntology("o1");
     item.setDatatype("type1");
     CollectionItemMappingMetadata md = new CollectionItemMappingMetadata();
-    md.setDateAdded(Instant.now());
-    md.setDateUpdated(Instant.now());
+    md.setDateAdded(Instant.now().truncatedTo( ChronoUnit.MILLIS ));
+    md.setDateUpdated(Instant.now().truncatedTo( ChronoUnit.MILLIS ));
     md.setId(1l);
     md.setIndex(1);
     md.setMemberRole("member");
