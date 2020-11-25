@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [1.1] - tbd
 ### Fixed
 - Some properties, e.g. collection members and internal identifiers, are now properly omitted while being returned by the controller
+- Truncating service-assigned times to milliseconds for compatibility reasons
 
 ## [1.0] -  2020-09-29
 ### Added
