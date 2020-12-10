@@ -35,7 +35,7 @@ public class CollectionObject implements EtagSupport {
     @Schema(required = true, description = "")
     //@NotNull
     //@Valid
-    @NotEmpty
+    //@NotEmpty
     @OneToOne(cascade = CascadeType.ALL)
     @JsonProperty("capabilities")
     private CollectionCapabilities capabilities = null;
