@@ -90,6 +90,7 @@ http://localhost:8070/static/overview.html
 ## More Information
 
 * [RDA Recommendation on Research Data Collections (doi: 10.15497/RDA00022)](https://zenodo.org/record/2428145#.XTbIMZMzbbA)
+* [Getting Started & Documentation](https://kit-dm-documentation.readthedocs.io/en/latest/)
 
 ## License
 
