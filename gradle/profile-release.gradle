@@ -1,5 +1,7 @@
 import java.text.SimpleDateFormat
 
+apply plugin: 'net.researchgate.release'
+
 ext {
    snippetsDir = file("build/generated-snippets")
 }
@@ -35,7 +37,7 @@ bootJar {
    launchScript()
 }
 
- release {
+release {
     tagTemplate = 'v${version}'
     versionPropertyFile = 'gradle.properties'
     versionProperties = ['version', 'mainversion']
