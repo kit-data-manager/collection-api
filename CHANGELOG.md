@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ## [1.1] - tbd
+### Changed
+- Change of messaging property names including documentation
+- Update to service-base 0.2.0
+- Update to generic-message-consumer 0.2.0
+
 ### Fixed
 - Some properties, e.g. collection members and internal identifiers, are now properly omitted while being returned by the controller
 - Truncating service-assigned times to milliseconds for compatibility reasons
