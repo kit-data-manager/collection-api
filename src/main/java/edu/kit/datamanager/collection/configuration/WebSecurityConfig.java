@@ -62,11 +62,11 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
     @Override
     protected void configure(HttpSecurity http) throws Exception {
         HttpSecurity httpSecurity = http.authorizeRequests()
-                .antMatchers(HttpMethod.OPTIONS, "/**").permitAll().and().sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS)
+                .antMatchers(HttpMethod.OPTIONS, "/**").permitAll()
+                .antMatchers("/editor/**").permitAll().and().sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS)
                 .and()
                 .csrf().disable()
                 .addFilterAfter(new JwtAuthenticationFilter(authenticationManager()), BasicAuthenticationFilter.class);
-
         // if(!applicationProperties.isAuthEnabled()){
         //   logger.info("Authentication is DISABLED. Adding 'NoAuthenticationFilter' to authentication chain.");
         httpSecurity = httpSecurity.addFilterAfter(new NoAuthenticationFilter("test123", authenticationManager()), JwtAuthenticationFilter.class);

@@ -29,7 +29,7 @@ public class MemberItem implements EtagSupport {
     private Long id;
 
     @Schema(required = true, description = "Identifier for the member")
-    @NotNull
+   // @NotNull
     @JsonProperty("id")
     private String mid = null;
 
