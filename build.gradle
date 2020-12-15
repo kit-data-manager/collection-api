@@ -62,7 +62,7 @@ dependencies {
     implementation("org.springframework.boot:spring-boot-starter-data-jpa")
     api("org.springdoc:springdoc-openapi-data-rest:1.2.31")
   
-    implementation("edu.kit.datamanager:service-base:0.1"){
+    implementation("edu.kit.datamanager:service-base:0.2.0"){
         exclude group: 'org.javers', module: 'javers-spring-boot-starter-sql'
     }
     implementation("de.codecentric:spring-boot-admin-starter-client:2.1.6")

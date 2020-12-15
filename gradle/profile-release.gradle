@@ -8,7 +8,6 @@ test {
    outputs.dir snippetsDir
 }
 
-  
 asciidoctor {
    attributes "snippets": snippetsDir,
             "version": jar.version,
@@ -35,4 +34,9 @@ bootJar {
    }
    launchScript()
 }
-   
+
+ release {
+    tagTemplate = 'v${version}'
+    versionPropertyFile = 'gradle.properties'
+    versionProperties = ['version', 'mainversion']
+}
