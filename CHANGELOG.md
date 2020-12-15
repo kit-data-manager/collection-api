@@ -6,7 +6,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-## [1.1] - tbd
+## [1.1.0] - 2020-12-15
 ### Changed
 - Change of messaging property names including documentation
 - Update to service-base 0.2.0
