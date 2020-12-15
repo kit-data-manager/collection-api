@@ -8,6 +8,7 @@ import edu.kit.datamanager.util.json.CustomInstantDeserializer;
 import edu.kit.datamanager.util.json.CustomInstantSerializer;
 import io.swagger.v3.oas.annotations.media.Schema;
 import java.time.Instant;
+import java.time.temporal.ChronoUnit;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
@@ -41,7 +42,7 @@ public class CollectionItemMappingMetadata {
     @JsonProperty("dateAdded")
     @JsonDeserialize(using = CustomInstantDeserializer.class)
     @JsonSerialize(using = CustomInstantSerializer.class)
-    private Instant dateAdded = Instant.now();
+    private Instant dateAdded = Instant.now().truncatedTo( ChronoUnit.MILLIS );
 
     @Schema(description = "The date the item's metadata were last updated.")
     @JsonProperty("dateUpdated")

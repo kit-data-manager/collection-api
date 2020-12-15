@@ -33,6 +33,7 @@ import edu.kit.datamanager.collection.util.TestDataCreationHelper;
 import java.time.Instant;
 import java.time.ZoneOffset;
 import java.time.format.DateTimeFormatter;
+import java.time.temporal.ChronoUnit;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -410,8 +411,8 @@ public class CollectionApiControllerTest {
         CollectionItemMappingMetadata props = new CollectionItemMappingMetadata();
         props.setMemberRole("member");
         props.setIndex(1);
-        props.setDateAdded(Instant.now());
-        props.setDateUpdated(Instant.now());
+        props.setDateAdded(Instant.now().truncatedTo( ChronoUnit.MILLIS ));
+        props.setDateUpdated(Instant.now().truncatedTo( ChronoUnit.MILLIS ));
         TestDataCreationHelper.initialize(collectionDao, memberDao).addCollection("1", CollectionProperties.getDefault()).addCollection("2", CollectionProperties.getDefault()).addMemberItem("1", "m1", null, null, "localhost", null, props).persist();
 
         collectionRegistry.getCollectionGraph().addEdge("1", new HashSet<>());
@@ -450,8 +451,8 @@ public class CollectionApiControllerTest {
         CollectionItemMappingMetadata props = new CollectionItemMappingMetadata();
         props.setMemberRole("member");
         props.setIndex(1);
-        props.setDateAdded(Instant.now());
-        props.setDateUpdated(Instant.now());
+        props.setDateAdded(Instant.now().truncatedTo( ChronoUnit.MILLIS ));
+        props.setDateUpdated(Instant.now().truncatedTo( ChronoUnit.MILLIS ));
 
         TestDataCreationHelper.initialize(collectionDao, memberDao).addCollection("1", CollectionProperties.getDefault()).addCollection("2", CollectionProperties.getDefault()).addMemberItem("1", "m1", null, null, "localhost", null, props).persist();
 
@@ -532,8 +533,8 @@ public class CollectionApiControllerTest {
         CollectionItemMappingMetadata props = new CollectionItemMappingMetadata();
         props.setMemberRole("member");
         props.setIndex(1);
-        props.setDateAdded(Instant.now());
-        props.setDateUpdated(Instant.now());
+        props.setDateAdded(Instant.now().truncatedTo( ChronoUnit.MILLIS ));
+        props.setDateUpdated(Instant.now().truncatedTo( ChronoUnit.MILLIS ));
         MemberItem item = new MemberItem();
         item.setMid("m1");
         item.setDescription("First member");
@@ -904,7 +905,7 @@ public class CollectionApiControllerTest {
         newCaps.setMaxLength(10);
 
         CollectionProperties newProps = CollectionProperties.getDefault();
-        newProps.setDateCreated(Instant.now());
+        newProps.setDateCreated(Instant.now().truncatedTo( ChronoUnit.MILLIS ));
         newProps.setOwnership("Tester");
         newProps.setLicense("Apache 2.0");
         newProps.setModelType("custom");
@@ -976,8 +977,8 @@ public class CollectionApiControllerTest {
 
         collectionRegistry.getCollectionGraph().addEdge("1", new HashSet<>());
         CollectionItemMappingMetadata mappingMetadata = new CollectionItemMappingMetadata();
-        mappingMetadata.setDateAdded(Instant.now());
-        mappingMetadata.setDateUpdated(Instant.now());
+        mappingMetadata.setDateAdded(Instant.now().truncatedTo( ChronoUnit.MILLIS ));
+        mappingMetadata.setDateUpdated(Instant.now().truncatedTo( ChronoUnit.MILLIS ));
         mappingMetadata.setIndex(5);
         mappingMetadata.setMemberRole("guest");
 

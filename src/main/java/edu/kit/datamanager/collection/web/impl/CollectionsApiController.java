@@ -39,6 +39,7 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import java.time.ZoneOffset;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
+import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -121,7 +122,7 @@ public class CollectionsApiController implements CollectionsApi {
             }
 
             LOG.trace("Setting property 'dateCreated' to now().");
-            props.setDateCreated(Instant.now());
+            props.setDateCreated(Instant.now().truncatedTo( ChronoUnit.MILLIS ));
 
             LOG.trace("Checking collection capabilities.");
             CollectionCapabilities caps = collection.getCapabilities();
@@ -697,7 +698,7 @@ public class CollectionsApiController implements CollectionsApi {
             mMetadata.setMemberRole(itemMetadata.getMemberRole());
 
             LOG.trace("Setting property 'dateUpdated'.");
-            mMetadata.setDateUpdated(Instant.now());
+            mMetadata.setDateUpdated(Instant.now().truncatedTo( ChronoUnit.MILLIS ));
         }
 
         LOG.trace("Persisting updated membership with new collection item metadata.");
