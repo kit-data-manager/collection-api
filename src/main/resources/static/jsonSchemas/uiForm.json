@@ -24,6 +24,7 @@
                 "capabilities.isOrdered",
                 "capabilities.appendsToEnd",
                 "capabilities.supportsRoles",
+                "capabilities.membershipIsMutable",
                 "capabilities.propertiesAreMutable",
                 "capabilities.restrictedToType",
                 "capabilities.maxLength"         

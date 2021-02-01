@@ -15,34 +15,17 @@
  */
 package edu.kit.datamanager.collection.dto;
 
-import edu.kit.datamanager.collection.domain.CollectionObject;
-import java.util.List;
-import lombok.Builder;
 import lombok.Getter;
-import org.json.simple.JSONObject;
+import lombok.Setter;
 
 /**
  *
  * @author chelbi
  */
-@Builder
 @Getter
-public class EditorRequest {
+@Setter
+public class TabulatorItems{
+    private String title;
+    private String field;
     
-    private JSONObject dataModel;
-    private JSONObject uiForm;
-    private List <CollectionObject> collections;
-    private TabulatorItems[] items;
-    
-    @Builder.Default
-    private boolean show= true;
-    
-    @Builder.Default
-    private boolean edit= true;
-    
-    @Builder.Default
-    private boolean delete= true;
-    
-    @Builder.Default
-    private boolean create = true;
 }
