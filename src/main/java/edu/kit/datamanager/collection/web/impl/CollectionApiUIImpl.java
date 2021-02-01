@@ -1,25 +1,40 @@
 /*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
+ * Copyright 2018 Karlsruhe Institute of Technology.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 package edu.kit.datamanager.collection.web.impl;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import edu.kit.datamanager.collection.dao.ICollectionObjectDao;
 import edu.kit.datamanager.collection.domain.CollectionObject;
 import edu.kit.datamanager.collection.dto.EditorRequest;
-import edu.kit.datamanager.collection.dto.Operation;
-import edu.kit.datamanager.collection.dto.RenderType;
+import edu.kit.datamanager.collection.dto.TabulatorItems;
 import edu.kit.datamanager.collection.web.CollectionApiUI;
-import edu.kit.datamanager.collection.web.CollectionsApi;
+import java.io.IOException;
 import java.io.InputStreamReader;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Paths;
+import java.util.List;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.core.io.Resource;
-import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
-import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.servlet.ModelAndView;
 
@@ -32,52 +47,23 @@ public class CollectionApiUIImpl implements CollectionApiUI {
 
     private final static String DATAMODEL = "/static/jsonSchemas/dataModel.json";
     private final static String UIFORM = "/static/jsonSchemas/uiForm.json";
+    private final static String ITEMS = "/static/jsonSchemas/items.json";
 
     @Autowired
-    private CollectionsApi collectionsApi;
+    private ICollectionObjectDao collectionDao;
 
-    @RequestMapping("/collection/create")
-    public ModelAndView createNewCollection() {
-        EditorRequest request = EditorRequest.builder()
-                .renderType(RenderType.FORM)
-                .operation(Operation.CREATE)
-                .dataModel(getJsonObject(DATAMODEL))
-                .uiForm(getJsonObject(UIFORM)).build();
-        ModelAndView model = new ModelAndView("collection");
-        model.addObject("request", request);
-        return model;
-    }
+    @RequestMapping("/collections")
+    @Override
+    public ModelAndView collections() {
+        List<CollectionObject> collections = collectionDao.findAll();
 
-    @RequestMapping("/collection/update/{id}")
-    public ModelAndView updateCollection(@PathVariable String id) {
-        ResponseEntity<CollectionObject> collection = collectionsApi.collectionsIdGet(id);
         EditorRequest request = EditorRequest.builder()
-                .renderType(RenderType.FORM)
-                .operation(Operation.UPDATE)
                 .dataModel(getJsonObject(DATAMODEL))
                 .uiForm(getJsonObject(UIFORM))
-                .resource(collection.getBody())
-                .etag(collection.getHeaders().getETag())
-                .build();
+                .collections(collections)
+                .items(getJsonArrayOfItems(ITEMS)).build();
 
-        ModelAndView model = new ModelAndView("collection");
-        model.addObject("request", request);
-        return model;
-    }
-    
-    @RequestMapping("/collection/delete/{id}")
-    public ModelAndView deleteCollection(@PathVariable String id) {
-        ResponseEntity<CollectionObject> collection = collectionsApi.collectionsIdGet(id);
-        EditorRequest request = EditorRequest.builder()
-                .renderType(RenderType.FORM)
-                .operation(Operation.DELETE)
-                .dataModel(getJsonObject(DATAMODEL))
-                .uiForm(getJsonObject(UIFORM))
-                .resource(collection.getBody())
-                .etag(collection.getHeaders().getETag())
-                .build();
-
-        ModelAndView model = new ModelAndView("collection");
+        ModelAndView model = new ModelAndView("collections");
         model.addObject("request", request);
         return model;
     }
@@ -94,4 +80,17 @@ public class CollectionApiUIImpl implements CollectionApiUI {
         }
         return obj;
     }
+
+    private TabulatorItems[] getJsonArrayOfItems(String path) {
+        ObjectMapper mapper = new ObjectMapper();
+        TabulatorItems[] items = null;
+        Resource resource = new ClassPathResource(path);
+        try {
+            items = mapper.readValue(Files.newBufferedReader(Paths.get(resource.getURI()), StandardCharsets.UTF_8), TabulatorItems[].class);
+        } catch (IOException ex) {
+            Logger.getLogger(CollectionApiUIImpl.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        return items;
+    }
+
 }

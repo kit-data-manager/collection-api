@@ -19,7 +19,8 @@
                 },
                 "appendsToEnd": {
                     "type": "boolean",
-                    "title": "appendsToEnd"
+                    "title": "appendsToEnd",
+                    "default": true
                 },
                 "supportsRoles": {
                     "type": "boolean",
@@ -27,11 +28,13 @@
                 },
                 "membershipIsMutable": {
                     "type": "boolean",
-                    "title": "membershipIsMutable"
+                    "title": "membershipIsMutable",
+                    "default": true
                 },
                 "propertiesAreMutable": {
                     "type": "boolean",
-                    "title": "propertiesAreMutable"
+                    "title": "propertiesAreMutable",
+                    "default": true
                 },
                 "restrictedToType": {
                     "type": "string",

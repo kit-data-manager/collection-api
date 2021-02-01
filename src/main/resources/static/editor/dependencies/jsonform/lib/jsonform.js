@@ -470,7 +470,7 @@ jsonform.elementTypes = {
       '<%= (node.disabled ? " disabled" : "")%>' +
       '<%= (node.schemaElement && node.schemaElement.required && (node.schemaElement.type !== "boolean") ? " required=\'required\'" : "") %>' +
       ' /><%= node.inlinetitle || "" %>' +
-      '</label></div>',
+      '<span class="checkmark"></span></label></div>',
     'fieldtemplate': true,
     'inputfield': true,
     'getElement': function (el) {
@@ -822,7 +822,7 @@ jsonform.elementTypes = {
       // Build up choices from the enumeration list
       var choices = null;
       var choiceshtml = null;
-      var template = '<div class="checkbox"><label>' +
+      var template = '<div class="checkbox"><label>'    +
         '<input type="checkbox" <% if (value) { %> checked="checked" <% } %> name="<%= name %>" value="1"' +
         '<%= (node.disabled? " disabled" : "")%>' +
         '/><%= title %></label></div>';
@@ -3413,6 +3413,15 @@ formTree.prototype.computeInitialValues = function () {
  *  root for the form
  */
 formTree.prototype.render = function (domRoot) {
+//    console.log("before ");
+//    console.log(domRoot);
+//     $(domRoot).removeClass('jsonform-readonly');
+//     $(domRoot).removeClass('jsonform-disabled');
+//     $(domRoot).removeAttr('readonly');
+//     $(domRoot).removeAttr('disabled');
+//    console.log("after ");
+//    console.log(domRoot);
+
   if (!domRoot) return;
   this.domRoot = domRoot;
   this.root.render();
@@ -3668,7 +3677,7 @@ $.fn.jsonForm = function(options) {
   var formElt = this;
   if (options.readonly && options.readonly === "true") { readonlyglobal= true;};
   options = _.defaults({}, options, {submitEvent: 'submit'});
-  
+
   var form = new formTree();
   form.initialize(options);
   form.render(formElt.get(0));
