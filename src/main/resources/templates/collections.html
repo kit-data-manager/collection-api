@@ -55,148 +55,147 @@
             $('body').append(modalTemplate("FAILED"));
             $('body').append(modalTemplate("SUCCESS"));
 
-            var inputs = {dataModel: options.dataModel, uiForm: options.uiForm, resource: options.collections, items: options.items};
-            $('#table').metadataeditorTable(inputs,
-                    //form filled with values will be shown. The user cannot edit the form.
-                            function readOperation(value) {
-                                var options = {operation: "READ", dataModel: inputs.dataModel, uiForm: inputs.uiForm, resource: value};
-                                $('form').metadataeditorForm(options, function onSubmitValid(value) {
-                                });
-                                $("#formModal").modal('show');
+            var inputs = {dataModel: options.dataModel, uiForm: options.uiForm, resource: options.collections, items: options.items,
+                readOperation: function (rowColumnvalue) {
+                    var options = {operation: "READ", dataModel: inputs.dataModel, uiForm: inputs.uiForm, resource: rowColumnvalue};
+                    $('form').metadataeditorForm(options, function onSubmitValid(value) {
+                    });
+                    $("#formModal").modal('show');
+                },
+                createOperation: function () {
+                    var options = {operation: "CREATE", dataModel: inputs.dataModel, uiForm: inputs.uiForm};
+                    $('form').metadataeditorForm(options, function onSubmitValid(value) {
+                        createCollection(value);
+                    });
+                    $("#formModal").modal('show');
+                },
+                updateOperation: function (rowColumnvalue) {
+                    var options = {operation: "UPDATE", dataModel: inputs.dataModel, uiForm: inputs.uiForm, resource: rowColumnvalue};
+                    $('form').metadataeditorForm(options, function onSubmitValid(updatedValue) {
+                        updateCollection(rowColumnvalue, updatedValue);
+                    });
+                    $("#formModal").modal('show');
+                },
+                deleteOperation: function (rowColumnvalue) {
+                    var options = {operation: "DELETE", dataModel: inputs.dataModel, uiForm: inputs.uiForm, resource: rowColumnvalue};
+                    $('form').metadataeditorForm(options, function onSubmitValid(value) {
+                        deleteCollection(rowColumnvalue);
+                    });
+                    $("#formModal").modal('show');
+                }
+
+            };
+            $('#table').metadataeditorTable(inputs);
+
+            /**
+             * generates the appropriate etag and updates the collection with the new json value.
+             * @param {type} rowColumnvalue the value of the JSON resource before update.
+             * @param {type} updatedValue the updated JSON resource 
+             * @returns {undefined}
+             */
+            function updateCollection(rowColumnvalue, updatedValue) {
+                generateEtag(rowColumnvalue.id, function (status, etag) {
+                    if (status === "success") {
+                        $.ajax({
+                            type: "PUT",
+                            url: "/api/v1/collections/" + rowColumnvalue.id,
+                            dataType: "json",
+                            contentType: "application/json",
+                            "headers": {
+                                "If-Match": etag
                             },
-                            //form filled with values will be shown. The user has the possibility to update the collection.
-                                    function editOperation(value) {
-                                        var options = {operation: "UPDATE", dataModel: inputs.dataModel, uiForm: inputs.uiForm, resource: value};
-                                        $('form').metadataeditorForm(options, function onSubmitValid(value) {
-                                            updateCollection(value);
-                                        });
-                                        $("#formModal").modal('show');
-                                    },
-                                    //form filled with read-only values will be shown. The user can delete the collection.
-                                            function deleteOperation(value) {
-                                                var options = {operation: "DELETE", dataModel: inputs.dataModel, uiForm: inputs.uiForm, resource: value};
-                                                $('form').metadataeditorForm(options, function onSubmitValid(value) {
-                                                    deleteCollection(value);
-                                                });
-                                                $("#formModal").modal('show');
-                                            },
-                                            //empty form will be shown. The user has the possibility to fill the form and create a new collection.
-                                                    function createOperation() {
-                                                        var options = {operation: "CREATE", dataModel: inputs.dataModel, uiForm: inputs.uiForm};
-                                                        $('form').metadataeditorForm(options, function onSubmitValid(value) {
-                                                            createCollection(value);
-                                                        });
-                                                        $("#formModal").modal('show');
-                                                    });
+                            data: updatedValue,
+                            success: function (result) {
+                                $("#formModal").modal('hide');
+                                showModal("SUCCESS", "Operation has been sucessfully executed!", "/collections");
+                            },
+                            error: function (result) {
+                                $("#formModal").modal('hide');
+                                showModal("FAILED", "Operation failed: Error: " + result.status, "");
+                            }
+                        });
+                    } else {
+                        alert("etag couldn't be generated");
+                    }
+                });
 
-                                            /**
-                                             * generates the appropriate etag and updates the collection with the new json value.
-                                             * @param {type} value the new json value
-                                             * @returns {undefined}
-                                             */
-                                            function updateCollection(value) {
-                                                generateEtag(value, function (status, etag) {
-                                                    if (status === "success") {
-                                                        $.ajax({
-                                                            type: "PUT",
-                                                            url: "/api/v1/collections/" + JSON.parse(value).id,
-                                                            dataType: "json",
-                                                            contentType: "application/json",
-                                                            "headers": {
-                                                                "If-Match": etag
-                                                            },
-                                                            data: value,
-                                                            success: function (result) {
-                                                                $("#formModal").modal('hide');
-                                                                showModal("SUCCESS", "Operation has been sucessfully executed!", "/collections");
-                                                            },
-                                                            error: function (result) {
-                                                                $("#formModal").modal('hide');
-                                                                showModal("FAILED", "Operation failed: Error: " + result.status, "");
-                                                            }
-                                                        });
-                                                    } else {
-                                                        alert("etag couldn't be generated");
-                                                    }
-                                                });
+            }
 
-                                            }
+            /**
+             * generates the appropriate etag and deletes the collection.
+             * @param {type} value JSON value, which represents the collection that should be deleted.
+             * @returns {undefined}
+             */
+            function deleteCollection(value) {
+                generateEtag(value.id, function (status, etag) {
+                    if (status === "success") {
+                        $.ajax({
+                            type: "DELETE",
+                            url: "/api/v1/collections/" + value.id,
+                            dataType: "json",
+                            contentType: "application/json",
+                            "headers": {
+                                "If-Match": etag
+                            },
+                            data: value,
+                            success: function (result) {
+                                $("#formModal").modal('hide');
+                                showModal("SUCCESS", "Operation has been sucessfully executed!", "/collections");
+                            },
+                            error: function (result) {
+                                $("#formModal").modal('hide');
+                                showModal("FAILED", "Operation failed: Error: " + result.status, "");
+                            }
+                        });
+                    } else {
+                        alert("etag couldn't be generated");
+                    }
+                });
+            }
 
-                                            /**
-                                             * generates the appropriate etag and deletes the collection.
-                                             * @param {type} value JSON value, which represents the collection that should be deleted.
-                                             * @returns {undefined}
-                                             */
-                                            function deleteCollection(value) {
-                                                generateEtag(value, function (status, etag) {
-                                                    if (status === "success") {
-                                                        $.ajax({
-                                                            type: "DELETE",
-                                                            url: "/api/v1/collections/" + JSON.parse(value).id,
-                                                            dataType: "json",
-                                                            contentType: "application/json",
-                                                            "headers": {
-                                                                "If-Match": etag
-                                                            },
-                                                            data: value,
-                                                            success: function (result) {
-                                                                $("#formModal").modal('hide');
-                                                                showModal("SUCCESS", "Operation has been sucessfully executed!", "/collections");
-                                                            },
-                                                            error: function (result) {
-                                                                $("#formModal").modal('hide');
-                                                                showModal("FAILED", "Operation failed: Error: " + result.status, "");
-                                                            }
-                                                        });
-                                                    } else {
-                                                        alert("etag couldn't be generated");
-                                                    }
-                                                });
-                                            }
+            /**
+             * creates a new collection.
+             * @param {type} value JSOn Value, which represents the collection that should be created.
+             * @returns {undefined}
+             */
+            function createCollection(value) {
+                $.ajax({
+                    type: "POST",
+                    url: "/api/v1/collections",
+                    dataType: "json",
+                    contentType: "application/json",
+                    data: "[" + value + "]",
+                    success: function (result) {
+                        $("#formModal").modal('hide');
+                        showModal("SUCCESS", "Operation has been sucessfully executed!", "/collections");
+                    },
+                    error: function (result) {
+                        $("#formModal").modal('hide');
+                        showModal("FAILED", "Operation failed: Error: " + result.status, "");
+                    }
+                });
+            }
 
-                                            /**
-                                             * creates a new collection.
-                                             * @param {type} value JSOn Value, which represents the collection that should be created.
-                                             * @returns {undefined}
-                                             */
-                                            function createCollection(value) {
-                                                $.ajax({
-                                                    type: "POST",
-                                                    url: "/api/v1/collections",
-                                                    dataType: "json",
-                                                    contentType: "application/json",
-                                                    data: "[" + value + "]",
-                                                    success: function (result) {
-                                                        $("#formModal").modal('hide');
-                                                        showModal("SUCCESS", "Operation has been sucessfully executed!", "/collections");
-                                                    },
-                                                    error: function (result) {
-                                                        $("#formModal").modal('hide');
-                                                        showModal("FAILED", "Operation failed: Error: " + result.status, "");
-                                                    }
-                                                });
-                                            }
-
-                                            /**
-                                             * returns the etag of a collection.
-                                             * @param {type} value represents a collection as a JSON value
-                                             * @param {type} callback cb function returns the etag value in case the actual method is coorectly executed.
-                                             * @returns {undefined}
-                                             */
-                                            function generateEtag(value, callback) {
-                                                $.ajax({
-                                                    type: "GET",
-                                                    url: "/api/v1/collections/" + JSON.parse(value).id,
-                                                    dataType: "json",
-                                                    contentType: "application/json",
-                                                    success: function (output, status, xhr) {
-                                                        callback(status, xhr.getResponseHeader("etag"));
-                                                    },
-                                                    error: function (result) {
-                                                        callback(result.status);
-                                                    }
-                                                });
-                                            }
+            /**
+             * returns the etag of a collection.
+             * @param {type} idValue represents the identifier of a collection
+             * @param {type} callback cb function returns the etag value in case the actual method is coorectly executed.
+             * @returns {undefined}
+             */
+            function generateEtag(idValue, callback) {
+                $.ajax({
+                    type: "GET",
+                    url: "/api/v1/collections/" + idValue,
+                    dataType: "json",
+                    contentType: "application/json",
+                    success: function (output, status, xhr) {
+                        callback(status, xhr.getResponseHeader("etag"));
+                    },
+                    error: function (result) {
+                        callback(result.status);
+                    }
+                });
+            }
         </script>
     </body>
 </html>
