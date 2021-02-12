@@ -65,6 +65,10 @@ import java.util.Set;
 import java.util.UUID;
 import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
+import javax.validation.ConstraintViolation;
+import javax.validation.Validation;
+import javax.validation.Validator;
+import javax.validation.ValidatorFactory;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.util.UriComponentsBuilder;
@@ -455,6 +459,16 @@ public class CollectionsApiController implements CollectionsApi {
             @PathVariable("id") String id,
             @Valid @RequestBody List<MemberItem> content) {
         LOG.trace("Calling collectionsIdMembersPost({}).", id);
+
+        //validate attributes of MemberItem
+        ValidatorFactory factory = Validation.buildDefaultValidatorFactory();
+        Validator validator = factory.getValidator();
+        for (MemberItem item : content) {
+            Set<ConstraintViolation<MemberItem>> constraintViolations = validator.validate(item);
+            if (constraintViolations.size() > 0) {
+                return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
+            }
+        }
 
         Optional<CollectionObject> result = collectionDao.findById(id);
         if (result.isEmpty()) {
