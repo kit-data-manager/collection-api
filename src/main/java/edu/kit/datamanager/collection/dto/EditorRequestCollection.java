@@ -15,25 +15,37 @@
  */
 package edu.kit.datamanager.collection.dto;
 
+import edu.kit.datamanager.collection.domain.CollectionObject;
+import java.util.List;
+import lombok.Builder;
 import lombok.Getter;
-import lombok.Setter;
+import org.json.simple.JSONObject;
 
 /**
- * includes the table's column definitions.
+ * It contains information of a collection, which should be sent to the metadata editor.
  * @author chelbi
  */
+@Builder
 @Getter
-@Setter
-public class TabulatorItems{
+public class EditorRequestCollection {
     
     /**
-     * The title that will be displayed in the header for the column.
+     * JSON schema, which describes the structure of the data model. 
      */
-    private String title;
+    private JSONObject dataModel;
     
     /**
-     * The key for the column in the JSON resource.
+     * JSON user interface form, which describes the structure of the form layout.
      */
-    private String field;
+    private JSONObject uiForm;
     
+    /**
+     * array of collections.
+     */
+    private List <CollectionObject> collections;
+    
+    /**
+     * array, which includes the table’s column definitions. 
+     */
+    private TabulatorItems[] items;
 }

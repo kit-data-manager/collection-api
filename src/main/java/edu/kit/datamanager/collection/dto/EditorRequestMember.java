@@ -15,34 +15,42 @@
  */
 package edu.kit.datamanager.collection.dto;
 
-import edu.kit.datamanager.collection.domain.CollectionObject;
+import edu.kit.datamanager.collection.domain.MemberItem;
 import java.util.List;
 import lombok.Builder;
 import lombok.Getter;
 import org.json.simple.JSONObject;
 
 /**
- *
+ * It contains information of a member, which should be sent to the metadata editor.
  * @author chelbi
  */
 @Builder
 @Getter
-public class EditorRequest {
+public class EditorRequestMember {
     
+    /**
+     * JSON schema, which describes the structure of the data model. 
+     */
     private JSONObject dataModel;
+    
+    /**
+     * JSON user interface form, which describes the structure of the form layout.
+     */
     private JSONObject uiForm;
-    private List <CollectionObject> collections;
+    
+    /**
+     * array of members.
+     */
+    private List<MemberItem> members;
+    
+    /**
+     * array, which includes the table’s column definitions. 
+     */
     private TabulatorItems[] items;
     
-    @Builder.Default
-    private boolean show= true;
-    
-    @Builder.Default
-    private boolean edit= true;
-    
-    @Builder.Default
-    private boolean delete= true;
-    
-    @Builder.Default
-    private boolean create = true;
+    /**
+     * identifier of the collection, to which the item belongs.
+     */
+    private String collectionId;
 }

@@ -24,4 +24,6 @@ import org.springframework.web.servlet.ModelAndView;
 public interface CollectionApiUI {
      
     public ModelAndView collections();
+    
+    public ModelAndView members(String id);
 }
