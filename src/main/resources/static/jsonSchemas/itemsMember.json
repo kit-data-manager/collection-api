@@ -1,0 +1,13 @@
+[{
+        "title": "Identifier",
+        "field": "id"
+    }, 
+    {
+        "title": "Location",
+        "field": "location"
+    },
+    {
+        "title": "Ontology",
+        "field": "ontology"
+    }
+]

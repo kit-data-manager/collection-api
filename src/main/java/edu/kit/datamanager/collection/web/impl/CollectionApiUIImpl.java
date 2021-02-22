@@ -18,7 +18,10 @@ package edu.kit.datamanager.collection.web.impl;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import edu.kit.datamanager.collection.dao.ICollectionObjectDao;
 import edu.kit.datamanager.collection.domain.CollectionObject;
-import edu.kit.datamanager.collection.dto.EditorRequest;
+import edu.kit.datamanager.collection.domain.MemberItem;
+import edu.kit.datamanager.collection.domain.MemberResultSet;
+import edu.kit.datamanager.collection.dto.EditorRequestCollection;
+import edu.kit.datamanager.collection.dto.EditorRequestMember;
 import edu.kit.datamanager.collection.dto.TabulatorItems;
 import edu.kit.datamanager.collection.web.CollectionApiUI;
 import java.io.IOException;
@@ -34,7 +37,12 @@ import org.json.simple.parser.JSONParser;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.core.io.Resource;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.servlet.ModelAndView;
 
@@ -45,29 +53,62 @@ import org.springframework.web.servlet.ModelAndView;
 @Controller
 public class CollectionApiUIImpl implements CollectionApiUI {
 
-    private final static String DATAMODEL = "/static/jsonSchemas/dataModel.json";
-    private final static String UIFORM = "/static/jsonSchemas/uiForm.json";
-    private final static String ITEMS = "/static/jsonSchemas/items.json";
+    private final static String DATAMODELCOLLECTION = "/static/jsonSchemas/dataModelCollection.json";
+    private final static String UIFORMCOLLECTION = "/static/jsonSchemas/uiFormCollection.json";
+    private final static String ITEMSCOLLECTION = "/static/jsonSchemas/itemsCollection.json";
+
+    private final static String DATAMODELMEMBER = "/static/jsonSchemas/dataModelMember.json";
+    private final static String UIFORMMEMBER = "/static/jsonSchemas/uiFormMember.json";
+    private final static String ITEMSMEMBER = "/static/jsonSchemas/itemsMember.json";
 
     @Autowired
     private ICollectionObjectDao collectionDao;
+
+    @Autowired
+    private CollectionsApiController collectionController;
 
     @RequestMapping("/collections")
     @Override
     public ModelAndView collections() {
         List<CollectionObject> collections = collectionDao.findAll();
 
-        EditorRequest request = EditorRequest.builder()
-                .dataModel(getJsonObject(DATAMODEL))
-                .uiForm(getJsonObject(UIFORM))
+        EditorRequestCollection request = EditorRequestCollection.builder()
+                .dataModel(getJsonObject(DATAMODELCOLLECTION))
+                .uiForm(getJsonObject(UIFORMCOLLECTION))
                 .collections(collections)
-                .items(getJsonArrayOfItems(ITEMS)).build();
+                .items(getJsonArrayOfItems(ITEMSCOLLECTION)).build();
 
         ModelAndView model = new ModelAndView("collections");
         model.addObject("request", request);
         return model;
     }
 
+    @RequestMapping("/collections/{id}/members")
+    @Override
+    public ModelAndView members(@PathVariable(value = "id", required = true) String id) {
+        Pageable pgbl = PageRequest.of(0, 20, Sort.unsorted());
+        ResponseEntity<MemberResultSet> memberResultSet = collectionController.collectionsIdMembersGet(id, null, null, null, null, null, pgbl);
+
+        List<MemberItem> memberItems = memberResultSet.getBody().getContents();
+
+        EditorRequestMember request = EditorRequestMember.builder()
+                .dataModel(getJsonObject(DATAMODELMEMBER))
+                .uiForm(getJsonObject(UIFORMMEMBER))
+                .members(memberItems)
+                .items(getJsonArrayOfItems(ITEMSMEMBER))
+                .collectionId(id).build();
+
+        ModelAndView model = new ModelAndView("members");
+        model.addObject("request", request);
+        return model;
+    }
+
+    /**
+     * gets a JSON object from a file.
+     *
+     * @param path path of the file.
+     * @return JSON object.
+     */
     private JSONObject getJsonObject(String path) {
         Resource resource = new ClassPathResource(path);
         JSONParser parser = new JSONParser();
@@ -81,6 +122,12 @@ public class CollectionApiUIImpl implements CollectionApiUI {
         return obj;
     }
 
+    /**
+     * gets an array of TabulatorItems from a file.
+     *
+     * @param path path of a file.
+     * @return array of TabulatorItems.
+     */
     private TabulatorItems[] getJsonArrayOfItems(String path) {
         ObjectMapper mapper = new ObjectMapper();
         TabulatorItems[] items = null;

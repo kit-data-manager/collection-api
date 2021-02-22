@@ -1,0 +1,34 @@
+{
+    "type": "fieldset",
+    "title": "Collection info",
+    "items": [
+        "id",
+        "description",
+        {
+            "type": "fieldset",
+            "title": "properties",
+            "htmlClass": "properties",
+            "items": [
+                "properties.ownership",
+                "properties.license",
+                "properties.modelType",
+                "properties.descriptionOntology",
+                "properties.hasAccessRestrictions"
+            ]
+        },
+        {
+            "type": "fieldset",
+            "title": "capabilities",
+            "htmlClass": "capabilities",
+            "items": [
+                "capabilities.isOrdered",
+                "capabilities.appendsToEnd",
+                "capabilities.supportsRoles",
+                "capabilities.membershipIsMutable",
+                "capabilities.propertiesAreMutable",
+                "capabilities.restrictedToType",
+                "capabilities.maxLength"         
+            ]
+        }
+    ]
+}

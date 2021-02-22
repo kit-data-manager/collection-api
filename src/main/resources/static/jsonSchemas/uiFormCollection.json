@@ -13,7 +13,9 @@
                 "properties.license",
                 "properties.modelType",
                 "properties.descriptionOntology",
-                "properties.hasAccessRestrictions"  
+                "properties.hasAccessRestrictions",
+                "properties.memberOf",
+                "properties.dateCreated" 
             ]
         },
         {
