@@ -11,7 +11,6 @@
         },
         "location": {
             "type": "string",
-            "required": true,
             "title": "Location"
         },
         "datatype": {
@@ -32,10 +31,11 @@
                     "title": "Role"
                 },
                 "index": {
-                    "type": "string",
+                    "type": "number",
                     "title": "Index"
                 }
             }
         }
-    }
+    },
+    "required": ["location"]
 }
