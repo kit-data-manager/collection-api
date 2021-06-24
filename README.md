@@ -91,6 +91,10 @@ http://localhost:8070/static/overview.html
 
 * [RDA Recommendation on Research Data Collections (doi: 10.15497/RDA00022)](https://zenodo.org/record/2428145#.XTbIMZMzbbA)
 * [Getting Started & Documentation](https://kit-dm-documentation.readthedocs.io/en/latest/)
+* [API documentation](https://rdacollectionswg.github.io/apidocs/#/)
+* [Interactive tutorial](https://www.katacoda.com/kitdm/scenarios/collection-api)
+* [Docker container](https://hub.docker.com/r/kitdm/collection-api)
+* [HMC website section and flyer](https://helmholtz-metadaten.de/de/fair-data-commons/collection-registry)
 
 ## License
 
