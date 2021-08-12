@@ -1148,6 +1148,12 @@ public class CollectionsApiController implements CollectionsApi {
         return new ResponseEntity<>(resultSet, HttpStatus.OK);
     }
     
+    /**
+     * get content path.
+     * @param begin
+     * @param end
+     * @return 
+     */
     private String getContentPath(String begin, String end){
          String path = request.getAttribute(HandlerMapping.PATH_WITHIN_HANDLER_MAPPING_ATTRIBUTE).toString();
          if (end == null){
