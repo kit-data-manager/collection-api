@@ -191,7 +191,7 @@ public interface CollectionsApi {
         @ApiResponse(responseCode = "401", description = "Unauthorized. Request was not authorized."),
         @ApiResponse(responseCode = "403", description = "Forbidden. May be returned, for example, if a request was made to delete a required metadata property or update a static item."),
         @ApiResponse(responseCode = "404", description = "Not found. The requested collection or member item was not found.")})
-    @RequestMapping(value = "/collections/{id}/**/members/{mid}/**/properties/{property}",
+    @RequestMapping(value = "/collections/{id}/**/members/{mid}/**/properties/{property}/**",
             produces = {"application/json"},
             method = RequestMethod.DELETE)
     ResponseEntity<Void> collectionsIdMembersMidPropertiesPropertyDelete(
@@ -205,7 +205,7 @@ public interface CollectionsApi {
         @ApiResponse(responseCode = "200", description = "The requested member", content = @Content(schema = @Schema(implementation = MemberItem.class))),
         @ApiResponse(responseCode = "401", description = "Unauthorized. Request was not authorized."),
         @ApiResponse(responseCode = "404", description = "Not found. The requested collection or member item was not found.")})
-    @RequestMapping(value = "/collections/{id}/**/members/{mid}/**/properties/{property}",
+    @RequestMapping(value = "/collections/{id}/**/members/{mid}/**/properties/{property}/**",
             produces = {"application/json"},
             method = RequestMethod.GET)
     ResponseEntity<String> collectionsIdMembersMidPropertiesPropertyGet(
@@ -221,7 +221,7 @@ public interface CollectionsApi {
         @ApiResponse(responseCode = "401", description = "Unauthorized. Request was not authorized."),
         @ApiResponse(responseCode = "403", description = "Forbidden. May be returned, for example, if a request was made to update a static item."),
         @ApiResponse(responseCode = "404", description = "Not found. The requested collection or member item was not found.")})
-    @RequestMapping(value = "/collections/{id}/**/members/{mid}/**/properties/{property}",
+    @RequestMapping(value = "/collections/{id}/**/members/{mid}/**/properties/{property}/**",
             produces = {"application/json"},
             method = RequestMethod.PUT)
     ResponseEntity<String> collectionsIdMembersMidPropertiesPropertyPut(
@@ -260,7 +260,7 @@ public interface CollectionsApi {
         @ApiResponse(responseCode = "403", description = "Forbidden. May be returned, for example, if a request was made to add an item to a static collection or if adding all elements would exceed the max. collection size."),
         @ApiResponse(responseCode = "404", description = "Not found. The collection was not found for adding items."),
         @ApiResponse(responseCode = "409", description = "Conflict. A member item with the same ID as the one posted already exists.")})
-    @RequestMapping(value = "/collections/{id}/**/members/",
+    @RequestMapping(value = "/collections/{id}/**/members",
             produces = {"application/json"},
             method = RequestMethod.POST)
     ResponseEntity<List<MemberItem>> collectionsIdMembersPost(

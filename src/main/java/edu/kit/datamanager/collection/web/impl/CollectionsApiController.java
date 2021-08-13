@@ -50,6 +50,7 @@ import edu.kit.datamanager.collection.domain.d3.MemberItemNode;
 import edu.kit.datamanager.collection.exceptions.CircularDependencyException;
 import edu.kit.datamanager.collection.util.ControllerUtils;
 import edu.kit.datamanager.collection.util.PaginationHelper;
+import edu.kit.datamanager.exceptions.CustomInternalServerError;
 import io.swagger.v3.oas.annotations.media.Schema;
 import java.time.ZoneOffset;
 import java.time.format.DateTimeFormatter;
@@ -65,10 +66,10 @@ import java.util.Set;
 import java.util.UUID;
 import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
-import javax.validation.ConstraintViolation;
-import javax.validation.Validation;
-import javax.validation.Validator;
-import javax.validation.ValidatorFactory;
+//import javax.validation.ConstraintViolation;
+//import javax.validation.Validation;
+//import javax.validation.Validator;
+//import javax.validation.ValidatorFactory;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.servlet.HandlerMapping;
@@ -467,14 +468,14 @@ public class CollectionsApiController implements CollectionsApi {
         LOG.trace("Calling collectionsIdMembersPost({}).", id);
 
         //validate attributes of MemberItem
-        ValidatorFactory factory = Validation.buildDefaultValidatorFactory();
-        Validator validator = factory.getValidator();
-        for (MemberItem item : content) {
-            Set<ConstraintViolation<MemberItem>> constraintViolations = validator.validate(item);
-            if (constraintViolations.size() > 0) {
-                return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
-            }
-        }
+//        ValidatorFactory factory = Validation.buildDefaultValidatorFactory();
+//        Validator validator = factory.getValidator();
+//        for (MemberItem item : content) {
+//            Set<ConstraintViolation<MemberItem>> constraintViolations = validator.validate(item);
+//            if (constraintViolations.size() > 0) {
+//                return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
+//            }
+//        }
 
         Optional<CollectionObject> result = collectionDao.findById(id);
         if (result.isEmpty()) {
@@ -621,7 +622,11 @@ public class CollectionsApiController implements CollectionsApi {
             @Valid @RequestParam(value = "f_dateAdded", required = false) Instant fDateAdded,
             @Valid @RequestParam(value = "expandDepth", required = false) Integer expandDepth,
             final Pageable pgbl) {
-        id= getContentPath("/collections/","/members/");
+         String path = request.getAttribute(HandlerMapping.PATH_WITHIN_HANDLER_MAPPING_ATTRIBUTE).toString();
+        if (path.contains("/collections/") && path.contains("/members")){
+            id= getContentPath("/collections/","/members");
+        }
+        
         LOG.trace("Calling collectionsIdMembersGet({}, {}, {}, {}, {}, {}).", id, fDatatype, fRole, fIndex, fDateAdded, expandDepth);
 
         Optional<CollectionObject> result = collectionDao.findById(id);
@@ -812,6 +817,7 @@ public class CollectionsApiController implements CollectionsApi {
             @PathVariable("property") String property) {
         id= getContentPath("/collections/","/members/");
         mid= getContentPath("/members/", "/properties/");
+        property= getContentPath("/properties/", null);
         LOG.trace("Calling collectionsIdMembersMidPropertiesPropertyGet({}, {}. {}).", id, mid, property);
 
         Optional<Membership> membership = new JPAQueryHelper(em).getMembershipByMid(id, mid);
@@ -872,7 +878,8 @@ public class CollectionsApiController implements CollectionsApi {
             @PathVariable("property") String property,
             @Valid @RequestBody String content) {
         id= getContentPath("/collections/","/members/");
-        mid= getContentPath("/members/", null);
+        mid= getContentPath("/members/", "/properties/");
+        property= getContentPath("/properties/", null);
         LOG.trace("Calling collectionsIdMembersMidPropertiesPropertyPut({}, {}. {}, {}).", id, mid, property, content);
 
         Optional<Membership> membership = new JPAQueryHelper(em).getMembershipByMid(id, mid);
@@ -940,6 +947,7 @@ public class CollectionsApiController implements CollectionsApi {
             @PathVariable("property") String property) {
         id= getContentPath("/collections/","/members/");
         mid= getContentPath("/members/", "/properties/");
+                property= getContentPath("/properties/", null);
         LOG.trace("Calling collectionsIdMembersMidPropertiesPropertyDelete({}, {}, {}).", id, mid, property);
 
         Optional<Membership> membership = new JPAQueryHelper(em).getMembershipByMid(id, mid);
@@ -1155,11 +1163,14 @@ public class CollectionsApiController implements CollectionsApi {
      * @return 
      */
     private String getContentPath(String begin, String end){
-         String path = request.getAttribute(HandlerMapping.PATH_WITHIN_HANDLER_MAPPING_ATTRIBUTE).toString();
-         if (end == null){
-             return path.substring(path.indexOf(begin)+(begin).length());
-         }else{
-        return path.substring(path.indexOf(begin)+(begin).length(), path.lastIndexOf(end));
-         }
+        String path = request.getAttribute(HandlerMapping.PATH_WITHIN_HANDLER_MAPPING_ATTRIBUTE).toString();
+        if(path == null){
+            throw new CustomInternalServerError("Unable to obtain request URI.");
+        }
+        if (end == null){
+            return path.substring(path.indexOf(begin)+(begin).length());
+        }else{
+            return path.substring(path.indexOf(begin)+(begin).length(), path.lastIndexOf(end));
+        }
     }
 }
