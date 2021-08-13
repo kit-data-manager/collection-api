@@ -1,0 +1,41 @@
+{
+    "type": "object",
+    "properties": {
+        "id": {
+            "type": "string",
+            "title": "Identifier Member"
+        },
+        "description": {
+            "type": "string",
+            "title": "Description"
+        },
+        "location": {
+            "type": "string",
+            "title": "Location"
+        },
+        "datatype": {
+            "type": "string",
+            "title": "Datatype"
+        },
+        "ontology": {
+            "type": "string",
+            "title": "Ontology"
+        },
+
+        "mappings": {
+            "type": "object",
+            "title": "Mapping",
+            "properties": {
+                "role": {
+                    "type": "string",
+                    "title": "Role"
+                },
+                "index": {
+                    "type": "number",
+                    "title": "Index"
+                }
+            }
+        }
+    },
+    "required": ["location"]
+}

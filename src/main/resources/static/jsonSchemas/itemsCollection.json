@@ -1,0 +1,13 @@
+[{
+        "title": "Identifier",
+        "field": "id"
+    },  
+    {
+        "title": "Ownership",
+        "field": "properties.ownership"
+    },
+    {
+        "title": "Maximum Length",
+        "field": "capabilities.maxLength"
+    }
+]

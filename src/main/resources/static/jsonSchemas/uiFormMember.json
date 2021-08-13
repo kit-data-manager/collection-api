@@ -1,0 +1,20 @@
+{
+    "type": "fieldset",
+    "title": "Member info",
+    "items": [
+        "id",
+        "description",
+        "location",
+        "datatype",
+        "ontology",
+        {  
+            "type": "fieldset",
+            "title": "Mapping",
+            "items": [
+                "mappings.role",
+                "mappings.index",
+                 "mappings.dateAdded",
+                "mappings.dateUpdated"]
+        }
+    ]
+}

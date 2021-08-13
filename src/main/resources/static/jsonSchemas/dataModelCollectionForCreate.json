@@ -1,0 +1,76 @@
+{
+    "type": "object",
+    "properties": {
+        "id": {
+            "type": "string",
+            "title": "Identifier"
+        },
+        "description": {
+            "type": "string",
+            "title": "Description"
+        },
+        "capabilities": {
+            "type": "object",
+            "title": "capabilities",
+            "properties": {
+                "isOrdered": {
+                    "type": "boolean",
+                    "title": "isOrdered"
+                },
+                "appendsToEnd": {
+                    "type": "boolean",
+                    "title": "appendsToEnd",
+                    "default": true
+                },
+                "supportsRoles": {
+                    "type": "boolean",
+                    "title": "supportsRoles"
+                },
+                "membershipIsMutable": {
+                    "type": "boolean",
+                    "title": "membershipIsMutable",
+                    "default": true
+                },
+                "propertiesAreMutable": {
+                    "type": "boolean",
+                    "title": "propertiesAreMutable",
+                    "default": true
+                },
+                "restrictedToType": {
+                    "type": "string",
+                    "title": "restrictedToType"
+                },
+                "maxLength": {
+                    "type": "number",
+                    "title": "maxLength"
+                }
+            }
+        },
+        "properties": {
+            "type": "object",
+            "title": "properties",
+            "properties": {
+                "ownership": {
+                    "type": "string",
+                    "title": "Ownership"
+                },
+                "license": {
+                    "type": "string",
+                    "title": "License"
+                },
+                "modelType": {
+                    "type": "string",
+                    "title": "Model Type"
+                },
+                "descriptionOntology": {
+                    "type": "string",
+                    "title": "Description Ontology"
+                },
+                "hasAccessRestrictions": {
+                    "type": "boolean",
+                    "title": "hasAccessRestrictions"
+                }
+            }
+        }
+    }
+}

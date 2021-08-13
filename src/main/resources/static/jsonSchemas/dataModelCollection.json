@@ -19,7 +19,8 @@
                 },
                 "appendsToEnd": {
                     "type": "boolean",
-                    "title": "appendsToEnd"
+                    "title": "appendsToEnd",
+                    "default": true
                 },
                 "supportsRoles": {
                     "type": "boolean",
@@ -27,11 +28,13 @@
                 },
                 "membershipIsMutable": {
                     "type": "boolean",
-                    "title": "membershipIsMutable"
+                    "title": "membershipIsMutable",
+                    "default": true
                 },
                 "propertiesAreMutable": {
                     "type": "boolean",
-                    "title": "propertiesAreMutable"
+                    "title": "propertiesAreMutable",
+                    "default": true
                 },
                 "restrictedToType": {
                     "type": "string",
@@ -59,6 +62,10 @@
                     "type": "string",
                     "title": "Model Type"
                 },
+                "memberOf": {
+                    "type": "string",
+                    "title": "Member Of"
+                },
                 "descriptionOntology": {
                     "type": "string",
                     "title": "Description Ontology"
@@ -66,6 +73,10 @@
                 "hasAccessRestrictions": {
                     "type": "boolean",
                     "title": "hasAccessRestrictions"
+                },
+                "dateCreated": {
+                    "type": "string",
+                    "title": "Date Created"
                 }
             }
         }

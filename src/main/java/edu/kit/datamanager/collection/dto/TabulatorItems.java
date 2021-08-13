@@ -13,24 +13,27 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.kit.datamanager.collection.configuration;
+package edu.kit.datamanager.collection.dto;
 
 import lombok.Getter;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.context.annotation.Configuration;
+import lombok.Setter;
 
 /**
- *
+ * includes the table's column definitions.
  * @author chelbi
  */
-@Configuration
 @Getter
-public class ApplicationProperties {
-
-    public static Integer maxExpansionDepth;
+@Setter
+public class TabulatorItems{
     
-     @Value("${collection.serviceFeature.maxExpansionDepth}")
-     public void setMaxExpansionDepth(Integer maxExpansionDepth){
-         this.maxExpansionDepth=maxExpansionDepth;
-     }
+    /**
+     * The title that will be displayed in the header for the column.
+     */
+    private String title;
+    
+    /**
+     * The key for the column in the JSON resource.
+     */
+    private String field;
+    
 }
