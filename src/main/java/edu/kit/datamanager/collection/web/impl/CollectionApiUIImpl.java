@@ -24,6 +24,7 @@ import edu.kit.datamanager.collection.dto.EditorRequestCollection;
 import edu.kit.datamanager.collection.dto.EditorRequestMember;
 import edu.kit.datamanager.collection.dto.TabulatorItems;
 import edu.kit.datamanager.collection.web.CollectionApiUI;
+import edu.kit.datamanager.exceptions.CustomInternalServerError;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
@@ -32,6 +33,7 @@ import java.nio.file.Paths;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import javax.servlet.http.HttpServletRequest;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -44,6 +46,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.servlet.HandlerMapping;
 import org.springframework.web.servlet.ModelAndView;
 
 /**
@@ -66,6 +69,13 @@ public class CollectionApiUIImpl implements CollectionApiUI {
 
     @Autowired
     private CollectionsApiController collectionController;
+    
+    private final HttpServletRequest request;
+    
+    @org.springframework.beans.factory.annotation.Autowired
+    public CollectionApiUIImpl(HttpServletRequest request) {
+        this.request = request;
+    }
 
     @RequestMapping("/collections")
     @Override
@@ -83,15 +93,19 @@ public class CollectionApiUIImpl implements CollectionApiUI {
         return model;
     }
 
-    @RequestMapping("/collections/{id}/members")
+    @RequestMapping("/collections/{id}/**/members")
     @Override
     public ModelAndView members(@PathVariable(value = "id", required = true) String id) {
         Pageable pgbl = PageRequest.of(0, 20, Sort.unsorted());
+        
+        String path = request.getAttribute(HandlerMapping.PATH_WITHIN_HANDLER_MAPPING_ATTRIBUTE).toString();
+        id= path.substring(path.indexOf("/collections/")+("/collections/").length(), path.lastIndexOf("/members"));
+ 
         ResponseEntity<MemberResultSet> memberResultSet = collectionController.collectionsIdMembersGet(id, null, null, null, null, null, pgbl);
 
         List<MemberItem> memberItems = memberResultSet.getBody().getContents();
 
-        EditorRequestMember request = EditorRequestMember.builder()
+        EditorRequestMember memberRequest = EditorRequestMember.builder()
                 .dataModel(getJsonObject(DATAMODELMEMBER))
                 .uiForm(getJsonObject(UIFORMMEMBER))
                 .members(memberItems)
@@ -99,7 +113,7 @@ public class CollectionApiUIImpl implements CollectionApiUI {
                 .collectionId(id).build();
 
         ModelAndView model = new ModelAndView("members");
-        model.addObject("request", request);
+        model.addObject("request", memberRequest);
         return model;
     }
 
