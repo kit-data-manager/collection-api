@@ -143,7 +143,10 @@ jacocoTestReport {
                     fileTree(dir: it, exclude: [\
             'edu/kit/datamanager/collection/configuration/**', \
             'edu/kit/datamanager/collection/filters/**', \
-            'edu/kit/datamanager/collection/Application*'
+            'edu/kit/datamanager/collection/Application*', \
+            'edu/kit/datamanager/collection/dto/**', \
+            'edu/kit/datamanager/collection/web/CollectionApiUI*', \
+            'edu/kit/datamanager/collection/web/impl/CollectionApiUIImpl*'                        
                         ])
                 }))
     }
