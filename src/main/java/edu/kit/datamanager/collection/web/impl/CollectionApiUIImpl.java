@@ -64,13 +64,13 @@ public class CollectionApiUIImpl implements CollectionApiUI {
     private final static String UIFORMMEMBER = "/static/jsonSchemas/uiFormMember.json";
     private final static String ITEMSMEMBER = "/static/jsonSchemas/itemsMember.json";
     */
-    private final static Resource DATAMODEL_COLLECTION= new ClassPathResource("static/jsonSchemas/dataModelCollection.json");
-    private final static Resource UIFORM_COLLECTION= new ClassPathResource("static/jsonSchemas/uiFormCollection.json");
-    private final static Resource ITEMS_COLLECTION= new ClassPathResource("static/jsonSchemas/itemsCollection.json");
+    private final static Resource DATAMODEL_COLLECTION= new ClassPathResource("/static/jsonSchemas/dataModelCollection.json");
+    private final static Resource UIFORM_COLLECTION= new ClassPathResource("/static/jsonSchemas/uiFormCollection.json");
+    private final static Resource ITEMS_COLLECTION= new ClassPathResource("/static/jsonSchemas/itemsCollection.json");
 
-    private final static Resource DATAMODEL_MEMBER = new ClassPathResource("static/jsonSchemas/dataModelMember.json");
-    private final static Resource UIFORM_MEMBER= new ClassPathResource("static/jsonSchemas/uiFormMember.json");
-    private final static Resource ITEMS_MEMBER= new ClassPathResource("static/jsonSchemas/itemsMember.json");
+    private final static Resource DATAMODEL_MEMBER = new ClassPathResource("/static/jsonSchemas/dataModelMember.json");
+    private final static Resource UIFORM_MEMBER= new ClassPathResource("/static/jsonSchemas/uiFormMember.json");
+    private final static Resource ITEMS_MEMBER= new ClassPathResource("/static/jsonSchemas/itemsMember.json");
 
     @Autowired
     private ICollectionObjectDao collectionDao;
