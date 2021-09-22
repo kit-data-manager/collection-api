@@ -55,7 +55,7 @@ import org.springframework.web.servlet.ModelAndView;
  */
 @Controller
 public class CollectionApiUIImpl implements CollectionApiUI {
-
+    /*
     private final static String DATAMODELCOLLECTION = "/static/jsonSchemas/dataModelCollection.json";
     private final static String UIFORMCOLLECTION = "/static/jsonSchemas/uiFormCollection.json";
     private final static String ITEMSCOLLECTION = "/static/jsonSchemas/itemsCollection.json";
@@ -63,6 +63,14 @@ public class CollectionApiUIImpl implements CollectionApiUI {
     private final static String DATAMODELMEMBER = "/static/jsonSchemas/dataModelMember.json";
     private final static String UIFORMMEMBER = "/static/jsonSchemas/uiFormMember.json";
     private final static String ITEMSMEMBER = "/static/jsonSchemas/itemsMember.json";
+    */
+    private final static Resource DATAMODEL_COLLECTION= new ClassPathResource("static/jsonSchemas/dataModelCollection.json");
+    private final static Resource UIFORM_COLLECTION= new ClassPathResource("static/jsonSchemas/uiFormCollection.json");
+    private final static Resource ITEMS_COLLECTION= new ClassPathResource("static/jsonSchemas/itemsCollection.json");
+
+    private final static Resource DATAMODEL_MEMBER = new ClassPathResource("static/jsonSchemas/dataModelMember.json");
+    private final static Resource UIFORM_MEMBER= new ClassPathResource("static/jsonSchemas/uiFormMember.json");
+    private final static Resource ITEMS_MEMBER= new ClassPathResource("static/jsonSchemas/itemsMember.json");
 
     @Autowired
     private ICollectionObjectDao collectionDao;
@@ -83,10 +91,10 @@ public class CollectionApiUIImpl implements CollectionApiUI {
         List<CollectionObject> collections = collectionDao.findAll();
 
         EditorRequestCollection request = EditorRequestCollection.builder()
-                .dataModel(getJsonObject(DATAMODELCOLLECTION))
-                .uiForm(getJsonObject(UIFORMCOLLECTION))
+                .dataModel(getJsonObject2(DATAMODEL_COLLECTION))
+                .uiForm(getJsonObject2(UIFORM_COLLECTION))
                 .collections(collections)
-                .items(getJsonArrayOfItems(ITEMSCOLLECTION)).build();
+                .items(getJsonArrayOfItems2(ITEMS_COLLECTION)).build();
 
         ModelAndView model = new ModelAndView("collections");
         model.addObject("request", request);
@@ -106,10 +114,10 @@ public class CollectionApiUIImpl implements CollectionApiUI {
         List<MemberItem> memberItems = memberResultSet.getBody().getContents();
 
         EditorRequestMember memberRequest = EditorRequestMember.builder()
-                .dataModel(getJsonObject(DATAMODELMEMBER))
-                .uiForm(getJsonObject(UIFORMMEMBER))
+                .dataModel(getJsonObject2(DATAMODEL_MEMBER))
+                .uiForm(getJsonObject2(UIFORM_MEMBER))
                 .members(memberItems)
-                .items(getJsonArrayOfItems(ITEMSMEMBER))
+                .items(getJsonArrayOfItems2(ITEMS_MEMBER))
                 .collectionId(id).build();
 
         ModelAndView model = new ModelAndView("members");
@@ -136,6 +144,17 @@ public class CollectionApiUIImpl implements CollectionApiUI {
         return obj;
     }
 
+    private JSONObject getJsonObject2(Resource resource) {
+        JSONParser parser = new JSONParser();
+        JSONObject obj = null;
+        try {
+            obj = (JSONObject) parser.parse(new InputStreamReader(resource.getInputStream(), StandardCharsets.UTF_8));
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return obj;
+    }
+
     /**
      * gets an array of TabulatorItems from a file.
      *
@@ -148,6 +167,17 @@ public class CollectionApiUIImpl implements CollectionApiUI {
         Resource resource = new ClassPathResource(path);
         try {
             //items = mapper.readValue(Files.newBufferedReader(Paths.get(resource.getURI()), StandardCharsets.UTF_8), TabulatorItems[].class);
+            items = mapper.readValue(resource.getFile(), TabulatorItems[].class);
+        } catch (IOException ex) {
+            Logger.getLogger(CollectionApiUIImpl.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        return items;
+    }
+
+    private TabulatorItems[] getJsonArrayOfItems2(Resource resource) {
+        ObjectMapper mapper = new ObjectMapper();
+        TabulatorItems[] items = null;
+        try {
             items = mapper.readValue(resource.getFile(), TabulatorItems[].class);
         } catch (IOException ex) {
             Logger.getLogger(CollectionApiUIImpl.class.getName()).log(Level.SEVERE, null, ex);
