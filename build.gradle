@@ -92,8 +92,8 @@ dependencies {
     testImplementation("org.springframework.boot:spring-boot-starter-test")
     testImplementation("org.springframework:spring-test")
     testImplementation("org.springframework.security:spring-security-test")
-    compile 'com.googlecode.json-simple:json-simple:1.1.1'
-    compile ('org.springframework.boot:spring-boot-starter-thymeleaf')
+    implementation 'com.googlecode.json-simple:json-simple:1.1.1'
+    implementation ('org.springframework.boot:spring-boot-starter-thymeleaf')
    
     //Java 11 Support 
     testImplementation("org.mockito:mockito-core:2.18.0")
