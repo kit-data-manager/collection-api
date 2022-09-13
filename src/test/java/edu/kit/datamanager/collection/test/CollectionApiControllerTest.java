@@ -650,6 +650,7 @@ public class CollectionApiControllerTest {
         //add a collection to two other collections --> only one member should be created in the database 
         item = new MemberItem();
         item.setMid("2");
+        item.setLocation("file:///tmp/");
         this.mockMvc.perform(post("/api/v1/collections/1/members").content(map.writeValueAsBytes(new MemberItem[]{item})).contentType(MediaType.APPLICATION_JSON)).andDo(print()).andExpect(status().isCreated()).andReturn();
         Assert.assertEquals(Long.valueOf(1), memberDao.countByMidIn("2"));
         this.mockMvc.perform(post("/api/v1/collections/4/members").content(map.writeValueAsBytes(new MemberItem[]{item})).contentType(MediaType.APPLICATION_JSON)).andDo(print()).andExpect(status().isCreated()).andReturn();
@@ -658,6 +659,7 @@ public class CollectionApiControllerTest {
         //add collection 3 to restricted type
         item = new MemberItem();
         item.setMid("3");
+        item.setLocation("file:///tmp/");
         this.mockMvc.perform(post("/api/v1/collections/type_restricted/members").content(map.writeValueAsBytes(new MemberItem[]{item})).contentType(MediaType.APPLICATION_JSON)).andDo(print()).andExpect(status().isBadRequest()).andReturn();
     }
 
@@ -1299,14 +1301,17 @@ public class CollectionApiControllerTest {
         ObjectMapper map = new ObjectMapper();
         MemberItem item= new MemberItem();
         item.setMid("1");
+        item.setLocation("file:///tmp/");
         this.mockMvc.perform(post("/api/v1/collections/2/members").content(map.writeValueAsBytes(new MemberItem[]{item})).contentType(MediaType.APPLICATION_JSON)).andDo(print()).andExpect(status().isBadRequest()).andReturn();
         
         item= new MemberItem();
         item.setMid("3");
+        item.setLocation("file:///tmp/");
         this.mockMvc.perform(post("/api/v1/collections/2/members").content(map.writeValueAsBytes(new MemberItem[]{item})).contentType(MediaType.APPLICATION_JSON)).andDo(print()).andExpect(status().isCreated()).andReturn();
         
         item= new MemberItem();
         item.setMid("1");
+        item.setLocation("file:///tmp/");
         this.mockMvc.perform(post("/api/v1/collections/3/members").content(map.writeValueAsBytes(new MemberItem[]{item})).contentType(MediaType.APPLICATION_JSON)).andDo(print()).andExpect(status().isBadRequest()).andReturn();
         
         MvcResult res = this.mockMvc.perform(get("/api/v1/collections/2/members/3")).andDo(print()).andExpect(status().isOk()).andReturn();
@@ -1318,6 +1323,7 @@ public class CollectionApiControllerTest {
         //add memberitem 1 to collection 3
         item= new MemberItem();
         item.setMid("1");
+        item.setLocation("file:///tmp/");
         this.mockMvc.perform(post("/api/v1/collections/3/members").content(map.writeValueAsBytes(new MemberItem[]{item})).contentType(MediaType.APPLICATION_JSON)).andDo(print()).andExpect(status().isCreated()).andReturn();
     }
 }

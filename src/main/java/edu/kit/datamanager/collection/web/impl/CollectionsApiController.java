@@ -272,7 +272,7 @@ public class CollectionsApiController implements CollectionsApi {
 //    testHelper = testHelper.addMemberItem("c9", "c5", "localhost");
 //
 //    testHelper.persist();
-        id= getContentPath("/collections/", null);  
+        //id= getContentPath("/collections/", null);  
         LOG.trace("Calling collectionsIdGet({}).", id);
 
         Optional<CollectionObject> result = collectionDao.findById(id);
@@ -290,7 +290,7 @@ public class CollectionsApiController implements CollectionsApi {
     public ResponseEntity<CollectionObject> collectionsIdPut(
             @PathVariable("id") String id,
             @Valid @RequestBody CollectionObject content) {
-        id= getContentPath("/collections/", null);
+      //  id= getContentPath("/collections/", null);
         LOG.trace("Calling collectionsIdPut({}, {}).", id, content);
 
         Optional<CollectionObject> result = collectionDao.findById(id);
@@ -378,7 +378,7 @@ public class CollectionsApiController implements CollectionsApi {
 
     @Override
     public ResponseEntity<Void> collectionsIdDelete(@PathVariable("id") String id) {
-        String decodedIdentifier = getContentPath("/collections/", null);
+        String decodedIdentifier = id;//getContentPath("/collections/", null);
         LOG.trace("Calling collectionsIdDelete({}).", decodedIdentifier);
         Optional<CollectionObject> result = collectionDao.findById(decodedIdentifier);
 
@@ -446,7 +446,7 @@ public class CollectionsApiController implements CollectionsApi {
 
     @Override
     public ResponseEntity<CollectionCapabilities> collectionsIdCapabilitiesGet(@PathVariable("id") String id) {
-        id = getContentPath("/collections/", "/capabilities");
+       // id = getContentPath("/collections/", "/capabilities");
         LOG.trace("Calling collectionsIdCapabilitiesGet({}).", id);
 
         Optional<CollectionObject> result = collectionDao.findById(id);
@@ -464,7 +464,6 @@ public class CollectionsApiController implements CollectionsApi {
     public ResponseEntity<List<MemberItem>> collectionsIdMembersPost(
             @PathVariable("id") String id,
             @Valid @RequestBody List<MemberItem> content) {
-        id= getContentPath("/collections/","/members");
         LOG.trace("Calling collectionsIdMembersPost({}).", id);
 
         //validate attributes of MemberItem
@@ -623,9 +622,9 @@ public class CollectionsApiController implements CollectionsApi {
             @Valid @RequestParam(value = "expandDepth", required = false) Integer expandDepth,
             final Pageable pgbl) {
          String path = request.getAttribute(HandlerMapping.PATH_WITHIN_HANDLER_MAPPING_ATTRIBUTE).toString();
-        if (path.contains("/collections/") && path.contains("/members")){
+       /* if (path.contains("/collections/") && path.contains("/members")){
             id= getContentPath("/collections/","/members");
-        }
+        }*/
         
         LOG.trace("Calling collectionsIdMembersGet({}, {}, {}, {}, {}, {}).", id, fDatatype, fRole, fIndex, fDateAdded, expandDepth);
 
@@ -679,8 +678,8 @@ public class CollectionsApiController implements CollectionsApi {
             @PathVariable("id") String id,
             @PathVariable("mid") String mid) {
             LOG.trace("Calling collectionsIdMembersMidGet({}, {}).", id, mid);
-        id= getContentPath("/collections/","/members/");
-        mid= getContentPath("/members/", null);
+       // id= getContentPath("/collections/","/members/");
+       // mid= getContentPath("/members/", null);
         Optional<Membership> membership = new JPAQueryHelper(em).getMembershipByMid(id, mid);
 
         if (membership.isEmpty()) {
@@ -757,8 +756,8 @@ public class CollectionsApiController implements CollectionsApi {
     public ResponseEntity<Void> collectionsIdMembersMidDelete(
             @PathVariable("id") String id,
             @PathVariable("mid") String mid) {
-        id= getContentPath("/collections/","/members/");
-        mid= getContentPath("/members/", null);
+        //id= getContentPath("/collections/","/members/");
+       // mid= getContentPath("/members/", null);
         LOG.trace("Calling collectionsIdMembersMidDelete({}, {}).", id, mid);
         Optional<Membership> membership = new JPAQueryHelper(em).getMembershipByMid(id, mid);
 
@@ -815,9 +814,9 @@ public class CollectionsApiController implements CollectionsApi {
             @PathVariable("id") String id,
             @PathVariable("mid") String mid,
             @PathVariable("property") String property) {
-        id= getContentPath("/collections/","/members/");
-        mid= getContentPath("/members/", "/properties/");
-        property= getContentPath("/properties/", null);
+       // id= getContentPath("/collections/","/members/");
+       // mid= getContentPath("/members/", "/properties/");
+       // property= getContentPath("/properties/", null);
         LOG.trace("Calling collectionsIdMembersMidPropertiesPropertyGet({}, {}. {}).", id, mid, property);
 
         Optional<Membership> membership = new JPAQueryHelper(em).getMembershipByMid(id, mid);
@@ -877,9 +876,9 @@ public class CollectionsApiController implements CollectionsApi {
             @PathVariable("mid") String mid,
             @PathVariable("property") String property,
             @Valid @RequestBody String content) {
-        id= getContentPath("/collections/","/members/");
-        mid= getContentPath("/members/", "/properties/");
-        property= getContentPath("/properties/", null);
+       // id= getContentPath("/collections/","/members/");
+       // mid= getContentPath("/members/", "/properties/");
+       // property= getContentPath("/properties/", null);
         LOG.trace("Calling collectionsIdMembersMidPropertiesPropertyPut({}, {}. {}, {}).", id, mid, property, content);
 
         Optional<Membership> membership = new JPAQueryHelper(em).getMembershipByMid(id, mid);
@@ -945,9 +944,9 @@ public class CollectionsApiController implements CollectionsApi {
             @PathVariable("id") String id,
             @PathVariable("mid") String mid,
             @PathVariable("property") String property) {
-        id= getContentPath("/collections/","/members/");
-        mid= getContentPath("/members/", "/properties/");
-                property= getContentPath("/properties/", null);
+        //id= getContentPath("/collections/","/members/");
+       // mid= getContentPath("/members/", "/properties/");
+               // property= getContentPath("/properties/", null);
         LOG.trace("Calling collectionsIdMembersMidPropertiesPropertyDelete({}, {}, {}).", id, mid, property);
 
         Optional<Membership> membership = new JPAQueryHelper(em).getMembershipByMid(id, mid);
@@ -1002,7 +1001,7 @@ public class CollectionsApiController implements CollectionsApi {
             @PathVariable("id") String id,
             @RequestBody MemberItem memberProperties,
             final Pageable pgbl) {
-        id= getContentPath("/collections/", "/ops/findMatch");
+        //id= getContentPath("/collections/", "/ops/findMatch");
         LOG.trace("Calling collectionsIdOpsFindMatchPost({}, {}).", id, memberProperties);
         Optional<CollectionObject> result = collectionDao.findById(id);
 
@@ -1041,7 +1040,7 @@ public class CollectionsApiController implements CollectionsApi {
     public ResponseEntity<MemberResultSet> collectionsIdOpsFlattenGet(
             @PathVariable("id") String id,
             final Pageable pgbl) {
-        id=getContentPath("/collections/", "/ops/flatten");
+        //id=getContentPath("/collections/", "/ops/flatten");
         LOG.trace("Calling collectionsIdOpsFlattenGet({}, {}).", id, pgbl);
         return collectionsIdMembersGet(id, null, null, null, null, Integer.MAX_VALUE, pgbl);
     }
@@ -1051,8 +1050,8 @@ public class CollectionsApiController implements CollectionsApi {
             @PathVariable("id") String id,
             @PathVariable("otherId") String otherId,
             final Pageable pgbl) {
-        id=getContentPath("/collections/", "/ops/intersection/");
-        otherId=getContentPath("/ops/intersection/", null);
+        //id=getContentPath("/collections/", "/ops/intersection/");
+       // otherId=getContentPath("/ops/intersection/", null);
         LOG.trace("Calling collectionsIdOpsIntersectionOtherIdGet({}, {}).", id, otherId);
 
         Optional<CollectionObject> left = collectionDao.findById(id);
@@ -1106,8 +1105,8 @@ public class CollectionsApiController implements CollectionsApi {
             @PathVariable("id") String id,
             @PathVariable("otherId") String otherId,
             final Pageable pgbl) {
-        id=getContentPath("/collections/", "/ops/union/");
-        otherId= getContentPath("/ops/union/", null);
+       // id=getContentPath("/collections/", "/ops/union/");
+       // otherId= getContentPath("/ops/union/", null);
         LOG.trace("Calling collectionsIdOpsUnionOtherIdGet({}, {}).", id, otherId);
 
         Optional<CollectionObject> left = collectionDao.findById(id);
@@ -1162,7 +1161,7 @@ public class CollectionsApiController implements CollectionsApi {
      * @param end
      * @return 
      */
-    private String getContentPath(String begin, String end){
+ /*   private String getContentPath(String begin, String end){
         String path = request.getAttribute(HandlerMapping.PATH_WITHIN_HANDLER_MAPPING_ATTRIBUTE).toString();
         if(path == null){
             throw new CustomInternalServerError("Unable to obtain request URI.");
@@ -1172,5 +1171,5 @@ public class CollectionsApiController implements CollectionsApi {
         }else{
             return path.substring(path.indexOf(begin)+(begin).length(), path.lastIndexOf(end));
         }
-    }
+    }*/
 }

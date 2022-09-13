@@ -29,7 +29,7 @@ public class ApplicationProperties {
 
     public static Integer maxExpansionDepth;
     
-     @Value("${collection.serviceFeature.maxExpansionDepth}")
+     @Value("${collection.serviceFeature.maxExpansionDepth:-1}")
      public void setMaxExpansionDepth(Integer maxExpansionDepth){
          this.maxExpansionDepth=maxExpansionDepth;
      }
