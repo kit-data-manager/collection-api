@@ -30,7 +30,7 @@ marked with the according tag. In all other cases the implementation is expected
 
 In order to build the Collection API you'll need:
 
-* Java SE Development Kit 8 or higher
+* Java SE Development Kit 11 or higher
 
 After obtaining the sources change to the folder where the sources are located perform the following steps:
 
@@ -61,7 +61,7 @@ As soon as you finished modifying 'application.properties', you may start the co
 e.g. where the service has been built before:
 
 ```
-user@localhost:/home/user/collection-api$ ./build/libs/collection-registry.jar
+user@localhost:/home/user/collection-api$ ./build/libs/collection-api.jar
 
   .   ____          _            __ _ _
  /\\ / ___'_ __ _ _(_)_ __  __ _ \ \ \ \
@@ -69,7 +69,7 @@ user@localhost:/home/user/collection-api$ ./build/libs/collection-registry.jar
  \\/  ___)| |_)| | | | | || (_| |  ) ) ) )
   '  |____| .__|_| |_|_| |_\__, | / / / /
  =========|_|==============|___/=/_/_/_/
- :: Spring Boot ::        (v2.0.5.RELEASE)
+ :: Spring Boot ::        (v2.2.2.RELEASE)
 [...]
 1970-01-01 00:00:00.000  INFO 56918 --- [           main] o.s.b.w.embedded.tomcat.TomcatWebServer  : Tomcat started on port(s): 8070 (http) with context path ''
 
@@ -82,10 +82,15 @@ http://localhost:8070/swagger-ui.html
 in order to see available RESTful endpoints and their documentation. You may have to adapt the port according to your local settings.
 Furthermore, you can use this Web interface to test single API calls in order to get familiar with the service. 
 
-The Collection API offers a graphical web frontend in order to visualize managed collections, collection items and relationships between them as well as associated metadata. 
+You may create collections via any REST client or using the Web UI available at 
+
+http://localhost:8070/collections
+
+The Collection API offers a graphical web frontend to visualize managed collections, collection items and relationships between them as well as associated metadata. 
 In addition it allows a simple search for elements in order to visualize linked nodes. To access the web frontend, open the following link in your browser:
 
 http://localhost:8070/static/overview.html
+
 
 ## More Information
 
