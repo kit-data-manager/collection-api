@@ -10,6 +10,6 @@ echo "Building latest release tagged as " $LATEST_TAG
 git checkout tags/$LATEST_TAG
 
 echo "Building project from source."
-./gradlew -Pclean-release build
+./gradlew -Dprofile=minimal build
 
 echo "Build done."

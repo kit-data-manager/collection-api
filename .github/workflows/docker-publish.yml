@@ -25,12 +25,18 @@ jobs:
 
     steps:
       - uses: actions/checkout@v2
-
-      - name: Run tests
-        run: |
-            cd docker/source
-            docker build . --file Dockerfile
-
+      - name: Set up OpenJDK version ...
+        uses: actions/setup-java@v2
+        with:
+          distribution: 'zulu' 
+          java-version: 11
+      - name: Grant execute permission for gradlew
+        run: chmod +x gradlew
+      - name: Build with Gradle
+        run:   |
+           ./gradlew jacocoTestReport
+        shell: bash
+     
   # Push image to GitHub Packages.
   # See also https://docs.docker.com/docker-hub/builds/
   push:
@@ -45,31 +51,23 @@ jobs:
 
       - name: Build image
         run: |
-           cd docker/source
            docker build . --file Dockerfile --tag $IMAGE_NAME
-
       - name: Log into registry
         run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login docker.pkg.github.com -u ${{ github.actor }} --password-stdin
 
       - name: Push image
         run: |
           IMAGE_ID=docker.pkg.github.com/${{ github.repository }}/$IMAGE_NAME
-
           # Change all uppercase to lowercase
           IMAGE_ID=$(echo $IMAGE_ID | tr '[A-Z]' '[a-z]')
-
           # Strip git ref prefix from version
           VERSION=$(echo "${{ github.ref }}" | sed -e 's,.*/\(.*\),\1,')
-
           # Strip "v" prefix from tag name
           [[ "${{ github.ref }}" == "refs/tags/"* ]] && VERSION=$(echo $VERSION | sed -e 's/^v//')
-
           # Use Docker `latest` tag convention
           [ "$VERSION" == "master" ] && VERSION=latest
-
           echo IMAGE_ID=$IMAGE_ID
           echo VERSION=$VERSION
-
           docker tag $IMAGE_NAME $IMAGE_ID:$VERSION
           docker push $IMAGE_ID:$VERSION
       - name: Docker meta
@@ -96,7 +94,7 @@ jobs:
       - name: Push to Docker Hub
         uses: docker/build-push-action@v2
         with:
-          context: ./docker/source/
+          context: .
           push: true
           tags: ${{ steps.docker_meta.outputs.tags }}
           labels: ${{ steps.docker_meta.outputs.labels }}
