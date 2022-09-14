@@ -1,8 +1,8 @@
-FROM openjdk:11-stretch AS build-env-java
+FROM openjdk:16-bullseye AS build-env-java
 MAINTAINER webmaster@datamanager.kit.edu
 LABEL stage=build-env
 
-RUN apt-get update && \
+RUN apt-get -y update && \
     apt-get upgrade --assume-yes && \
     apt-get install --assume-yes git && \
     mkdir -p /collection-api/
@@ -15,13 +15,14 @@ COPY build.sh /collection-api/
 
 RUN sh /collection-api/build.sh
 
-FROM openjdk:11-stretch AS run-collection-api
+FROM openjdk:16-bullseye AS run-base-repo
 MAINTAINER webmaster@datamanager.kit.edu
 LABEL stage=run
 
+RUN mkdir -p /var/repository
 RUN mkdir -p /collection-api/config/
-COPY --from=build-collection-api /collection-api/collection-api/build/libs/collection-api.jar /collection-api/collection-api.jar
-COPY --from=build-collection-api /collection-api/collection-api/config/application-default.properties /collection-api/application.properties
+COPY --from=build-collection-api /collection-api/base-repo/build/libs/base-repo.jar /base-repo/base-repo.jar
+COPY --from=build-collection-apio /collection-api/collection-api/config/application-default.properties /collection-api/application.properties
 COPY run.sh /collection-api/
 
 EXPOSE 8080
