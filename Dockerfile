@@ -1,7 +1,7 @@
 ####################################################
 # START GLOBAL DECLARATION
 ####################################################
-ARG REPO_NAME_DEFAULT=base-repo
+ARG REPO_NAME_DEFAULT=collection-api
 ARG REPO_PORT_DEFAULT=8080
 ARG SERVICE_ROOT_DIRECTORY_DEFAULT=/spring
 ####################################################
@@ -38,8 +38,8 @@ ENV REPO_NAME=${REPO_NAME_DEFAULT}
 ENV SERVICE_DIRECTORY=${SERVICE_ROOT_DIRECTORY_DEFAULT}/${REPO_NAME_DEFAULT}
 
 # Create directory for repo
-RUN mkdir -p /git/base-repo/
-WORKDIR /git/base-repo/
+RUN mkdir -p /git/${REPO_NAME_DEFAULT}/
+WORKDIR /git/${REPO_NAME_DEFAULT}/
 COPY . .
 RUN cp config/application-docker.properties settings/application-default.properties
 # Build service in given directory
