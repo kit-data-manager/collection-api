@@ -35,9 +35,11 @@ In order to build the Collection API you'll need:
 After obtaining the sources change to the folder where the sources are located perform the following steps:
 
 ```
-user@localhost:/home/user/collection-api$ ./gradlew -Pclean-release build
-> Configure project :
-Using release profile for building collection-api
+user@localhost:/home/user/collection-api$ ./gradlew -Dprofile=minimal build
+Running gradle version: 7.4.2
+Building collection-api version: 1.2.1-SNAPSHOT
+JDK version: 11
+Using minimal profile for building collection-api
 <-------------> 0% EXECUTING [0s]
 [...]
 user@localhost:/home/user/collection-api$
@@ -53,9 +55,8 @@ libraries and finally build the collection-api microservice itself. As a result,
 * PostgreSQL 9.1 or higher
 
 ### Setup
-Before you are able to start the microservice, you have to modify the file 'application.properties' according to your local setup. 
-Therefor, copy the file 'conf/application.properties' to your project folder and customize it. For the Collection API you just have to adapt the properties of 
-spring.datasource and you may change the server.port property. All other properties can be ignored for the time being.
+Before you are able to start the microservice, you have to provide a configuration file according to your local setup. 
+Therefor, copy the file 'config/application-default.properties' to your project folder, rename it to 'application.properties' and customize it. For the Collection API you just may adapt the properties of spring.datasource and change the server.port property. All other properties can be ignored for the time being.
 
 As soon as you finished modifying 'application.properties', you may start the collection-api microservice by executing the following command inside the project folder, 
 e.g. where the service has been built before:
@@ -95,9 +96,9 @@ http://localhost:8070/static/overview.html
 ## More Information
 
 * [RDA Recommendation on Research Data Collections (doi: 10.15497/RDA00022)](https://zenodo.org/record/2428145#.XTbIMZMzbbA)
-* [Getting Started & Documentation](https://kit-dm-documentation.readthedocs.io/en/latest/)
-* [API documentation](https://rdacollectionswg.github.io/apidocs/#/)
-* [Interactive tutorial](https://www.katacoda.com/kitdm/scenarios/collection-api)
+* [Getting Started & Documentation](https://kit-data-manager.github.io/webpage/collection-registry/index.html)
+* [API documentation](https://kit-data-manager.github.io/webpage/collection-registry/documentation/api-docs.html)
+* [Interactive tutorial](https://killercoda.com/0d38ffbe-8e9d-494b-b04a-fddaae6537fa/scenario/collection-api)
 * [Docker container](https://hub.docker.com/r/kitdm/collection-api)
 * [HMC website section and flyer](https://helmholtz-metadaten.de/de/fair-data-commons/collection-registry)
 
