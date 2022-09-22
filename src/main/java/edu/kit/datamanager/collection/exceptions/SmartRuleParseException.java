@@ -1,5 +1,5 @@
 /*
- * Copyright 2019 Karlsruhe Institute of Technology.
+ * Copyright 2022 Karlsruhe Institute of Technology.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,22 +13,16 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.kit.datamanager.collection;
+package edu.kit.datamanager.collection.exceptions;
 
-import org.springframework.boot.SpringApplication;
-import org.springframework.boot.autoconfigure.SpringBootApplication;
-import org.springframework.context.annotation.ComponentScan;
-import org.springframework.scheduling.annotation.EnableScheduling;
 /**
  *
  * @author jejkal
  */
-@SpringBootApplication
-@EnableScheduling
-@ComponentScan({"edu.kit.datamanager.collection"})
-public class Application {
+public class SmartRuleParseException extends Exception {
 
-    public static void main(String[] args) {
-        SpringApplication.run(Application.class, args);
+    public SmartRuleParseException(String message) {
+        super(message);
     }
+
 }

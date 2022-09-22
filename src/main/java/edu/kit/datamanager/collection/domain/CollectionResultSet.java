@@ -19,8 +19,8 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import io.swagger.v3.oas.annotations.media.Schema;
 import java.util.ArrayList;
 import java.util.List;
-import org.springframework.validation.annotation.Validated;
 import javax.validation.Valid;
+import org.springframework.validation.annotation.Validated;
 import lombok.Data;
 
 /**
@@ -37,7 +37,7 @@ public class CollectionResultSet{
   @Schema(required = true, description = "list of Collection Objects returned in response to a query")
   //@NotNull
   @JsonProperty("contents")
-  //@Valid
+  @Valid
   private List<CollectionObject> contents = new ArrayList<CollectionObject>();
 
   @Schema(description = "If the service supports pagination, and the resultset is paginated, this will be a cursor which can be used to retrieve the next page in the results.")

@@ -30,7 +30,6 @@ configurations {
 }
 
 ext {
-    set('javersVersion', "6.6.5")
     set('springBootVersion', "2.7.2")
     set('springDocVersion', "1.6.9")
     set('keycloakVersion', "19.0.0")
@@ -79,8 +78,6 @@ dependencies {
         exclude group: 'org.javers', module: 'javers-spring-boot-starter-sql'
     }
 
-    //implementation "com.github.victools:jsonschema-generator:4.23.0"
-
     //Keycloak
     implementation "org.keycloak:keycloak-spring-boot-starter:${keycloakVersion}"
     implementation "com.nimbusds:nimbus-jose-jwt:9.23"
@@ -88,15 +85,13 @@ dependencies {
     implementation "io.jsonwebtoken:jjwt-impl:0.11.5"
     implementation "io.jsonwebtoken:jjwt-jackson:0.11.5"
 
-    implementation "org.javers:javers-core:${javersVersion}"
-    implementation "com.github.fge:json-patch:1.9"
-    implementation "com.bazaarvoice.jolt:jolt-core:0.1.7"    
-    implementation "com.bazaarvoice.jolt:json-utils:0.1.7"    
     implementation "org.apache.commons:commons-collections4:4.4"
 
     implementation "javax.xml.bind:jaxb-api:2.3.1"
 
-    implementation 'com.googlecode.json-simple:json-simple:1.1.1'
+    implementation "org.hamcrest:hamcrest:2.2"
+
+    implementation "com.googlecode.json-simple:json-simple:1.1.1"
 
     runtimeOnly    "org.apache.httpcomponents:httpclient:4.5.13"
 

@@ -80,6 +80,12 @@ public class CollectionProperties{
   @JsonProperty("descriptionOntology")
   private String descriptionOntology = null;
 
+  @Schema(description = "If provided, this is a list of rules applied while adding new collection members. By these rules, member items can be orgnized at creation time, e.g., adding them to a certain sub-collection.")
+  @JsonProperty("smartRules")
+  @Valid
+  @ElementCollection(fetch = FetchType.EAGER)
+  private Set<String> smartRules = new HashSet<>();
+  
   public static CollectionProperties getDefault(){
     CollectionProperties result = new CollectionProperties();
     return result;
