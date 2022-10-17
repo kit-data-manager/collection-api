@@ -74,7 +74,7 @@ dependencies {
     implementation "org.springdoc:springdoc-openapi-data-rest:${springDocVersion}"
     implementation "org.springdoc:springdoc-openapi-webmvc-core:${springDocVersion}"
 
-    implementation "edu.kit.datamanager:repo-core:1.0.3"
+    implementation "edu.kit.datamanager:repo-core:1.0.4"
     implementation("edu.kit.datamanager:service-base:1.0.4"){
         exclude group: 'org.javers', module: 'javers-spring-boot-starter-sql'
     }
