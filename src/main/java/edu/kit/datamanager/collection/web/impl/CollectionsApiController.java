@@ -15,7 +15,6 @@
  */
 package edu.kit.datamanager.collection.web.impl;
 
-import com.google.common.base.Objects;
 import edu.kit.datamanager.collection.configuration.CollectionRegistryConfig;
 import edu.kit.datamanager.collection.domain.CollectionCapabilities;
 import edu.kit.datamanager.collection.domain.CollectionObject;
@@ -55,7 +54,6 @@ import edu.kit.datamanager.collection.util.SmartRule;
 import io.swagger.v3.oas.annotations.media.Schema;
 import java.io.UnsupportedEncodingException;
 import java.net.URLDecoder;
-import java.net.URLEncoder;
 import java.time.ZoneOffset;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
@@ -65,6 +63,7 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
@@ -305,34 +304,6 @@ public class CollectionsApiController implements CollectionsApi {
 
     @Override
     public ResponseEntity<CollectionObject> collectionsIdGet(@PathVariable("id") String id) {
-
-//test data creation
-//    collectionDao.deleteAll();
-//    membershipDao.deleteAll();
-//
-//    TestDataCreationHelper testHelper = TestDataCreationHelper.initialize(collectionDao, memberDao);
-//    for(int i = 0; i < 20; i++){
-//      testHelper = testHelper.addCollection("c" + i, CollectionProperties.getDefault());
-//    }
-//
-//    for(int i = 0; i < 20; i++){
-//      for(int j = 0; j < 20; j++){
-//        testHelper = testHelper.addMemberItem("c" + i, "m" + i + "-" + j, "localhost");
-//      }
-//    }
-//
-//    testHelper = testHelper.addMemberItem("c2", "c1", "localhost");
-//    testHelper = testHelper.addMemberItem("c3", "c1", "localhost");
-//    testHelper = testHelper.addMemberItem("c2", "c4", "localhost");
-//    testHelper = testHelper.addMemberItem("c4", "c5", "localhost");
-//    testHelper = testHelper.addMemberItem("c8", "c12", "localhost");
-//    testHelper = testHelper.addMemberItem("c1", "c18", "localhost");
-//    testHelper = testHelper.addMemberItem("c15", "c17", "localhost");
-//    testHelper = testHelper.addMemberItem("c9", "c19", "localhost");
-//    testHelper = testHelper.addMemberItem("c9", "c5", "localhost");
-//
-//    testHelper.persist();
-        //id= getContentPath("/collections/", null);  
         LOG.trace("Calling collectionsIdGet({}).", id);
 
         Optional<CollectionObject> result = collectionDao.findById(id);
@@ -581,7 +552,7 @@ public class CollectionsApiController implements CollectionsApi {
         Set<String> collectionItemIds = new HashSet<>();
         LOG.trace("Checking {} member items for proper type, assigned ids and membership conflicts.");
         for (MemberItem item : content) {
-            if (Objects.equal(id, item.getMid())) {
+            if (Objects.equals(id, item.getMid())) {
                 LOG.error("Unable to add collection {} as member to itself.", id);
                 return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
             }
@@ -1341,22 +1312,137 @@ public class CollectionsApiController implements CollectionsApi {
         return new ResponseEntity<>(resultSet, HttpStatus.OK);
     }
 
-    /**
-     * get content path.
-     *
-     * @param begin
-     * @param end
-     * @return
+    /*
+//test data creation
+//    collectionDao.deleteAll();
+//    membershipDao.deleteAll();
+//
+//    TestDataCreationHelper testHelper = TestDataCreationHelper.initialize(collectionDao, memberDao);
+//    for(int i = 0; i < 20; i++){
+//      testHelper = testHelper.addCollection("c" + i, CollectionProperties.getDefault());
+//    }
+//
+//    for(int i = 0; i < 20; i++){
+//      for(int j = 0; j < 20; j++){
+//        testHelper = testHelper.addMemberItem("c" + i, "m" + i + "-" + j, "localhost");
+//      }
+//    }
+//
+//    testHelper = testHelper.addMemberItem("c2", "c1", "localhost");
+//    testHelper = testHelper.addMemberItem("c3", "c1", "localhost");
+//    testHelper = testHelper.addMemberItem("c2", "c4", "localhost");
+//    testHelper = testHelper.addMemberItem("c4", "c5", "localhost");
+//    testHelper = testHelper.addMemberItem("c8", "c12", "localhost");
+//    testHelper = testHelper.addMemberItem("c1", "c18", "localhost");
+//    testHelper = testHelper.addMemberItem("c15", "c17", "localhost");
+//    testHelper = testHelper.addMemberItem("c9", "c19", "localhost");
+//    testHelper = testHelper.addMemberItem("c9", "c5", "localhost");
+//
+//    testHelper.persist();
+        //id= getContentPath("/collections/", null);  
      */
-    /*   private String getContentPath(String begin, String end){
-        String path = request.getAttribute(HandlerMapping.PATH_WITHIN_HANDLER_MAPPING_ATTRIBUTE).toString();
-        if(path == null){
-            throw new CustomInternalServerError("Unable to obtain request URI.");
-        }
-        if (end == null){
-            return path.substring(path.indexOf(begin)+(begin).length());
-        }else{
-            return path.substring(path.indexOf(begin)+(begin).length(), path.lastIndexOf(end));
-        }
-    }*/
+    private String restorePid(String prefix, String suffix) {
+        return prefix + "/" + suffix;
+    }
+
+    @Override
+    public ResponseEntity<CollectionCapabilities> collectionsPidCapabilitiesGet(String prefix, String suffix) {
+        return collectionsIdCapabilitiesGet(restorePid(prefix, suffix));
+    }
+
+    @Override
+    public ResponseEntity<Void> collectionsPidDelete(String prefix, String suffix) {
+        return collectionsIdDelete(restorePid(prefix, suffix));
+    }
+
+    @Override
+    public ResponseEntity<CollectionObject> collectionsPidGet(String prefix, String suffix) {
+        return collectionsIdGet(restorePid(prefix, suffix));
+    }
+
+    @Override
+    public ResponseEntity<MemberResultSet> collectionsPidMembersGet(String prefix, String suffix, String fDatatype, String fRole, Integer fIndex, Instant fDateAdded, Integer expandDepth, Pageable pgbl) {
+        return collectionsIdMembersGet(restorePid(prefix, suffix), fDatatype, fRole, fIndex, fDateAdded, expandDepth, pgbl);
+    }
+
+    @Override
+    public ResponseEntity<Void> collectionsPidMembersMidDelete(String prefix, String suffix, String mid) {
+        return collectionsIdMembersMidDelete(restorePid(prefix, suffix), mid);
+    }
+
+    @Override
+    public ResponseEntity<MemberItem> collectionsPidMembersMidGet(String prefix, String suffix, String mid) {
+        return collectionsIdMembersMidGet(restorePid(prefix, suffix), mid);
+    }
+
+    @Override
+    public ResponseEntity<Void> collectionsPidMembersMidPropertiesPropertyDelete(String prefix, String suffix, String mid, String property) {
+        return collectionsIdMembersMidPropertiesPropertyDelete(restorePid(prefix, suffix), mid, property);
+    }
+
+    @Override
+    public ResponseEntity<String> collectionsPidMembersMidPropertiesPropertyGet(String prefix, String suffix, String mid, String property) {
+        return collectionsIdMembersMidPropertiesPropertyGet(restorePid(prefix, suffix), mid, property);
+    }
+
+    @Override
+    public ResponseEntity<String> collectionsPidMembersMidPropertiesPropertyPut(String prefix, String suffix, String mid, String property, String content) {
+        return collectionsIdMembersMidPropertiesPropertyPut(restorePid(prefix, suffix), mid, property, content);
+    }
+
+    @Override
+    public ResponseEntity<MemberItem> collectionsPidMembersMidPut(String prefix, String suffix, String mid, MemberItem content) {
+        return collectionsIdMembersMidPut(restorePid(prefix, suffix), mid, content);
+    }
+
+    @Override
+    public ResponseEntity<List<MemberItem>> collectionsPidMembersPost(String prefix, String suffix, List<MemberItem> content) {
+        return collectionsIdMembersPost(restorePid(prefix, suffix), content);
+    }
+
+    @Override
+    public ResponseEntity<MemberResultSet> collectionsPidOpsFindMatchPost(String prefix, String suffix, MemberItem memberProperties, Pageable pgbl) {
+        return collectionsIdOpsFindMatchPost(restorePid(prefix, suffix), memberProperties, pgbl);
+    }
+
+    @Override
+    public ResponseEntity<MemberResultSet> collectionsPidOpsFlattenGet(String prefix, String suffix, Pageable pgbl) {
+        return collectionsIdOpsFlattenGet(restorePid(prefix, suffix), pgbl);
+    }
+
+    @Override
+    public ResponseEntity<MemberResultSet> collectionsPidOpsIntersectionOtherIdGet(String prefix, String suffix, String otherId, Pageable pgbl) {
+        return collectionsIdOpsIntersectionOtherIdGet(restorePid(prefix, suffix), otherId, pgbl);
+    }
+
+    @Override
+    public ResponseEntity<MemberResultSet> collectionsIdOpsIntersectionOtherPidGet(String id, String prefix, String suffix, Pageable pgbl) {
+        return collectionsIdOpsIntersectionOtherIdGet(id, restorePid(prefix, suffix), pgbl);
+    }
+
+    @Override
+    public ResponseEntity<MemberResultSet> collectionsPidOpsIntersectionOtherPidGet(String prefix, String suffix, String otherPrefix, String otherSuffix, Pageable pgbl) {
+        return collectionsIdOpsIntersectionOtherIdGet(restorePid(prefix, suffix), restorePid(otherPrefix, otherSuffix), pgbl);
+    }
+
+    @Override
+    public ResponseEntity<MemberResultSet> collectionsPidOpsUnionOtherIdGet(String prefix, String suffix, String otherId, Pageable pgbl) {
+        return collectionsIdOpsUnionOtherIdGet(restorePid(prefix, suffix), otherId, pgbl);
+    }
+
+    @Override
+    public ResponseEntity<MemberResultSet> collectionsIdOpsUnionOtherPidGet(String id, String prefix, String suffix, Pageable pgbl) {
+        return collectionsIdOpsUnionOtherIdGet(id, restorePid(prefix, suffix), pgbl);
+    }
+
+    @Override
+    public ResponseEntity<MemberResultSet> collectionsPidOpsUnionOtherPidGet(String prefix, String suffix, String otherPrefix, String otherSuffix, Pageable pgbl) {
+        return collectionsIdOpsUnionOtherIdGet(restorePid(prefix, suffix), restorePid(otherPrefix, otherSuffix), pgbl);
+    }
+
+    @Override
+    public ResponseEntity<CollectionObject> collectionsPidPut(String prefix, String suffix, CollectionObject content) {
+        return collectionsIdPut(restorePid(prefix, suffix), content);
+    }
+
 }
