@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 - Smart Collections for rule-based organization of members depending on member attributs, e.g., dataType
+- Added support for PIDs in the form *prefix/suffix* to be used as collection and member ids
 
 ### Changed
 - Update to org.springframework.boot 2.7.3
@@ -38,10 +39,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Update to h2 2.1.214
 
 ### Security
-- Changed handling of collection- and member-id in the way, the both MUST be provided URLEncoded and MUST NOT contain (URLEncoded) slashes 
+- Changed handling of collection- and member-id in the way, the both MUST be provided URLEncoded 
 
 ### Removed
-- Support for identifiers (collection and members) containing slashes
+
 
 ## [1.2.0] - 2021-09-23
 ### Added
