@@ -120,10 +120,11 @@ public class CollectionsApiController implements CollectionsApi {
             } else {
                 try {
                     object.setId(URLDecoder.decode(object.getId(), "UTF-8"));
+                   /* Remove if tested...should work from v1.3.0
                     if (object.getId().contains("/")) {
                         LOG.error("Detected slash character in collection id {}.", object.getId());
                         return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
-                    }
+                    }*/
                 } catch (UnsupportedEncodingException ex) {
                     //ignore
                 }
@@ -566,10 +567,11 @@ public class CollectionsApiController implements CollectionsApi {
             } else {
                 try {
                     item.setMid(URLDecoder.decode(item.getMid(), "UTF-8"));
+                     /* Remove if tested...should work from v1.3.0
                     if (item.getMid().contains("/")) {
                         LOG.error("Detected slash character in member id {}.", item.getMid());
                         return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
-                    }
+                    }*/
                 } catch (UnsupportedEncodingException ex) {
                     //ignore
                 }
@@ -1345,6 +1347,9 @@ public class CollectionsApiController implements CollectionsApi {
         return prefix + "/" + suffix;
     }
 
+    /**
+     * Wrappers for PID Support
+     */
     @Override
     public ResponseEntity<CollectionCapabilities> collectionsPidCapabilitiesGet(String prefix, String suffix) {
         return collectionsIdCapabilitiesGet(restorePid(prefix, suffix));
@@ -1443,6 +1448,66 @@ public class CollectionsApiController implements CollectionsApi {
     @Override
     public ResponseEntity<CollectionObject> collectionsPidPut(String prefix, String suffix, CollectionObject content) {
         return collectionsIdPut(restorePid(prefix, suffix), content);
+    }
+
+    @Override
+    public ResponseEntity<Void> collectionsIdMembersPidDelete(String id, String prefix, String suffix) {
+        return collectionsIdMembersMidDelete(id, restorePid(prefix, suffix));
+    }
+
+    @Override
+    public ResponseEntity<Void> collectionsPidMembersPidDelete(String prefix, String suffix, String mPrefix, String mSuffix) {
+        return collectionsIdMembersMidDelete(restorePid(prefix, suffix), restorePid(mPrefix, mSuffix));
+    }
+
+    @Override
+    public ResponseEntity<MemberItem> collectionsIdMembersPidGet(String id, String prefix, String suffix) {
+        return collectionsIdMembersMidGet(id, restorePid(prefix, suffix));
+    }
+
+    @Override
+    public ResponseEntity<MemberItem> collectionsPidMembersPidGet(String prefix, String suffix, String mPrefix, String mSuffix) {
+        return collectionsIdMembersMidGet(restorePid(prefix, suffix), restorePid(mPrefix, mSuffix));
+    }
+
+    @Override
+    public ResponseEntity<Void> collectionsIdMembersPidPropertiesPropertyDelete(String id, String prefix, String suffix, String property) {
+        return collectionsIdMembersMidPropertiesPropertyDelete(id, restorePid(prefix, suffix), property);
+    }
+
+    @Override
+    public ResponseEntity<Void> collectionsPidMembersPidPropertiesPropertyDelete(String prefix, String suffix, String mPrefix, String mSuffix, String property) {
+        return collectionsIdMembersMidPropertiesPropertyDelete(restorePid(prefix, suffix), restorePid(mPrefix, mSuffix), property);
+    }
+
+    @Override
+    public ResponseEntity<String> collectionsIdMembersPidPropertiesPropertyGet(String id, String prefix, String suffix, String property) {
+        return collectionsIdMembersMidPropertiesPropertyGet(id, restorePid(prefix, suffix), property);
+    }
+
+    @Override
+    public ResponseEntity<String> collectionsPidMembersPidPropertiesPropertyGet(String prefix, String suffix, String mPrefix, String mSuffix, String property) {
+        return collectionsIdMembersMidPropertiesPropertyGet(restorePid(prefix, suffix), restorePid(mPrefix, suffix), mSuffix);
+    }
+
+    @Override
+    public ResponseEntity<String> collectionsIdMembersPidPropertiesPropertyPut(String id, String prefix, String suffix, String property, String content) {
+        return collectionsIdMembersMidPropertiesPropertyPut(id, restorePid(prefix, suffix), property, content);
+    }
+
+    @Override
+    public ResponseEntity<String> collectionsPidMembersPidPropertiesPropertyPut(String prefix, String suffix, String mPrefix, String mSuffix, String property, String content) {
+        return collectionsIdMembersMidPropertiesPropertyPut(restorePid(prefix, suffix), restorePid(mPrefix, mSuffix), property, content);
+    }
+
+    @Override
+    public ResponseEntity<MemberItem> collectionsIdMembersPidPut(String id, String prefix, String suffix, MemberItem content) {
+        return collectionsIdMembersMidPut(id, restorePid(prefix, suffix), content);
+    }
+
+    @Override
+    public ResponseEntity<MemberItem> collectionsPidMembersPidPut(String prefix, String suffix, String mPrefix, String mSuffix, MemberItem content) {
+        return collectionsIdMembersMidPut(restorePid(prefix, suffix), restorePid(mPrefix, mSuffix), content);
     }
 
 }

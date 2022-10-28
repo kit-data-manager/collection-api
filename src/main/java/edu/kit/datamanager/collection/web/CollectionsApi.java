@@ -248,6 +248,24 @@ public interface CollectionsApi {
             @Parameter(description = "Persistent identifier for the collection", required = true) @PathVariable("id") String id,
             @Parameter(description = "Identifier for the collection member", required = true) @PathVariable("mid") String mid);
 
+    @Schema(title = "Remove a collection member item.", name = "collectionsIdMembersPidDelete",
+            description = "Removes a member item from a collection. The response may differ depending upon whether or not the "
+            + "service features include support for asynchronous actions.")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "Successful removal. Empty response body."),
+        @ApiResponse(responseCode = "202", description = "Accepted request. Empty response body. (For asynchronous requests, if supported by service features.)"),
+        @ApiResponse(responseCode = "401", description = "Unauthorized. Request was not authorized."),
+        @ApiResponse(responseCode = "403", description = "Forbidden. May be returned, for example, if a request was made to remove  item from a static collection."),
+        @ApiResponse(responseCode = "404", description = "Not Found"),
+        @ApiResponse(responseCode = "200", description = "Unexpected error")})
+    @RequestMapping(value = "/collections/{id}/members/{prefix}/{suffix}",
+            produces = {"application/json"},
+            method = RequestMethod.DELETE)
+    ResponseEntity<Void> collectionsIdMembersPidDelete(
+            @Parameter(description = "Persistent identifier for the collection", required = true) @PathVariable("id") String id,
+            @Parameter(description = "PID prefix for the collection member", required = true) @PathVariable("prefix") String prefix,
+            @Parameter(description = "PID suffix for the collection member", required = true) @PathVariable("suffix") String suffix);
+
     @Schema(title = "Remove a collection member item.", name = "collectionsPidMembersMidDelete",
             description = "Removes a member item from a collection. The response may differ depending upon whether or not the "
             + "service features include support for asynchronous actions.")
@@ -266,6 +284,25 @@ public interface CollectionsApi {
             @Parameter(description = "PID suffix identifier for the collection", required = true) @PathVariable("suffix") String suffix,
             @Parameter(description = "Identifier for the collection member", required = true) @PathVariable("mid") String mid);
 
+    @Schema(title = "Remove a collection member item.", name = "collectionsPidMembersPidDelete",
+            description = "Removes a member item from a collection. The response may differ depending upon whether or not the "
+            + "service features include support for asynchronous actions.")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "Successful removal. Empty response body."),
+        @ApiResponse(responseCode = "202", description = "Accepted request. Empty response body. (For asynchronous requests, if supported by service features.)"),
+        @ApiResponse(responseCode = "401", description = "Unauthorized. Request was not authorized."),
+        @ApiResponse(responseCode = "403", description = "Forbidden. May be returned, for example, if a request was made to remove  item from a static collection."),
+        @ApiResponse(responseCode = "404", description = "Not Found"),
+        @ApiResponse(responseCode = "200", description = "Unexpected error")})
+    @RequestMapping(value = "/collections/{prefix}/{suffix}/members/{mPrefix}/{mSuffix}",
+            produces = {"application/json"},
+            method = RequestMethod.DELETE)
+    ResponseEntity<Void> collectionsPidMembersPidDelete(
+            @Parameter(description = "PID prefix identifier for the collection", required = true) @PathVariable("prefix") String prefix,
+            @Parameter(description = "PID suffix identifier for the collection", required = true) @PathVariable("suffix") String suffix,
+            @Parameter(description = "PID prefix for the collection member", required = true) @PathVariable("mPrefix") String mPrefix,
+            @Parameter(description = "PID suffix for the collection member", required = true) @PathVariable("mSuffix") String mSuffix);
+
     @Schema(title = "Get the properties of a member item in a collection.", name = "collectionsIdMembersMidGet",
             description = "This request retrieves the properties of a specific member item from a collection")
     @ApiResponses(value = {
@@ -278,6 +315,20 @@ public interface CollectionsApi {
     ResponseEntity<MemberItem> collectionsIdMembersMidGet(
             @Parameter(description = "Identifier for the collection", required = true) @PathVariable("id") String id,
             @Parameter(description = "Identifier for the collection member item.", required = true) @PathVariable("mid") String mid);
+
+    @Schema(title = "Get the properties of a member item in a collection.", name = "collectionsIdMembersPidGet",
+            description = "This request retrieves the properties of a specific member item from a collection")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "The requested member", content = @Content(schema = @Schema(implementation = MemberItem.class))),
+        @ApiResponse(responseCode = "401", description = "Unauthorized. Request was not authorized."),
+        @ApiResponse(responseCode = "404", description = "Not found. The requested collection or member item was not found.")})
+    @RequestMapping(value = "/collections/{id}/members/{prefix}/{suffix}",
+            produces = {"application/json"},
+            method = RequestMethod.GET)
+    ResponseEntity<MemberItem> collectionsIdMembersPidGet(
+            @Parameter(description = "Identifier for the collection", required = true) @PathVariable("id") String id,
+            @Parameter(description = "PID prefix for the collection member item.", required = true) @PathVariable("prefix") String prefix,
+            @Parameter(description = "PID suffix for the collection member item.", required = true) @PathVariable("suffix") String suffix);
 
     @Schema(title = "Get the properties of a member item in a collection.", name = "collectionsPidMembersMidGet",
             description = "This request retrieves the properties of a specific member item from a collection")
@@ -293,6 +344,21 @@ public interface CollectionsApi {
             @Parameter(description = "PID suffix for the collection", required = true) @PathVariable("suffix") String suffix,
             @Parameter(description = "Identifier for the collection member item.", required = true) @PathVariable("mid") String mid);
 
+    @Schema(title = "Get the properties of a member item in a collection.", name = "collectionsPidMembersPidGet",
+            description = "This request retrieves the properties of a specific member item from a collection")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "The requested member", content = @Content(schema = @Schema(implementation = MemberItem.class))),
+        @ApiResponse(responseCode = "401", description = "Unauthorized. Request was not authorized."),
+        @ApiResponse(responseCode = "404", description = "Not found. The requested collection or member item was not found.")})
+    @RequestMapping(value = "/collections/{prefix}/{suffix}/members/{mPrefix}/{mSuffix}",
+            produces = {"application/json"},
+            method = RequestMethod.GET)
+    ResponseEntity<MemberItem> collectionsPidMembersPidGet(
+            @Parameter(description = "PID prefix for the collection", required = true) @PathVariable("prefix") String prefix,
+            @Parameter(description = "PID suffix for the collection", required = true) @PathVariable("suffix") String suffix,
+            @Parameter(description = "PID prefix for the collection member item.", required = true) @PathVariable("mPrefix") String mPrefix,
+            @Parameter(description = "PID suffix for the collection member item.", required = true) @PathVariable("mSuffix") String mSuffix);
+       
     @Schema(title = "Delete a named property of a member item in a collection.", name = "collectionsIdMembersMidPropertiesPropertyDelete",
             description = "This request deletes a specific named property of a specific member item from a collection")
     @ApiResponses(value = {
@@ -309,6 +375,23 @@ public interface CollectionsApi {
             @Parameter(description = "Identifier for the collection member item.", required = true) @PathVariable("mid") String mid,
             @Parameter(description = "the name of a property to update", required = true) @PathVariable("property") String property);
 
+    @Schema(title = "Delete a named property of a member item in a collection.", name = "collectionsIdMembersPidPropertiesPropertyDelete",
+            description = "This request deletes a specific named property of a specific member item from a collection")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "Successful deletion. Empty response body."),
+        @ApiResponse(responseCode = "202", description = "Accepted delete request. Empty response body. (For asyncrhonous requests, if supported by service features.)"),
+        @ApiResponse(responseCode = "401", description = "Unauthorized. Request was not authorized."),
+        @ApiResponse(responseCode = "403", description = "Forbidden. May be returned, for example, if a request was made to delete a required metadata property or update a static item."),
+        @ApiResponse(responseCode = "404", description = "Not found. The requested collection or member item was not found.")})
+    @RequestMapping(value = "/collections/{id}/members/{prefix}/{suffix}/properties/{property}",
+            produces = {"application/json"},
+            method = RequestMethod.DELETE)
+    ResponseEntity<Void> collectionsIdMembersPidPropertiesPropertyDelete(
+            @Parameter(description = "Identifier for the collection", required = true) @PathVariable("id") String id,
+            @Parameter(description = "PID prefix for the collection member item.", required = true) @PathVariable("prefix") String prefix,
+            @Parameter(description = "PID suffix for the collection member item.", required = true) @PathVariable("suffix") String suffix,
+            @Parameter(description = "the name of a property to update", required = true) @PathVariable("property") String property);
+    
     @Schema(title = "Delete a named property of a member item in a collection.", name = "collectionsPidMembersMidPropertiesPropertyDelete",
             description = "This request deletes a specific named property of a specific member item from a collection")
     @ApiResponses(value = {
@@ -326,6 +409,24 @@ public interface CollectionsApi {
             @Parameter(description = "Identifier for the collection member item.", required = true) @PathVariable("mid") String mid,
             @Parameter(description = "the name of a property to update", required = true) @PathVariable("property") String property);
 
+    @Schema(title = "Delete a named property of a member item in a collection.", name = "collectionsPidMembersPidPropertiesPropertyDelete",
+            description = "This request deletes a specific named property of a specific member item from a collection")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "Successful deletion. Empty response body."),
+        @ApiResponse(responseCode = "202", description = "Accepted delete request. Empty response body. (For asyncrhonous requests, if supported by service features.)"),
+        @ApiResponse(responseCode = "401", description = "Unauthorized. Request was not authorized."),
+        @ApiResponse(responseCode = "403", description = "Forbidden. May be returned, for example, if a request was made to delete a required metadata property or update a static item."),
+        @ApiResponse(responseCode = "404", description = "Not found. The requested collection or member item was not found.")})
+    @RequestMapping(value = "/collections/{prefix}/{suffix}/members/{mPrefix}/{mSuffix}/properties/{property}",
+            produces = {"application/json"},
+            method = RequestMethod.DELETE)
+    ResponseEntity<Void> collectionsPidMembersPidPropertiesPropertyDelete(
+            @Parameter(description = "PID prefix for the collection", required = true) @PathVariable("prefix") String prefix,
+            @Parameter(description = "PID suffix for the collection", required = true) @PathVariable("suffix") String suffix,
+            @Parameter(description = "PID prefix for the collection member item.", required = true) @PathVariable("mPrefix") String mPrefix,
+            @Parameter(description = "PID suffix for the collection member item.", required = true) @PathVariable("mSuffix") String mSuffix,
+            @Parameter(description = "the name of a property to update", required = true) @PathVariable("property") String property);
+
     @Schema(title = "Get a named property of a member item in a collection.", name = "collectionsIdMembersMidPropertiesPropertyGet",
             description = "This request retrieves a specific named property of a specific member item from a collection")
     @ApiResponses(value = {
@@ -340,6 +441,21 @@ public interface CollectionsApi {
             @Parameter(description = "Identifier for the collection member item.", required = true) @PathVariable("mid") String mid,
             @Parameter(description = "the name of a property to retrieve (e.g. index)", required = true) @PathVariable("property") String property);
 
+    @Schema(title = "Get a named property of a member item in a collection.", name = "collectionsIdMembersPidPropertiesPropertyGet",
+            description = "This request retrieves a specific named property of a specific member item from a collection")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "The requested member", content = @Content(schema = @Schema(implementation = MemberItem.class))),
+        @ApiResponse(responseCode = "401", description = "Unauthorized. Request was not authorized."),
+        @ApiResponse(responseCode = "404", description = "Not found. The requested collection or member item was not found.")})
+    @RequestMapping(value = "/collections/{id}/members/{prefix}/{suffix}/properties/{property}",
+            produces = {"application/json"},
+            method = RequestMethod.GET)
+    ResponseEntity<String> collectionsIdMembersPidPropertiesPropertyGet(
+            @Parameter(description = "Identifier for the collection", required = true) @PathVariable("id") String id,
+            @Parameter(description = "PID prefix for the collection member item.", required = true) @PathVariable("prefix") String prefix,
+            @Parameter(description = "PID suffix for the collection member item.", required = true) @PathVariable("suffix") String suffix,
+            @Parameter(description = "the name of a property to retrieve (e.g. index)", required = true) @PathVariable("property") String property);
+ 
     @Schema(title = "Get a named property of a member item in a collection.", name = "collectionsPidMembersMidPropertiesPropertyGet",
             description = "This request retrieves a specific named property of a specific member item from a collection")
     @ApiResponses(value = {
@@ -353,6 +469,22 @@ public interface CollectionsApi {
             @Parameter(description = "PID prefix for the collection", required = true) @PathVariable("prefix") String prefix,
             @Parameter(description = "PID suffix for the collection", required = true) @PathVariable("suffix") String suffix,
             @Parameter(description = "Identifier for the collection member item.", required = true) @PathVariable("mid") String mid,
+            @Parameter(description = "the name of a property to retrieve (e.g. index)", required = true) @PathVariable("property") String property);
+
+    @Schema(title = "Get a named property of a member item in a collection.", name = "collectionsPidMembersPidPropertiesPropertyGet",
+            description = "This request retrieves a specific named property of a specific member item from a collection")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "The requested member", content = @Content(schema = @Schema(implementation = MemberItem.class))),
+        @ApiResponse(responseCode = "401", description = "Unauthorized. Request was not authorized."),
+        @ApiResponse(responseCode = "404", description = "Not found. The requested collection or member item was not found.")})
+    @RequestMapping(value = "/collections/{prefix}/{suffix}/members/{mPrefix}/{mSuffix}/properties/{property}",
+            produces = {"application/json"},
+            method = RequestMethod.GET)
+    ResponseEntity<String> collectionsPidMembersPidPropertiesPropertyGet(
+            @Parameter(description = "PID prefix for the collection", required = true) @PathVariable("prefix") String prefix,
+            @Parameter(description = "PID suffix for the collection", required = true) @PathVariable("suffix") String suffix,
+            @Parameter(description = "PID prefix for the collection member item.", required = true) @PathVariable("mPrefix") String mPrefix,
+            @Parameter(description = "PID suffix for the collection member item.", required = true) @PathVariable("mSuffix") String mSuffix,
             @Parameter(description = "the name of a property to retrieve (e.g. index)", required = true) @PathVariable("property") String property);
 
     @Schema(title = "Update a named property of a member item in a collection.", name = "collectionsIdMembersMidPropertiesPropertyPut",
@@ -372,6 +504,24 @@ public interface CollectionsApi {
             @Parameter(description = "the name of a property to update", required = true) @PathVariable("property") String property,
             @Parameter(description = "new property value", required = true) @Valid @RequestBody String content);
 
+    @Schema(title = "Update a named property of a member item in a collection.", name = "collectionsIdMembersPidPropertiesPropertyPut",
+            description = "This request updates a specific named property of a specific member item from a collection")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "Successful update. The updated member item is returned in the response.", content = @Content(schema = @Schema(implementation = MemberItem.class))),
+        @ApiResponse(responseCode = "202", description = "Accepted update request. Empty response body. (For asynchronous requests, if supported by service features.)"),
+        @ApiResponse(responseCode = "401", description = "Unauthorized. Request was not authorized."),
+        @ApiResponse(responseCode = "403", description = "Forbidden. May be returned, for example, if a request was made to update a static item."),
+        @ApiResponse(responseCode = "404", description = "Not found. The requested collection or member item was not found.")})
+    @RequestMapping(value = "/collections/{id}/members/{prefix}/{suffix}/properties/{property}",
+            produces = {"application/json"},
+            method = RequestMethod.PUT)
+    ResponseEntity<String> collectionsIdMembersPidPropertiesPropertyPut(
+            @Parameter(description = "Identifier for the collection", required = true) @PathVariable("id") String id,
+            @Parameter(description = "PID prefix for the collection member item.", required = true) @PathVariable("prefix") String prefix,
+            @Parameter(description = "PID suffix for the collection member item.", required = true) @PathVariable("suffix") String suffix,
+            @Parameter(description = "the name of a property to update", required = true) @PathVariable("property") String property,
+            @Parameter(description = "new property value", required = true) @Valid @RequestBody String content);
+    
     @Schema(title = "Update a named property of a member item in a collection.", name = "collectionsPidMembersMidPropertiesPropertyPut",
             description = "This request updates a specific named property of a specific member item from a collection")
     @ApiResponses(value = {
@@ -387,6 +537,25 @@ public interface CollectionsApi {
             @Parameter(description = "PID prefix for the collection", required = true) @PathVariable("prefix") String prefix,
             @Parameter(description = "PID suffix for the collection", required = true) @PathVariable("suffix") String suffix,
             @Parameter(description = "Identifier for the collection member item.", required = true) @PathVariable("mid") String mid,
+            @Parameter(description = "the name of a property to update", required = true) @PathVariable("property") String property,
+            @Parameter(description = "new property value", required = true) @Valid @RequestBody String content);
+
+    @Schema(title = "Update a named property of a member item in a collection.", name = "collectionsPidMembersPidPropertiesPropertyPut",
+            description = "This request updates a specific named property of a specific member item from a collection")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "Successful update. The updated member item is returned in the response.", content = @Content(schema = @Schema(implementation = MemberItem.class))),
+        @ApiResponse(responseCode = "202", description = "Accepted update request. Empty response body. (For asynchronous requests, if supported by service features.)"),
+        @ApiResponse(responseCode = "401", description = "Unauthorized. Request was not authorized."),
+        @ApiResponse(responseCode = "403", description = "Forbidden. May be returned, for example, if a request was made to update a static item."),
+        @ApiResponse(responseCode = "404", description = "Not found. The requested collection or member item was not found.")})
+    @RequestMapping(value = "/collections/{prefix}/{suffix}/members/{mPrefix}/{mSuffix}/properties/{property}",
+            produces = {"application/json"},
+            method = RequestMethod.PUT)
+    ResponseEntity<String> collectionsPidMembersPidPropertiesPropertyPut(
+            @Parameter(description = "PID prefix for the collection", required = true) @PathVariable("prefix") String prefix,
+            @Parameter(description = "PID suffix for the collection", required = true) @PathVariable("suffix") String suffix,
+            @Parameter(description = "PID prefix for the collection member item.", required = true) @PathVariable("mPrefix") String mPrefix,
+            @Parameter(description = "PID suffix for the collection member item.", required = true) @PathVariable("mSuffix") String mSuffix,
             @Parameter(description = "the name of a property to update", required = true) @PathVariable("property") String property,
             @Parameter(description = "new property value", required = true) @Valid @RequestBody String content);
 
@@ -409,6 +578,26 @@ public interface CollectionsApi {
             @Parameter(description = "Identifier for the collection member", required = true) @PathVariable("mid") String mid,
             @Parameter(description = "Collection item mapping metadata", required = true) @Valid @RequestBody MemberItem content);
 
+     @Schema(title = "Update the properties of a collection member item.", name = "collectionsIdMembersPidPut",
+            description = "This request updates the properties of a collection member item.  The updated CollectionItemMappingMetadata  "
+            + "must be supplied in the body of the request. The response may differ  depending upon whether or not the  service "
+            + "features include support  for asynchronous actions.")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "Successful update. The updated CollectionItemMappingMetadata is returned in the response.", content = @Content(schema = @Schema(implementation = MemberItem.class))),
+        @ApiResponse(responseCode = "202", description = "Accepted update request. Empty response body. (For asynchronous requests if supported by service features.)"),
+        @ApiResponse(responseCode = "400", description = "Invalid Input"),
+        @ApiResponse(responseCode = "401", description = "Unauthorized. Request was not authorized."),
+        @ApiResponse(responseCode = "403", description = "Forbidden. May be returned, for example, if a request was made to update an item in a static collection."),
+        @ApiResponse(responseCode = "404", description = "Not found. The requested collection or member item was not found.")})
+    @RequestMapping(value = "/collections/{id}/members/{prefix}/{suffix}",
+            produces = {"application/json"},
+            method = RequestMethod.PUT)
+    ResponseEntity<MemberItem> collectionsIdMembersPidPut(
+            @Parameter(description = "Identifier for the collection", required = true) @PathVariable("id") String id,
+            @Parameter(description = "PID prefix for the collection member", required = true) @PathVariable("prefix") String prefix,
+            @Parameter(description = "PID suffix for the collection member", required = true) @PathVariable("suffix") String suffix,
+            @Parameter(description = "Collection item mapping metadata", required = true) @Valid @RequestBody MemberItem content);
+
     @Schema(title = "Update the properties of a collection member item.", name = "collectionsPidMembersMidPut",
             description = "This request updates the properties of a collection member item.  The updated CollectionItemMappingMetadata  "
             + "must be supplied in the body of the request. The response may differ  depending upon whether or not the  service "
@@ -427,6 +616,27 @@ public interface CollectionsApi {
             @Parameter(description = "PID prefix for the collection", required = true) @PathVariable("prefix") String prefix,
             @Parameter(description = "PID suffix for the collection", required = true) @PathVariable("suffix") String suffix,
             @Parameter(description = "Identifier for the collection member", required = true) @PathVariable("mid") String mid,
+            @Parameter(description = "Collection item mapping metadata", required = true) @Valid @RequestBody MemberItem content);
+
+    @Schema(title = "Update the properties of a collection member item.", name = "collectionsPidMembersPidPut",
+            description = "This request updates the properties of a collection member item. The updated CollectionItemMappingMetadata  "
+            + "must be supplied in the body of the request. The response may differ  depending upon whether or not the  service "
+            + "features include support  for asynchronous actions.")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "Successful update. The updated CollectionItemMappingMetadata is returned in the response.", content = @Content(schema = @Schema(implementation = MemberItem.class))),
+        @ApiResponse(responseCode = "202", description = "Accepted update request. Empty response body. (For asynchronous requests if supported by service features.)"),
+        @ApiResponse(responseCode = "400", description = "Invalid Input"),
+        @ApiResponse(responseCode = "401", description = "Unauthorized. Request was not authorized."),
+        @ApiResponse(responseCode = "403", description = "Forbidden. May be returned, for example, if a request was made to update an item in a static collection."),
+        @ApiResponse(responseCode = "404", description = "Not found. The requested collection or member item was not found.")})
+    @RequestMapping(value = "/collections/{prefix}/{suffix}/members/{mPrefix}/{mSuffix}",
+            produces = {"application/json"},
+            method = RequestMethod.PUT)
+    ResponseEntity<MemberItem> collectionsPidMembersPidPut(
+            @Parameter(description = "PID prefix for the collection", required = true) @PathVariable("prefix") String prefix,
+            @Parameter(description = "PID suffix for the collection", required = true) @PathVariable("suffix") String suffix,
+            @Parameter(description = "PID prefix for the collection member", required = true) @PathVariable("mPrefix") String mPrefix,
+            @Parameter(description = "PID suffix for the collection member", required = true) @PathVariable("mSuffix") String mSuffix,
             @Parameter(description = "Collection item mapping metadata", required = true) @Valid @RequestBody MemberItem content);
 
     @Schema(title = "Add one or more new member items to this collection.", name = "collectionsIdMembersPost",

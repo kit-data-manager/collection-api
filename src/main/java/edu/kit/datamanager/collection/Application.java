@@ -15,6 +15,7 @@
  */
 package edu.kit.datamanager.collection;
 
+import java.net.URLDecoder;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.annotation.ComponentScan;
@@ -28,7 +29,7 @@ import org.springframework.scheduling.annotation.EnableScheduling;
 @ComponentScan({"edu.kit.datamanager.collection"})
 public class Application {
 
-    public static void main(String[] args) {
+    public static void main(String[] args){
         SpringApplication.run(Application.class, args);
     }
 }
