@@ -61,7 +61,7 @@ dependencies {
 
      
     implementation "org.springframework:spring-messaging:5.3.23"
-    implementation "org.springframework.security:spring-security-web:5.7.4"
+    implementation "org.springframework.security:spring-security-web:5.7.5"
     implementation "org.springframework.security:spring-security-config:5.7.5"
     
     // cloud support
