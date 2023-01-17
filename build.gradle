@@ -7,6 +7,7 @@ plugins {
     id "org.owasp.dependencycheck" version "7.3.0"
     id 'org.asciidoctor.jvm.convert' version '3.3.2'
     id "net.researchgate.release" version "3.0.2"
+    id "com.gorylenko.gradle-git-properties" version "2.4.1"
     id 'java'
     id 'jacoco'
 }
@@ -129,6 +130,10 @@ tasks.withType(Test) {
     testLogging {
         events 'started', 'passed'
     }
+}
+
+springBoot {    
+    buildInfo()
 }
 
 bootJar {
