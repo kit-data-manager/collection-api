@@ -1,5 +1,5 @@
 /*
- * Copyright 2018 Karlsruhe Institute of Technology.
+ * Copyright 2022 Karlsruhe Institute of Technology.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,24 +13,16 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.kit.datamanager.collection.configuration;
-
-import lombok.Getter;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.context.annotation.Configuration;
+package edu.kit.datamanager.collection.exceptions;
 
 /**
  *
- * @author chelbi
+ * @author jejkal
  */
-@Configuration
-@Getter
-public class ApplicationProperties {
+public class SmartRuleParseException extends Exception {
 
-    public static Integer maxExpansionDepth;
-    
-     @Value("${collection.serviceFeature.maxExpansionDepth:-1}")
-     public void setMaxExpansionDepth(Integer maxExpansionDepth){
-         this.maxExpansionDepth=maxExpansionDepth;
-     }
+    public SmartRuleParseException(String message) {
+        super(message);
+    }
+
 }

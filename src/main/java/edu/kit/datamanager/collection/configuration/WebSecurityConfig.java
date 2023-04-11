@@ -15,11 +15,12 @@
  */
 package edu.kit.datamanager.collection.configuration;
 
-import edu.kit.datamanager.security.filter.JwtAuthenticationFilter;
-import edu.kit.datamanager.security.filter.JwtAuthenticationProvider;
+import edu.kit.datamanager.security.filter.KeycloakTokenFilter;
 import edu.kit.datamanager.security.filter.NoAuthenticationFilter;
 import edu.kit.datamanager.security.filter.NoopAuthenticationEventPublisher;
+import java.util.Optional;
 import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.web.servlet.FilterRegistrationBean;
 import org.springframework.context.annotation.Bean;
@@ -48,15 +49,12 @@ import org.springframework.web.filter.CorsFilter;
 @EnableGlobalMethodSecurity(prePostEnabled = true)
 public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
 
+    private static final Logger logger = LoggerFactory.getLogger(WebSecurityConfig.class);
+    
     @Autowired
-    private Logger logger;
-
+    private Optional<KeycloakTokenFilter> keycloaktokenFilterBean;
+    
     public WebSecurityConfig() {
-    }
-
-    @Override
-    public void configure(AuthenticationManagerBuilder auth) throws Exception {
-        auth.authenticationEventPublisher(new NoopAuthenticationEventPublisher()).authenticationProvider(new JwtAuthenticationProvider("test123", logger));
     }
 
     @Override
@@ -65,11 +63,15 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
                 .antMatchers(HttpMethod.OPTIONS, "/**").permitAll()
                 .antMatchers("/editor/**").permitAll().and().sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS)
                 .and()
-                .csrf().disable()
-                .addFilterAfter(new JwtAuthenticationFilter(authenticationManager()), BasicAuthenticationFilter.class);
+                .csrf().disable();
+        
+         if (keycloaktokenFilterBean.isPresent()) {
+            httpSecurity.addFilterAfter(keycloaktokenFilterBean.get(), BasicAuthenticationFilter.class);
+        }
+        //        .addFilterAfter(new JwtAuthenticationFilter(authenticationManager()), BasicAuthenticationFilter.class);
         // if(!applicationProperties.isAuthEnabled()){
         //   logger.info("Authentication is DISABLED. Adding 'NoAuthenticationFilter' to authentication chain.");
-        httpSecurity = httpSecurity.addFilterAfter(new NoAuthenticationFilter("test123", authenticationManager()), JwtAuthenticationFilter.class);
+            httpSecurity = httpSecurity.addFilterAfter(new NoAuthenticationFilter("vkfvoswsohwrxgjaxipuiyyjgubggzdaqrcuupbugxtnalhiegkppdgjgwxsmvdb", authenticationManager()), BasicAuthenticationFilter.class);
         // } else{
         //   logger.info("Authentication is ENABLED.");
         //}
@@ -107,7 +109,7 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
         final UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         CorsConfiguration config = new CorsConfiguration();
         config.setAllowCredentials(true);
-        config.addAllowedOrigin("*"); // @Value: http://localhost:8080
+        config.addAllowedOriginPattern("*"); // @Value: http://localhost:8080
         config.addAllowedHeader("*");
         config.addAllowedMethod("*");
         config.addExposedHeader("Content-Range");

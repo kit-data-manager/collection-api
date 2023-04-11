@@ -15,7 +15,6 @@
  */
 package edu.kit.datamanager.collection.web.impl;
 
-import com.google.common.base.Objects;
 import edu.kit.datamanager.collection.configuration.CollectionRegistryConfig;
 import edu.kit.datamanager.collection.domain.CollectionCapabilities;
 import edu.kit.datamanager.collection.domain.CollectionObject;
@@ -48,10 +47,13 @@ import edu.kit.datamanager.collection.domain.d3.DataWrapper;
 import edu.kit.datamanager.collection.domain.d3.Link;
 import edu.kit.datamanager.collection.domain.d3.MemberItemNode;
 import edu.kit.datamanager.collection.exceptions.CircularDependencyException;
+import edu.kit.datamanager.collection.exceptions.SmartRuleParseException;
 import edu.kit.datamanager.collection.util.ControllerUtils;
 import edu.kit.datamanager.collection.util.PaginationHelper;
-import edu.kit.datamanager.exceptions.CustomInternalServerError;
+import edu.kit.datamanager.collection.util.SmartRule;
 import io.swagger.v3.oas.annotations.media.Schema;
+import java.io.UnsupportedEncodingException;
+import java.net.URLDecoder;
 import java.time.ZoneOffset;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
@@ -61,6 +63,7 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
@@ -72,7 +75,6 @@ import javax.persistence.PersistenceContext;
 //import javax.validation.ValidatorFactory;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
-import org.springframework.web.servlet.HandlerMapping;
 import org.springframework.web.util.UriComponentsBuilder;
 
 @javax.annotation.Generated(value = "io.swagger.codegen.languages.SpringCodegen", date = "2019-07-09T15:21:24.632+02:00")
@@ -94,7 +96,7 @@ public class CollectionsApiController implements CollectionsApi {
 
     @Autowired
     private CollectionRegistryConfig collectionRegistry;
-    
+
     @PersistenceContext
     private EntityManager em;
 
@@ -115,59 +117,117 @@ public class CollectionsApiController implements CollectionsApi {
                 LOG.trace("Adding local pid to collection without provided id");
                 object.setId(UUID.randomUUID().toString());
                 LOG.trace("Assigned local pid {} to collection object.", object.getId());
+            } else {
+                try {
+                    object.setId(URLDecoder.decode(object.getId(), "UTF-8"));
+                   /* Remove if tested...should work from v1.3.0
+                    if (object.getId().contains("/")) {
+                        LOG.error("Detected slash character in collection id {}.", object.getId());
+                        return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
+                    }*/
+                } catch (UnsupportedEncodingException ex) {
+                    //ignore
+                }
             }
             ids.add(object.getId());
+            if (null != object.getProperties() && object.getProperties().getSmartRules() != null) {
+                for (String ruleString : object.getProperties().getSmartRules()) {
+                    try {
+                        SmartRule.fromString(ruleString);
+                    } catch (SmartRuleParseException ex) {
+                        LOG.error("Failed to evaluate smart rule \"" + ruleString + "\" of user-provided collection with id " + object.getId(), ex);
+                        return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
+                    }
+                }
+            }
         }
 
         long existingCollectionCount = collectionDao.countByIdIn(ids.toArray(new String[]{}));
 
-        if (existingCollectionCount > 0) {
-            LOG.debug("There is already a collection at least one of the following ids: {}.", ids);
+        if (existingCollectionCount
+                > 0) {
+            LOG.debug("There is already a collection for at least one of the following ids: {}.", ids);
             return new ResponseEntity<>(HttpStatus.CONFLICT);
         }
 
         Long existingMemberCount = memberDao.countByMidIn(ids.toArray(new String[]{}));
-        if (existingMemberCount > 0){
-             LOG.debug("There is already a member at least one of the following ids: {}.", ids);
+        if (existingMemberCount
+                > 0) {
+            LOG.debug("There is already a member at least one of the following ids: {}.", ids);
             return new ResponseEntity<>(HttpStatus.CONFLICT);
         }
-        
-        LOG.trace("Checking properties and creating collections.");
-        for (CollectionObject collection : content) {
-            LOG.trace("Checking collection properties.");
-            CollectionProperties props = collection.getProperties();
-            if (props == null) {
-                LOG.trace("Collection properties not present. Creating new collection properties instance.");
-                props = new CollectionProperties();
-                collection.setProperties(props);
-            }
 
-            LOG.trace("Setting property 'dateCreated' to now().");
-            props.setDateCreated(Instant.now().truncatedTo( ChronoUnit.MILLIS ));
+        LOG.trace(
+                "Checking properties and creating collections.");
+        content.forEach(collection
+                -> {
+            doPersistCollection(collection);
+//            LOG.trace("Checking collection properties.");
+//            CollectionProperties props = collection.getProperties();
+//            if (props == null) {
+//                LOG.trace("Collection properties not present. Creating new collection properties instance.");
+//                props = new CollectionProperties();
+//                collection.setProperties(props);
+//            }
+//
+//            LOG.trace("Setting property 'dateCreated' to now().");
+//            props.setDateCreated(Instant.now().truncatedTo(ChronoUnit.MILLIS));
+//
+//            LOG.trace("Checking collection capabilities.");
+//            CollectionCapabilities caps = collection.getCapabilities();
+//
+//            if (caps == null) {
+//                LOG.trace("Collection capabilities not present. Creating new default collection capabilities instance.");
+//                collection.setCapabilities(CollectionCapabilities.getDefault());
+//            }
+//
+//            LOG.trace("Persisting new collection.");
+//            collectionDao.save(collection);
+//
+//            collectionRegistry.getCollectionGraph().addEdge(collection.getId(), new HashSet<String>());
+        }
+        );
 
-            LOG.trace("Checking collection capabilities.");
-            CollectionCapabilities caps = collection.getCapabilities();
+        LOG.trace(
+                "Returning created collections.");
+        return new ResponseEntity<>(content, HttpStatus.CREATED);
+    }
 
-            if (caps == null) {
-                LOG.trace("Collection capabilities not present. Creating new default collection capabilities instance.");
-                collection.setCapabilities(CollectionCapabilities.getDefault());
-            }
-
-            LOG.trace("Persisting new collection.");
-            collectionDao.save(collection);
-            
-            collectionRegistry.getCollectionGraph().addEdge(collection.getId(), new HashSet<String>());
+    private CollectionObject doPersistCollection(CollectionObject collection) {
+        LOG.trace("Checking collection properties.");
+        CollectionProperties props = collection.getProperties();
+        if (props == null) {
+            LOG.trace("Collection properties not present. Creating new collection properties instance.");
+            props = new CollectionProperties();
+            collection.setProperties(props);
         }
 
-        LOG.trace("Returning created collections.");
-        return new ResponseEntity<>(content, HttpStatus.CREATED);
+        LOG.trace("Setting property 'dateCreated' to now().");
+        props.setDateCreated(Instant.now().truncatedTo(ChronoUnit.MILLIS));
+
+        LOG.trace("Checking collection capabilities.");
+        CollectionCapabilities caps = collection.getCapabilities();
+
+        if (caps == null) {
+            LOG.trace("Collection capabilities not present. Creating new default collection capabilities instance.");
+            collection.setCapabilities(CollectionCapabilities.getDefault());
+        }
+
+        LOG.trace("Persisting new collection.");
+        CollectionObject result = collectionDao.save(collection);
+
+        collectionRegistry.getCollectionGraph().addEdge(result.getId(), new HashSet<String>());
+        return result;
     }
 
     @Override
     public ResponseEntity<CollectionResultSet> collectionsGet(
-            @Valid @RequestParam(value = "f_modelType", required = false) String fModelType,
-            @Valid @RequestParam(value = "f_memberType", required = false) String fMemberType,
-            @Valid @RequestParam(value = "f_ownership", required = false) String fOwnership,
+            @Valid
+            @RequestParam(value = "f_modelType", required = false) String fModelType,
+            @Valid
+            @RequestParam(value = "f_memberType", required = false) String fMemberType,
+            @Valid
+            @RequestParam(value = "f_ownership", required = false) String fOwnership,
             final Pageable pgbl,
             final HttpServletRequest request,
             final UriComponentsBuilder uriBuilder) {
@@ -187,14 +247,14 @@ public class CollectionsApiController implements CollectionsApi {
         resultList.forEach((o) -> {
             resultSet.addContentsItem(o);
         });
-        
+
         LOG.trace("Setting cursor values.");
         resultSet.setNextCursor(PaginationHelper.create(pgbl.getPageNumber(), totalElementCount).withElementsPerPage(pgbl.getPageSize()).getNextPageLink());
         resultSet.setPrevCursor(PaginationHelper.create(pgbl.getPageNumber(), totalElementCount).withElementsPerPage(pgbl.getPageSize()).getPrevPageLink());
         LOG.trace("Returning result set.");
-        
+
         LOG.trace("Structure of Collections");
-       LOG.trace("{}",collectionRegistry.getCollectionGraph().toString());
+        LOG.trace("{}", collectionRegistry.getCollectionGraph().toString());
         return new ResponseEntity<>(resultSet, HttpStatus.OK);
     }
 
@@ -222,7 +282,7 @@ public class CollectionsApiController implements CollectionsApi {
         for (CollectionObject o : collections) {
             List<Membership> memberships = helper.getColletionsMembershipsByFilters(Arrays.asList(o.getId()), null, null, null, null, false, 0, 20);
             for (Membership m : memberships) {
-            if (!collectionIds.contains(m.getMember().getMid()) && !memberIds.contains(m.getMember().getMid())) {
+                if (!collectionIds.contains(m.getMember().getMid()) && !memberIds.contains(m.getMember().getMid())) {
                     MemberItemNode n_m = new MemberItemNode();
                     n_m.setId(m.getMember().getMid());
                     n_m.setRadius(5);
@@ -245,34 +305,6 @@ public class CollectionsApiController implements CollectionsApi {
 
     @Override
     public ResponseEntity<CollectionObject> collectionsIdGet(@PathVariable("id") String id) {
-
-//test data creation
-//    collectionDao.deleteAll();
-//    membershipDao.deleteAll();
-//
-//    TestDataCreationHelper testHelper = TestDataCreationHelper.initialize(collectionDao, memberDao);
-//    for(int i = 0; i < 20; i++){
-//      testHelper = testHelper.addCollection("c" + i, CollectionProperties.getDefault());
-//    }
-//
-//    for(int i = 0; i < 20; i++){
-//      for(int j = 0; j < 20; j++){
-//        testHelper = testHelper.addMemberItem("c" + i, "m" + i + "-" + j, "localhost");
-//      }
-//    }
-//
-//    testHelper = testHelper.addMemberItem("c2", "c1", "localhost");
-//    testHelper = testHelper.addMemberItem("c3", "c1", "localhost");
-//    testHelper = testHelper.addMemberItem("c2", "c4", "localhost");
-//    testHelper = testHelper.addMemberItem("c4", "c5", "localhost");
-//    testHelper = testHelper.addMemberItem("c8", "c12", "localhost");
-//    testHelper = testHelper.addMemberItem("c1", "c18", "localhost");
-//    testHelper = testHelper.addMemberItem("c15", "c17", "localhost");
-//    testHelper = testHelper.addMemberItem("c9", "c19", "localhost");
-//    testHelper = testHelper.addMemberItem("c9", "c5", "localhost");
-//
-//    testHelper.persist();
-        id= getContentPath("/collections/", null);  
         LOG.trace("Calling collectionsIdGet({}).", id);
 
         Optional<CollectionObject> result = collectionDao.findById(id);
@@ -289,8 +321,9 @@ public class CollectionsApiController implements CollectionsApi {
     @Override
     public ResponseEntity<CollectionObject> collectionsIdPut(
             @PathVariable("id") String id,
-            @Valid @RequestBody CollectionObject content) {
-        id= getContentPath("/collections/", null);
+            @Valid
+            @RequestBody CollectionObject content) {
+        //  id= getContentPath("/collections/", null);
         LOG.trace("Calling collectionsIdPut({}, {}).", id, content);
 
         Optional<CollectionObject> result = collectionDao.findById(id);
@@ -303,6 +336,17 @@ public class CollectionsApiController implements CollectionsApi {
         CollectionObject existing = result.get();
 
         ControllerUtils.checkEtag(request, existing);
+
+        if (null != content.getProperties() && content.getProperties().getSmartRules() != null) {
+            for (String ruleString : content.getProperties().getSmartRules()) {
+                try {
+                    SmartRule.fromString(ruleString);
+                } catch (SmartRuleParseException ex) {
+                    LOG.error("Failed to evaluate smart rule \"" + ruleString + "\" of user-provided collection with id " + content.getId(), ex);
+                    return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
+                }
+            }
+        }
 
         if (content.getDescription() != null) {
             LOG.debug("Updating collection description from value {} to value {}.", existing.getDescription(), content.getDescription());
@@ -378,7 +422,7 @@ public class CollectionsApiController implements CollectionsApi {
 
     @Override
     public ResponseEntity<Void> collectionsIdDelete(@PathVariable("id") String id) {
-        String decodedIdentifier = getContentPath("/collections/", null);
+        String decodedIdentifier = id;//getContentPath("/collections/", null);
         LOG.trace("Calling collectionsIdDelete({}).", decodedIdentifier);
         Optional<CollectionObject> result = collectionDao.findById(decodedIdentifier);
 
@@ -389,46 +433,46 @@ public class CollectionsApiController implements CollectionsApi {
             Set<MemberItem> memberItems = new HashSet<>();
             memberships.forEach(membership -> {
                 memberItems.add(membership.getMember());
-            });  
+            });
             Set<String> collectionMemberOfs = result.get().getProperties().getMemberOf();
             LOG.trace("Deleting collection with id {}.", decodedIdentifier);
             collectionDao.delete(result.get());
 
             LOG.trace("Returning HTTP 204.");
-            
+
             memberItems.forEach(memberItem -> {
                 Optional<Membership> membership = membershipDao.findByMember(memberItem);
                 Optional<CollectionObject> collection = collectionDao.findById(memberItem.getMid());
-                
+
                 //delete id of the deleted collection from MemberOf
-                if (!collection.isEmpty()){
+                if (!collection.isEmpty()) {
                     LOG.trace("Deleting the id of the deleted collection {} from MemberOf of the collection with id {}", decodedIdentifier, collection.get().getId());
                     collection.get().getProperties().getMemberOf().remove(decodedIdentifier);
                     collectionDao.save(collection.get());
                 }
                 //delete memberItem if it has no memberships
-                if (membership.isEmpty()){
+                if (membership.isEmpty()) {
                     LOG.trace("Deleting MemberItem with id {} having no membership", memberItem.getMid());
                     memberDao.delete(memberItem);
                     LOG.trace("Returning HTTP 204.");
                 }
-                
-            });   
+
+            });
             //delete the member Item which is a collection id from the parent collection
-            Set<MemberItem> memberItemsToDelete= new HashSet<>();
-            for (String collectionId: collectionMemberOfs){
+            Set<MemberItem> memberItemsToDelete = new HashSet<>();
+            for (String collectionId : collectionMemberOfs) {
                 Optional<CollectionObject> collection = collectionDao.findById(collectionId);
-                if (!collection.isEmpty()){
+                if (!collection.isEmpty()) {
                     memberships = collection.get().getMembers();
-                    for (Membership membershipToDelete: memberships){
+                    for (Membership membershipToDelete : memberships) {
                         MemberItem memberItemToDelete = membershipToDelete.getMember();
-                        if (memberItemToDelete.getMid().equals(decodedIdentifier)){
-                             LOG.trace("Deleting MemberItem with id {} from Collection with id {}", decodedIdentifier, collectionId);
+                        if (memberItemToDelete.getMid().equals(decodedIdentifier)) {
+                            LOG.trace("Deleting MemberItem with id {} from Collection with id {}", decodedIdentifier, collectionId);
                             collection.get().getMembers().remove(membershipToDelete);
                             collectionDao.save(collection.get());
                             memberItemsToDelete.add(memberItemToDelete);
                             membershipToDelete.setMember(null);
-                            membershipDao.delete(membershipToDelete); 
+                            membershipDao.delete(membershipToDelete);
                         }
                     }
                 }
@@ -436,8 +480,8 @@ public class CollectionsApiController implements CollectionsApi {
             memberItemsToDelete.forEach((memberItem) -> {
                 memberDao.delete(memberItem);
             });
-        //delete collection id from the structure of collections
-        collectionRegistry.getCollectionGraph().removeCollection(decodedIdentifier);
+            //delete collection id from the structure of collections
+            collectionRegistry.getCollectionGraph().removeCollection(decodedIdentifier);
         } else {
             LOG.trace("No collection with id {} found. Returning HTTP 204.", decodedIdentifier);
         }
@@ -446,7 +490,7 @@ public class CollectionsApiController implements CollectionsApi {
 
     @Override
     public ResponseEntity<CollectionCapabilities> collectionsIdCapabilitiesGet(@PathVariable("id") String id) {
-        id = getContentPath("/collections/", "/capabilities");
+        // id = getContentPath("/collections/", "/capabilities");
         LOG.trace("Calling collectionsIdCapabilitiesGet({}).", id);
 
         Optional<CollectionObject> result = collectionDao.findById(id);
@@ -463,8 +507,8 @@ public class CollectionsApiController implements CollectionsApi {
     @Override
     public ResponseEntity<List<MemberItem>> collectionsIdMembersPost(
             @PathVariable("id") String id,
-            @Valid @RequestBody List<MemberItem> content) {
-        id= getContentPath("/collections/","/members");
+            @Valid
+            @RequestBody List<MemberItem> content) {
         LOG.trace("Calling collectionsIdMembersPost({}).", id);
 
         //validate attributes of MemberItem
@@ -476,40 +520,40 @@ public class CollectionsApiController implements CollectionsApi {
 //                return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
 //            }
 //        }
-
         Optional<CollectionObject> result = collectionDao.findById(id);
         if (result.isEmpty()) {
             LOG.debug("No collection with id {} found.", id);
             return new ResponseEntity<>(HttpStatus.NOT_FOUND);
         }
 
-        CollectionObject existing = result.get();
+        CollectionObject collectionToAddTo = result.get();
         Map<String, MemberItem> existingMembers = new HashMap<>();
 
         String restrictedToType = null;
         LOG.trace("Checking if update is allowed by collection capabilities.");
-        if (existing.getCapabilities() != null) {
+        if (collectionToAddTo.getCapabilities() != null) {
             LOG.trace("Check property 'membershipMutable'.");
-            if (!existing.getCapabilities().getMembershipIsMutable()) {
+            if (!collectionToAddTo.getCapabilities().getMembershipIsMutable()) {
                 LOG.error("Unable to add members to immutable collection with id {}.", id);
                 return new ResponseEntity<>(HttpStatus.FORBIDDEN);
             }
             LOG.trace("Check property 'maxLength'.");
-            if (existing.getCapabilities().getMaxLength() > -1) {
+            if (collectionToAddTo.getCapabilities().getMaxLength() > -1) {
                 LOG.trace("Checking collection maxLength property.");
-                int membershipCount = existing.getMembers().size();
-                if (membershipCount + content.size() >= existing.getCapabilities().getMaxLength()) {
-                    LOG.error("Adding {} members to collection would exceed max count {}.", content.size(), existing.getCapabilities().getMaxLength());
+                int membershipCount = collectionToAddTo.getMembers().size();
+                if (membershipCount + content.size() >= collectionToAddTo.getCapabilities().getMaxLength()) {
+                    LOG.error("Adding {} members to collection would exceed max count {}.", content.size(), collectionToAddTo.getCapabilities().getMaxLength());
                     return new ResponseEntity<>(HttpStatus.FORBIDDEN);
                 }
             }
             LOG.trace("Obtaining property 'restrictedToType'.");
-            restrictedToType = existing.getCapabilities().getRestrictedToType();
+            restrictedToType = collectionToAddTo.getCapabilities().getRestrictedToType();
         }
 
+        Set<String> collectionItemIds = new HashSet<>();
         LOG.trace("Checking {} member items for proper type, assigned ids and membership conflicts.");
         for (MemberItem item : content) {
-            if (Objects.equal(id, item.getMid())) {
+            if (Objects.equals(id, item.getMid())) {
                 LOG.error("Unable to add collection {} as member to itself.", id);
                 return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
             }
@@ -521,25 +565,37 @@ public class CollectionsApiController implements CollectionsApi {
                 item.setMid(UUID.randomUUID().toString());
                 LOG.trace("UUID {} assigned as member item id.", item.getId());
             } else {
+                try {
+                    item.setMid(URLDecoder.decode(item.getMid(), "UTF-8"));
+                     /* Remove if tested...should work from v1.3.0
+                    if (item.getMid().contains("/")) {
+                        LOG.error("Detected slash character in member id {}.", item.getMid());
+                        return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
+                    }*/
+                } catch (UnsupportedEncodingException ex) {
+                    //ignore
+                }
+
                 //check if id is collection
                 Optional<CollectionObject> optionalCollection = collectionDao.findById(item.getMid());
                 if (optionalCollection.isPresent()) {
+                    collectionItemIds.add(item.getMid());
                     CollectionObject collection = optionalCollection.get();
-                    if (collection.getCapabilities().getRestrictedToType() != null && !collection.getCapabilities().getRestrictedToType().equals(existing.getCapabilities().getRestrictedToType())){
-                        LOG.error("Collection has invalid resctricted Type. Collection with id {} only supports type {}, but member collection provided type {}.", id, existing.getCapabilities().getRestrictedToType(), collection.getCapabilities().getRestrictedToType());
+                    if (collection.getCapabilities().getRestrictedToType() != null && !collection.getCapabilities().getRestrictedToType().equals(collectionToAddTo.getCapabilities().getRestrictedToType())) {
+                        LOG.error("Collection has invalid resctricted Type. Collection with id {} only supports type {}, but member collection provided type {}.", id, collectionToAddTo.getCapabilities().getRestrictedToType(), collection.getCapabilities().getRestrictedToType());
                         return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
                     }
                     //check if the graph is circular when adding a new member
-                    try{
+                    try {
                         collectionRegistry.getCollectionGraph().isCircular(id, item.getMid());
-                    }catch (CircularDependencyException e){
+                    } catch (CircularDependencyException e) {
                         LOG.error("Member cannot be added. {}", e.getMessage());
                         return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
                     }
                     LOG.trace("Provided member with id {} represents an existing collection. Adding parent collection id {} to memberOf property.", item.getMid(), id);
                     collection.getProperties().getMemberOf().add(id);
-                    
-                    //a collection might have already a memberItem
+
+                    //the collection might have already the other collection as member
                     Optional<MemberItem> optionalMember = memberDao.findByMid(item.getMid());
                     if (optionalMember.isPresent()) {
                         //existing member item of a collection found, do not persist member, only membership
@@ -550,83 +606,182 @@ public class CollectionsApiController implements CollectionsApi {
                     //might be another existing member?
                     Optional<MemberItem> optionalMember = memberDao.findByMid(item.getMid());
                     if (optionalMember.isPresent()) {
-                        if (restrictedToType != null && !restrictedToType.equals(optionalMember.get().getDatatype())){
+                        if (restrictedToType != null && !restrictedToType.equals(optionalMember.get().getDatatype())) {
                             LOG.error("Member has invalid type. Collection with id {} only supports type {}, but member provided type {}.", id, restrictedToType, optionalMember.get().getDatatype());
                             return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
                         }
                         //existing member found, do not persist member, only membership
                         LOG.trace("Existing member found for mid {}.", item.getMid());
                         existingMembers.put(item.getMid(), optionalMember.get());
-                    }else if(restrictedToType != null && !restrictedToType.equals(item.getDatatype())){
+                    } else if (restrictedToType != null && !restrictedToType.equals(item.getDatatype())) {
                         LOG.error("Member has invalid type. Collection with id {} only supports type {}, but member provided type {}.", id, restrictedToType, item.getDatatype());
                         return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
                     }
                 }
-            }
 
-            JPAQueryHelper helper;
-
-            LOG.trace("Checking for existing membership between collection {} and member item id {}.", id, item.getMid());
-            if (new JPAQueryHelper(em).isMemberPartOfCollection(id, item.getMid())) {
-                LOG.error("Existing membership found. Returning HTTP CONFLICT.");
-                return new ResponseEntity<>(HttpStatus.CONFLICT);
+                LOG.trace("Checking for existing membership between collection {} and member item id {}.", id, item.getMid());
+                if (new JPAQueryHelper(em).isMemberPartOfCollection(id, item.getMid())) {
+                    LOG.error("Existing membership found. Returning HTTP CONFLICT.");
+                    return new ResponseEntity<>(HttpStatus.CONFLICT);
+                }
             }
         }
 
         LOG.trace("All member items are fine. Adding {} member(s) to collection {}.", content.size(), id);
         for (MemberItem item : content) {
-            LOG.trace("Obtaining collection item mapping metadata.");
-            CollectionItemMappingMetadata mappingMetadata = item.getMappings();
-            if (mappingMetadata == null) {
-                LOG.trace("No collection item metadata provided. Creating new metadata instance.");
-                mappingMetadata = CollectionItemMappingMetadata.getDefault();
+            Set<String> rules = collectionToAddTo.getProperties().getSmartRules();
+
+            //for every rule:
+            //check if rule applies
+            //applies: 
+            //check if target collection exists
+            // exists
+            // use target collection
+            //not exist:
+            //create target collection as sub-collection of adressed collection (mark as rule-created?)
+            //add member to target collection and continue
+            //not apply: continue
+            //if no rule applied: add member to adressed collection
+            boolean ruleApplied = false;
+            //apply rules only to items, not collections
+            if (rules != null && !collectionItemIds.contains(item.getMid())) {
+                LOG.trace("Checking smart-rules for member {}.", item.getMid());
+                for (String rule : rules) {
+                    LOG.trace("Checking smart-rule {}.", rule);
+                    try {
+                        SmartRule smartRule = SmartRule.fromString(rule);
+                        if (smartRule.matches(item)) {
+                            LOG.trace("Member matches smart-rule.");
+                            ruleApplied = true;
+                            String targetCollectionId = smartRule.getTargetCollectionId();
+                            LOG.trace("Checking for smart-rule's target collection id {}.", targetCollectionId);
+                            Optional<CollectionObject> optTargetCollection = collectionDao.findById(targetCollectionId);
+                            CollectionObject targetCollection = null;
+                            if (!optTargetCollection.isPresent()) {
+                                LOG.trace("Target collection does not exist. Creating new collection as member of collection {}.", collectionToAddTo.getCapabilities());
+                                //create target collection as child of collectionToAdd
+                                CollectionObject newCollection = new CollectionObject();
+                                newCollection.setId(targetCollectionId);
+                                newCollection.setProperties(new CollectionProperties());
+                                newCollection.getProperties().getMemberOf().add(collectionToAddTo.getId());
+                                newCollection.setDescription("Rule-based created collection.");
+                                LOG.trace("Persisting new collection with id {}.", targetCollectionId);
+                                targetCollection = doPersistCollection(newCollection);
+                            } else {
+                                LOG.trace("Target collection exists.");
+                                targetCollection = optTargetCollection.get();
+                            }
+                            //target collection exists
+                            LOG.trace("Persisting member item with id {} in smart-rule target collection with id {}.", item.getMid(), targetCollectionId);
+                            persistItem(item, false, existingMembers, targetCollection);
+                            existingMembers.put(item.getMid(), item);
+                        }
+                    } catch (SmartRuleParseException ex) {
+                        LOG.error("Failed to evaluate smart rule for collection " + id + ".", ex);
+                        return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
+                    }
+                }
             }
 
-            MemberItem membershipMember;
-
-            if (!existingMembers.containsKey(item.getMid())) {
-                LOG.trace("Persisting new member item with id {}.", item.getId());
-                membershipMember = memberDao.save(item);
-            } else {
-                LOG.trace("Skip persisting existing member with id {}.", item.getId());
-                membershipMember = existingMembers.get(item.getMid());
-                item.copyFrom(membershipMember);
+            if (!ruleApplied) {
+                LOG.trace("No smart-rule applied to member with id {}. Adding member to adressed collection with id {}.", item.getMid(), collectionToAddTo.getId());
+                persistItem(item, collectionItemIds.contains(item.getMid()), existingMembers, collectionToAddTo);
             }
 
-            Membership m = new Membership();
-            m.setMember(item);
-            m.setMappings(mappingMetadata);
-
-            existing.getMembers().add(m);
-
-            LOG.trace("Persisting new membership between collection {} and member item {}.", id, item.getId());
-            collectionDao.save(existing);
-
-            Optional<CollectionObject> optionalCollection = collectionDao.findById(item.getMid());
-            if (optionalCollection.isPresent()) {
-                    collectionRegistry.getCollectionGraph().addEdge(item.getMid(), id);
-            }
-            item.setMappings(mappingMetadata);
+//            LOG.trace("Obtaining collection item mapping metadata.");
+//            CollectionItemMappingMetadata mappingMetadata = item.getMappings();
+//            if (mappingMetadata == null) {
+//                LOG.trace("No collection item metadata provided. Creating new metadata instance.");
+//                mappingMetadata = CollectionItemMappingMetadata.getDefault();
+//            }
+//
+//            MemberItem membershipMember;
+//
+//            if (!existingMembers.containsKey(item.getMid())) {
+//                LOG.trace("Persisting new member item with id {}.", item.getId());
+//                item.copyFrom(memberDao.save(item));
+//            } else {
+//                LOG.trace("Skip persisting existing member with id {}.", item.getId());
+//                membershipMember = existingMembers.get(item.getMid());
+//                item.copyFrom(membershipMember);
+//            }
+//
+//            Membership m = new Membership();
+//            m.setMember(item);
+//            m.setMappings(mappingMetadata);
+//
+//            collectionToAddTo.getMembers().add(m);
+//
+//            LOG.trace("Persisting new membership between collection {} and member item {}.", id, item.getId());
+//            collectionDao.save(collectionToAddTo);
+//
+//            Optional<CollectionObject> optionalCollection = collectionDao.findById(item.getMid());
+//            if (optionalCollection.isPresent()) {
+//                collectionRegistry.getCollectionGraph().addEdge(item.getMid(), id);
+//            }
+//            //set mapping metadata to item in order to make it available in the returned list
+//            item.setMappings(mappingMetadata);
         }
 
         LOG.trace("Returning collection of created member items.");
         return new ResponseEntity<>(content, HttpStatus.CREATED);
     }
 
+    private void persistItem(MemberItem item, boolean isCollection, Map<String, MemberItem> existingMembers, CollectionObject targetCollection) {
+        LOG.trace("Obtaining collection item mapping metadata.");
+        CollectionItemMappingMetadata mappingMetadata = item.getMappings();
+        if (mappingMetadata == null) {
+            LOG.trace("No collection item metadata provided. Creating new metadata instance.");
+            mappingMetadata = CollectionItemMappingMetadata.getDefault();
+        }
+
+        MemberItem membershipMember;
+
+        if (!existingMembers.containsKey(item.getMid())) {
+            LOG.trace("Persisting new member item with id {}.", item.getId());
+            item.copyFrom(memberDao.save(item));
+        } else {
+            LOG.trace("Skip persisting existing member with id {}.", item.getId());
+            membershipMember = existingMembers.get(item.getMid());
+            item.copyFrom(membershipMember);
+        }
+
+        Membership m = new Membership();
+        m.setMember(item);
+        m.setMappings(mappingMetadata);
+
+        targetCollection.getMembers().add(m);
+
+        LOG.trace("Persisting new membership between collection {} and member item {}.", targetCollection.getId(), item.getId());
+        collectionDao.save(targetCollection);
+
+        //Optional<CollectionObject> optionalCollection = collectionDao.findById(item.getMid());
+        if (isCollection) {
+            collectionRegistry.getCollectionGraph().addEdge(item.getMid(), targetCollection.getId());
+        }
+        //set mapping metadata to item in order to make it available in the returned list
+        item.setMappings(mappingMetadata);
+    }
+
     @Override
     public ResponseEntity<MemberResultSet> collectionsIdMembersGet(
             @PathVariable("id") String id,
-            @Valid @RequestParam(value = "f_datatype", required = false) String fDatatype,
-            @Valid @RequestParam(value = "f_role", required = false) String fRole,
-            @Valid @RequestParam(value = "f_index", required = false) Integer fIndex,
-            @Valid @RequestParam(value = "f_dateAdded", required = false) Instant fDateAdded,
-            @Valid @RequestParam(value = "expandDepth", required = false) Integer expandDepth,
+            @Valid
+            @RequestParam(value = "f_datatype", required = false) String fDatatype,
+            @Valid
+            @RequestParam(value = "f_role", required = false) String fRole,
+            @Valid
+            @RequestParam(value = "f_index", required = false) Integer fIndex,
+            @Valid
+            @RequestParam(value = "f_dateAdded", required = false) Instant fDateAdded,
+            @Valid
+            @RequestParam(value = "expandDepth", required = false) Integer expandDepth,
             final Pageable pgbl) {
-         String path = request.getAttribute(HandlerMapping.PATH_WITHIN_HANDLER_MAPPING_ATTRIBUTE).toString();
-        if (path.contains("/collections/") && path.contains("/members")){
+        // String path = request.getAttribute(HandlerMapping.PATH_WITHIN_HANDLER_MAPPING_ATTRIBUTE).toString();
+        /* if (path.contains("/collections/") && path.contains("/members")){
             id= getContentPath("/collections/","/members");
-        }
-        
+        }*/
+
         LOG.trace("Calling collectionsIdMembersGet({}, {}, {}, {}, {}, {}).", id, fDatatype, fRole, fIndex, fDateAdded, expandDepth);
 
         Optional<CollectionObject> result = collectionDao.findById(id);
@@ -656,17 +811,19 @@ public class CollectionsApiController implements CollectionsApi {
         MemberResultSet resultSet = new MemberResultSet();
         LOG.trace("Filling result set with {} results from result list.", itemList.size());
 
-        for (Membership membership : itemList) {
+        itemList.stream().map(membership -> {
             //we have to copy the item in case an item is in multiple collections, in that case the same item  pointer is returned multiple times pointing to the same memory location
             MemberItem item = membership.getMember();
             item.setMappings(membership.getMappings());
+            return item;
+        }).forEachOrdered(item -> {
             resultSet.addContentsItem(item);
-        }
+        });
 
         LOG.trace("Obtaining total element count.");
         long totalElementCount = helper.getColletionsMembershipsCountByFilters(collectionIdList, fDatatype, fIndex, fRole, fDateAdded);
 
-        long totalPages = (totalElementCount > 0) ? (int) Math.rint(totalElementCount / pageSize) + ((totalElementCount % pageSize != 0) ? 1 : 0) : 0;
+        // long totalPages = (totalElementCount > 0) ? (int) Math.rint(totalElementCount / pageSize) + ((totalElementCount % pageSize != 0) ? 1 : 0) : 0;
         LOG.trace("Setting cursor values.");
         resultSet.setNextCursor(PaginationHelper.create(pgbl.getPageNumber(), totalElementCount).withElementsPerPage(pgbl.getPageSize()).getNextPageLink());
         resultSet.setPrevCursor(PaginationHelper.create(pgbl.getPageNumber(), totalElementCount).withElementsPerPage(pgbl.getPageSize()).getPrevPageLink());
@@ -678,9 +835,9 @@ public class CollectionsApiController implements CollectionsApi {
     public ResponseEntity<MemberItem> collectionsIdMembersMidGet(
             @PathVariable("id") String id,
             @PathVariable("mid") String mid) {
-            LOG.trace("Calling collectionsIdMembersMidGet({}, {}).", id, mid);
-        id= getContentPath("/collections/","/members/");
-        mid= getContentPath("/members/", null);
+        LOG.trace("Calling collectionsIdMembersMidGet({}, {}).", id, mid);
+        // id= getContentPath("/collections/","/members/");
+        // mid= getContentPath("/members/", null);
         Optional<Membership> membership = new JPAQueryHelper(em).getMembershipByMid(id, mid);
 
         if (membership.isEmpty()) {
@@ -699,7 +856,8 @@ public class CollectionsApiController implements CollectionsApi {
     public ResponseEntity<MemberItem> collectionsIdMembersMidPut(
             @PathVariable("id") String id,
             @PathVariable("mid") String mid,
-            @Valid @RequestBody MemberItem content) {
+            @Valid
+            @RequestBody MemberItem content) {
         LOG.trace("Calling collectionsIdMembersMidPut({}, {}, {}).", id, mid, content);
 
         Optional<Membership> membership = new JPAQueryHelper(em).getMembershipByMid(id, mid);
@@ -732,7 +890,6 @@ public class CollectionsApiController implements CollectionsApi {
         LOG.trace("Transferring collection item mapping metadata from provided member item.");
 
         if (itemMetadata != null) {
-
             LOG.trace("Transferring property 'index'.");
             mMetadata.setIndex(itemMetadata.getIndex());
 
@@ -740,7 +897,7 @@ public class CollectionsApiController implements CollectionsApi {
             mMetadata.setMemberRole(itemMetadata.getMemberRole());
 
             LOG.trace("Setting property 'dateUpdated'.");
-            mMetadata.setDateUpdated(Instant.now().truncatedTo( ChronoUnit.MILLIS ));
+            mMetadata.setDateUpdated(Instant.now().truncatedTo(ChronoUnit.MILLIS));
         }
 
         LOG.trace("Persisting updated membership with new collection item metadata.");
@@ -757,8 +914,8 @@ public class CollectionsApiController implements CollectionsApi {
     public ResponseEntity<Void> collectionsIdMembersMidDelete(
             @PathVariable("id") String id,
             @PathVariable("mid") String mid) {
-        id= getContentPath("/collections/","/members/");
-        mid= getContentPath("/members/", null);
+        //id= getContentPath("/collections/","/members/");
+        // mid= getContentPath("/members/", null);
         LOG.trace("Calling collectionsIdMembersMidDelete({}, {}).", id, mid);
         Optional<Membership> membership = new JPAQueryHelper(em).getMembershipByMid(id, mid);
 
@@ -793,10 +950,10 @@ public class CollectionsApiController implements CollectionsApi {
             MemberItem memberItemToDelete = membership.get().getMember();
             membership.get().setMember(null);
             membershipDao.delete(membership.get());
-            if (membershipDao.findByMember(item).isEmpty()){
+            if (membershipDao.findByMember(item).isEmpty()) {
                 memberDao.delete(memberItemToDelete);
             }
-            
+
             if (memberCollection != null) {
                 LOG.trace("Persisting updated member collection with id {}.", mid);
                 collectionDao.save(memberCollection);
@@ -815,9 +972,9 @@ public class CollectionsApiController implements CollectionsApi {
             @PathVariable("id") String id,
             @PathVariable("mid") String mid,
             @PathVariable("property") String property) {
-        id= getContentPath("/collections/","/members/");
-        mid= getContentPath("/members/", "/properties/");
-        property= getContentPath("/properties/", null);
+        // id= getContentPath("/collections/","/members/");
+        // mid= getContentPath("/members/", "/properties/");
+        // property= getContentPath("/properties/", null);
         LOG.trace("Calling collectionsIdMembersMidPropertiesPropertyGet({}, {}. {}).", id, mid, property);
 
         Optional<Membership> membership = new JPAQueryHelper(em).getMembershipByMid(id, mid);
@@ -876,10 +1033,11 @@ public class CollectionsApiController implements CollectionsApi {
             @PathVariable("id") String id,
             @PathVariable("mid") String mid,
             @PathVariable("property") String property,
-            @Valid @RequestBody String content) {
-        id= getContentPath("/collections/","/members/");
-        mid= getContentPath("/members/", "/properties/");
-        property= getContentPath("/properties/", null);
+            @Valid
+            @RequestBody String content) {
+        // id= getContentPath("/collections/","/members/");
+        // mid= getContentPath("/members/", "/properties/");
+        // property= getContentPath("/properties/", null);
         LOG.trace("Calling collectionsIdMembersMidPropertiesPropertyPut({}, {}. {}, {}).", id, mid, property, content);
 
         Optional<Membership> membership = new JPAQueryHelper(em).getMembershipByMid(id, mid);
@@ -945,9 +1103,9 @@ public class CollectionsApiController implements CollectionsApi {
             @PathVariable("id") String id,
             @PathVariable("mid") String mid,
             @PathVariable("property") String property) {
-        id= getContentPath("/collections/","/members/");
-        mid= getContentPath("/members/", "/properties/");
-                property= getContentPath("/properties/", null);
+        //id= getContentPath("/collections/","/members/");
+        // mid= getContentPath("/members/", "/properties/");
+        // property= getContentPath("/properties/", null);
         LOG.trace("Calling collectionsIdMembersMidPropertiesPropertyDelete({}, {}, {}).", id, mid, property);
 
         Optional<Membership> membership = new JPAQueryHelper(em).getMembershipByMid(id, mid);
@@ -1002,7 +1160,7 @@ public class CollectionsApiController implements CollectionsApi {
             @PathVariable("id") String id,
             @RequestBody MemberItem memberProperties,
             final Pageable pgbl) {
-        id= getContentPath("/collections/", "/ops/findMatch");
+        //id= getContentPath("/collections/", "/ops/findMatch");
         LOG.trace("Calling collectionsIdOpsFindMatchPost({}, {}).", id, memberProperties);
         Optional<CollectionObject> result = collectionDao.findById(id);
 
@@ -1041,7 +1199,7 @@ public class CollectionsApiController implements CollectionsApi {
     public ResponseEntity<MemberResultSet> collectionsIdOpsFlattenGet(
             @PathVariable("id") String id,
             final Pageable pgbl) {
-        id=getContentPath("/collections/", "/ops/flatten");
+        //id=getContentPath("/collections/", "/ops/flatten");
         LOG.trace("Calling collectionsIdOpsFlattenGet({}, {}).", id, pgbl);
         return collectionsIdMembersGet(id, null, null, null, null, Integer.MAX_VALUE, pgbl);
     }
@@ -1051,8 +1209,8 @@ public class CollectionsApiController implements CollectionsApi {
             @PathVariable("id") String id,
             @PathVariable("otherId") String otherId,
             final Pageable pgbl) {
-        id=getContentPath("/collections/", "/ops/intersection/");
-        otherId=getContentPath("/ops/intersection/", null);
+        //id=getContentPath("/collections/", "/ops/intersection/");
+        // otherId=getContentPath("/ops/intersection/", null);
         LOG.trace("Calling collectionsIdOpsIntersectionOtherIdGet({}, {}).", id, otherId);
 
         Optional<CollectionObject> left = collectionDao.findById(id);
@@ -1106,8 +1264,8 @@ public class CollectionsApiController implements CollectionsApi {
             @PathVariable("id") String id,
             @PathVariable("otherId") String otherId,
             final Pageable pgbl) {
-        id=getContentPath("/collections/", "/ops/union/");
-        otherId= getContentPath("/ops/union/", null);
+        // id=getContentPath("/collections/", "/ops/union/");
+        // otherId= getContentPath("/ops/union/", null);
         LOG.trace("Calling collectionsIdOpsUnionOtherIdGet({}, {}).", id, otherId);
 
         Optional<CollectionObject> left = collectionDao.findById(id);
@@ -1140,8 +1298,8 @@ public class CollectionsApiController implements CollectionsApi {
 
         for (Membership membership : itemList) {
             //we have to copy the item in case an item is in multiple collections, in that case the same item  pointer is returned multiple times pointing to the same memory location
-             MemberItem item = membership.getMember();
-             MemberItem copyItem = MemberItem.copy(item);
+            MemberItem item = membership.getMember();
+            MemberItem copyItem = MemberItem.copy(item);
             copyItem.setMappings(membership.getMappings());
             resultSet.addContentsItem(copyItem);
         }
@@ -1155,22 +1313,201 @@ public class CollectionsApiController implements CollectionsApi {
         LOG.trace("Returning result set.");
         return new ResponseEntity<>(resultSet, HttpStatus.OK);
     }
-    
-    /**
-     * get content path.
-     * @param begin
-     * @param end
-     * @return 
+
+    /*
+//test data creation
+//    collectionDao.deleteAll();
+//    membershipDao.deleteAll();
+//
+//    TestDataCreationHelper testHelper = TestDataCreationHelper.initialize(collectionDao, memberDao);
+//    for(int i = 0; i < 20; i++){
+//      testHelper = testHelper.addCollection("c" + i, CollectionProperties.getDefault());
+//    }
+//
+//    for(int i = 0; i < 20; i++){
+//      for(int j = 0; j < 20; j++){
+//        testHelper = testHelper.addMemberItem("c" + i, "m" + i + "-" + j, "localhost");
+//      }
+//    }
+//
+//    testHelper = testHelper.addMemberItem("c2", "c1", "localhost");
+//    testHelper = testHelper.addMemberItem("c3", "c1", "localhost");
+//    testHelper = testHelper.addMemberItem("c2", "c4", "localhost");
+//    testHelper = testHelper.addMemberItem("c4", "c5", "localhost");
+//    testHelper = testHelper.addMemberItem("c8", "c12", "localhost");
+//    testHelper = testHelper.addMemberItem("c1", "c18", "localhost");
+//    testHelper = testHelper.addMemberItem("c15", "c17", "localhost");
+//    testHelper = testHelper.addMemberItem("c9", "c19", "localhost");
+//    testHelper = testHelper.addMemberItem("c9", "c5", "localhost");
+//
+//    testHelper.persist();
+        //id= getContentPath("/collections/", null);  
      */
-    private String getContentPath(String begin, String end){
-        String path = request.getAttribute(HandlerMapping.PATH_WITHIN_HANDLER_MAPPING_ATTRIBUTE).toString();
-        if(path == null){
-            throw new CustomInternalServerError("Unable to obtain request URI.");
-        }
-        if (end == null){
-            return path.substring(path.indexOf(begin)+(begin).length());
-        }else{
-            return path.substring(path.indexOf(begin)+(begin).length(), path.lastIndexOf(end));
-        }
+    private String restorePid(String prefix, String suffix) {
+        return prefix + "/" + suffix;
     }
+
+    /**
+     * Wrappers for PID Support
+     */
+    @Override
+    public ResponseEntity<CollectionCapabilities> collectionsPidCapabilitiesGet(String prefix, String suffix) {
+        return collectionsIdCapabilitiesGet(restorePid(prefix, suffix));
+    }
+
+    @Override
+    public ResponseEntity<Void> collectionsPidDelete(String prefix, String suffix) {
+        return collectionsIdDelete(restorePid(prefix, suffix));
+    }
+
+    @Override
+    public ResponseEntity<CollectionObject> collectionsPidGet(String prefix, String suffix) {
+        return collectionsIdGet(restorePid(prefix, suffix));
+    }
+
+    @Override
+    public ResponseEntity<MemberResultSet> collectionsPidMembersGet(String prefix, String suffix, String fDatatype, String fRole, Integer fIndex, Instant fDateAdded, Integer expandDepth, Pageable pgbl) {
+        return collectionsIdMembersGet(restorePid(prefix, suffix), fDatatype, fRole, fIndex, fDateAdded, expandDepth, pgbl);
+    }
+
+    @Override
+    public ResponseEntity<Void> collectionsPidMembersMidDelete(String prefix, String suffix, String mid) {
+        return collectionsIdMembersMidDelete(restorePid(prefix, suffix), mid);
+    }
+
+    @Override
+    public ResponseEntity<MemberItem> collectionsPidMembersMidGet(String prefix, String suffix, String mid) {
+        return collectionsIdMembersMidGet(restorePid(prefix, suffix), mid);
+    }
+
+    @Override
+    public ResponseEntity<Void> collectionsPidMembersMidPropertiesPropertyDelete(String prefix, String suffix, String mid, String property) {
+        return collectionsIdMembersMidPropertiesPropertyDelete(restorePid(prefix, suffix), mid, property);
+    }
+
+    @Override
+    public ResponseEntity<String> collectionsPidMembersMidPropertiesPropertyGet(String prefix, String suffix, String mid, String property) {
+        return collectionsIdMembersMidPropertiesPropertyGet(restorePid(prefix, suffix), mid, property);
+    }
+
+    @Override
+    public ResponseEntity<String> collectionsPidMembersMidPropertiesPropertyPut(String prefix, String suffix, String mid, String property, String content) {
+        return collectionsIdMembersMidPropertiesPropertyPut(restorePid(prefix, suffix), mid, property, content);
+    }
+
+    @Override
+    public ResponseEntity<MemberItem> collectionsPidMembersMidPut(String prefix, String suffix, String mid, MemberItem content) {
+        return collectionsIdMembersMidPut(restorePid(prefix, suffix), mid, content);
+    }
+
+    @Override
+    public ResponseEntity<List<MemberItem>> collectionsPidMembersPost(String prefix, String suffix, List<MemberItem> content) {
+        return collectionsIdMembersPost(restorePid(prefix, suffix), content);
+    }
+
+    @Override
+    public ResponseEntity<MemberResultSet> collectionsPidOpsFindMatchPost(String prefix, String suffix, MemberItem memberProperties, Pageable pgbl) {
+        return collectionsIdOpsFindMatchPost(restorePid(prefix, suffix), memberProperties, pgbl);
+    }
+
+    @Override
+    public ResponseEntity<MemberResultSet> collectionsPidOpsFlattenGet(String prefix, String suffix, Pageable pgbl) {
+        return collectionsIdOpsFlattenGet(restorePid(prefix, suffix), pgbl);
+    }
+
+    @Override
+    public ResponseEntity<MemberResultSet> collectionsPidOpsIntersectionOtherIdGet(String prefix, String suffix, String otherId, Pageable pgbl) {
+        return collectionsIdOpsIntersectionOtherIdGet(restorePid(prefix, suffix), otherId, pgbl);
+    }
+
+    @Override
+    public ResponseEntity<MemberResultSet> collectionsIdOpsIntersectionOtherPidGet(String id, String prefix, String suffix, Pageable pgbl) {
+        return collectionsIdOpsIntersectionOtherIdGet(id, restorePid(prefix, suffix), pgbl);
+    }
+
+    @Override
+    public ResponseEntity<MemberResultSet> collectionsPidOpsIntersectionOtherPidGet(String prefix, String suffix, String otherPrefix, String otherSuffix, Pageable pgbl) {
+        return collectionsIdOpsIntersectionOtherIdGet(restorePid(prefix, suffix), restorePid(otherPrefix, otherSuffix), pgbl);
+    }
+
+    @Override
+    public ResponseEntity<MemberResultSet> collectionsPidOpsUnionOtherIdGet(String prefix, String suffix, String otherId, Pageable pgbl) {
+        return collectionsIdOpsUnionOtherIdGet(restorePid(prefix, suffix), otherId, pgbl);
+    }
+
+    @Override
+    public ResponseEntity<MemberResultSet> collectionsIdOpsUnionOtherPidGet(String id, String prefix, String suffix, Pageable pgbl) {
+        return collectionsIdOpsUnionOtherIdGet(id, restorePid(prefix, suffix), pgbl);
+    }
+
+    @Override
+    public ResponseEntity<MemberResultSet> collectionsPidOpsUnionOtherPidGet(String prefix, String suffix, String otherPrefix, String otherSuffix, Pageable pgbl) {
+        return collectionsIdOpsUnionOtherIdGet(restorePid(prefix, suffix), restorePid(otherPrefix, otherSuffix), pgbl);
+    }
+
+    @Override
+    public ResponseEntity<CollectionObject> collectionsPidPut(String prefix, String suffix, CollectionObject content) {
+        return collectionsIdPut(restorePid(prefix, suffix), content);
+    }
+
+    @Override
+    public ResponseEntity<Void> collectionsIdMembersPidDelete(String id, String prefix, String suffix) {
+        return collectionsIdMembersMidDelete(id, restorePid(prefix, suffix));
+    }
+
+    @Override
+    public ResponseEntity<Void> collectionsPidMembersPidDelete(String prefix, String suffix, String mPrefix, String mSuffix) {
+        return collectionsIdMembersMidDelete(restorePid(prefix, suffix), restorePid(mPrefix, mSuffix));
+    }
+
+    @Override
+    public ResponseEntity<MemberItem> collectionsIdMembersPidGet(String id, String prefix, String suffix) {
+        return collectionsIdMembersMidGet(id, restorePid(prefix, suffix));
+    }
+
+    @Override
+    public ResponseEntity<MemberItem> collectionsPidMembersPidGet(String prefix, String suffix, String mPrefix, String mSuffix) {
+        return collectionsIdMembersMidGet(restorePid(prefix, suffix), restorePid(mPrefix, mSuffix));
+    }
+
+    @Override
+    public ResponseEntity<Void> collectionsIdMembersPidPropertiesPropertyDelete(String id, String prefix, String suffix, String property) {
+        return collectionsIdMembersMidPropertiesPropertyDelete(id, restorePid(prefix, suffix), property);
+    }
+
+    @Override
+    public ResponseEntity<Void> collectionsPidMembersPidPropertiesPropertyDelete(String prefix, String suffix, String mPrefix, String mSuffix, String property) {
+        return collectionsIdMembersMidPropertiesPropertyDelete(restorePid(prefix, suffix), restorePid(mPrefix, mSuffix), property);
+    }
+
+    @Override
+    public ResponseEntity<String> collectionsIdMembersPidPropertiesPropertyGet(String id, String prefix, String suffix, String property) {
+        return collectionsIdMembersMidPropertiesPropertyGet(id, restorePid(prefix, suffix), property);
+    }
+
+    @Override
+    public ResponseEntity<String> collectionsPidMembersPidPropertiesPropertyGet(String prefix, String suffix, String mPrefix, String mSuffix, String property) {
+        return collectionsIdMembersMidPropertiesPropertyGet(restorePid(prefix, suffix), restorePid(mPrefix, suffix), mSuffix);
+    }
+
+    @Override
+    public ResponseEntity<String> collectionsIdMembersPidPropertiesPropertyPut(String id, String prefix, String suffix, String property, String content) {
+        return collectionsIdMembersMidPropertiesPropertyPut(id, restorePid(prefix, suffix), property, content);
+    }
+
+    @Override
+    public ResponseEntity<String> collectionsPidMembersPidPropertiesPropertyPut(String prefix, String suffix, String mPrefix, String mSuffix, String property, String content) {
+        return collectionsIdMembersMidPropertiesPropertyPut(restorePid(prefix, suffix), restorePid(mPrefix, mSuffix), property, content);
+    }
+
+    @Override
+    public ResponseEntity<MemberItem> collectionsIdMembersPidPut(String id, String prefix, String suffix, MemberItem content) {
+        return collectionsIdMembersMidPut(id, restorePid(prefix, suffix), content);
+    }
+
+    @Override
+    public ResponseEntity<MemberItem> collectionsPidMembersPidPut(String prefix, String suffix, String mPrefix, String mSuffix, MemberItem content) {
+        return collectionsIdMembersMidPut(restorePid(prefix, suffix), restorePid(mPrefix, mSuffix), content);
+    }
+
 }

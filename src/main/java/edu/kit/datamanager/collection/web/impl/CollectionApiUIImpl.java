@@ -91,13 +91,13 @@ public class CollectionApiUIImpl implements CollectionApiUI {
         return model;
     }
 
-    @RequestMapping("/collections/{id}/**/members")
+    @RequestMapping("/collections/{id}/members")
     @Override
     public ModelAndView members(@PathVariable(value = "id", required = true) String id) {
         Pageable pgbl = PageRequest.of(0, 20, Sort.unsorted());
         
-        String path = request.getAttribute(HandlerMapping.PATH_WITHIN_HANDLER_MAPPING_ATTRIBUTE).toString();
-        id= path.substring(path.indexOf("/collections/")+("/collections/").length(), path.lastIndexOf("/members"));
+       // String path = request.getAttribute(HandlerMapping.PATH_WITHIN_HANDLER_MAPPING_ATTRIBUTE).toString();
+        //id= path.substring(path.indexOf("/collections/")+("/collections/").length(), path.lastIndexOf("/members"));
  
         ResponseEntity<MemberResultSet> memberResultSet = collectionController.collectionsIdMembersGet(id, null, null, null, null, null, pgbl);
 

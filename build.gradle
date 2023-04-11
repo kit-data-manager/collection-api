@@ -1,123 +1,121 @@
-buildscript {
-    repositories { 
-        mavenLocal()
-        jcenter()
-        mavenCentral()
-    }
-	repositories {
-      maven {
-        url "https://plugins.gradle.org/m2/"
-      }
-    }
-    dependencies {
-        classpath("org.springframework.boot:spring-boot-gradle-plugin:2.2.2.RELEASE")
-        classpath 'org.asciidoctor:asciidoctor-gradle-plugin:1.5.9.2'
-        classpath 'net.researchgate:gradle-release:2.6.0'
-    }
-}
-
 plugins { 
-    id 'io.franzbecker.gradle-lombok' version '1.14'
-    id "io.spring.dependency-management" version "1.0.8.RELEASE" 
-    id "com.github.kt3k.coveralls" version "2.8.1" 
-    id "org.owasp.dependencycheck" version "3.1.2"
-    id "org.asciidoctor.convert" version "1.5.3"
-    id "com.gorylenko.gradle-git-properties" version "1.4.17"
+    id "org.springframework.boot" version "2.7.5"
+    id "io.spring.dependency-management" version "1.1.0" 
+    id "io.freefair.lombok" version "6.5.1"
+    id "io.freefair.maven-publish-java" version "6.5.1"
+    id "com.github.kt3k.coveralls" version "2.12.0" 
+    id "org.owasp.dependencycheck" version "7.3.0"
+    id 'org.asciidoctor.jvm.convert' version '3.3.2'
+    id "net.researchgate.release" version "3.0.2"
+    id "com.gorylenko.gradle-git-properties" version "2.4.1"
+    id 'java'
+    id 'jacoco'
 }
-
-apply plugin: 'java'
-apply plugin: 'java-library'
-apply plugin: 'jacoco'
-apply plugin: 'org.springframework.boot'
-apply plugin: 'io.spring.dependency-management'
-
-println "Building ${name} version: ${version}"
 
 jar {
-    baseName = 'collection-api'
-    version = System.getenv('version')
+    archiveBaseName = 'collection-api'
+    // version is defined in file 'gradle.properties'
+    archiveVersion = System.getenv('version')
 }
 
 repositories {
     mavenLocal() 
-    jcenter()
     mavenCentral()
 }
 
 sourceCompatibility = 1.8
 targetCompatibility = 1.8
-
+ 
 configurations {
     all*.exclude module : 'spring-boot-starter-logging'
 }
 
-lombok {
-    version = '1.18.10'
-    sha256 = ""
+ext {
+    set('springBootVersion', "2.7.2")
+    set('springDocVersion', "1.6.9")
+    set('keycloakVersion', "19.0.0")
+
+    // directory for generated code snippets during tests
+    snippetsDir = file("build/generated-snippets")
 }
 
-if (project.hasProperty('travis')) {
-    println 'Using travis profile for building ' + project.getName()
-    apply from: 'gradle/profile-travis.gradle'
-} else if (project.hasProperty('release') || project.hasProperty('clean-release')) {
-    println 'Using release profile for building ' + project.getName()
-    apply from: 'gradle/profile-release.gradle'   
+println "Running gradle version: $gradle.gradleVersion"
+println "Building ${name} version: ${version}"
+println "JDK version: ${JavaVersion.current()}"
+
+if (System.getProperty('profile') == 'minimal') {
+    println 'Using minimal profile for building ' + project.getName()
+    apply from: 'gradle/profile-minimal.gradle'   
+} else {
+    println 'Using default profile executing all tests for building ' + project.getName()
+    apply from: 'gradle/profile-complete.gradle'
 }
 
 dependencies {
-    implementation("org.springframework.boot:spring-boot-starter-data-rest")
-    implementation("org.springframework.boot:spring-boot-starter-security")
-    implementation("org.springframework.boot:spring-boot-starter-data-jpa")
-    api("org.springdoc:springdoc-openapi-data-rest:1.2.31")
-  
-    implementation("edu.kit.datamanager:service-base:0.2.0"){
+   // boot starter
+    implementation "org.springframework.boot:spring-boot-starter-validation"    
+    implementation "org.springframework.boot:spring-boot-starter-data-jpa"
+    implementation "org.springframework.boot:spring-boot-starter-data-rest"
+    implementation "org.springframework.boot:spring-boot-starter-mail"
+    implementation "org.springframework.boot:spring-boot-starter-actuator"
+    implementation "org.springframework.boot:spring-boot-starter-thymeleaf"
+
+     
+    implementation "org.springframework:spring-messaging:5.3.23"
+    implementation "org.springframework.security:spring-security-web:5.7.5"
+    implementation "org.springframework.security:spring-security-config:5.7.5"
+    
+    // cloud support
+    implementation "org.springframework.cloud:spring-cloud-starter-config:3.1.5"
+    implementation "org.springframework.cloud:spring-cloud-starter-netflix-eureka-client:3.1.4"
+
+    // springdoc
+    implementation "org.springdoc:springdoc-openapi-ui:${springDocVersion}"
+    implementation "org.springdoc:springdoc-openapi-data-rest:${springDocVersion}"
+    implementation "org.springdoc:springdoc-openapi-webmvc-core:${springDocVersion}"
+
+    implementation "edu.kit.datamanager:repo-core:1.0.4"
+    implementation("edu.kit.datamanager:service-base:1.0.7"){
         exclude group: 'org.javers', module: 'javers-spring-boot-starter-sql'
     }
-    implementation("de.codecentric:spring-boot-admin-starter-client:2.1.6")
 
-    implementation("org.postgresql:postgresql:42.2.1")
-    implementation("com.h2database:h2:1.4.194")
+    //Keycloak
+    implementation "org.keycloak:keycloak-spring-boot-starter:${keycloakVersion}"
+    implementation "com.nimbusds:nimbus-jose-jwt:9.25.6"
+    implementation "io.jsonwebtoken:jjwt-api:0.11.5"
+    implementation "io.jsonwebtoken:jjwt-impl:0.11.5"
+    implementation "io.jsonwebtoken:jjwt-jackson:0.11.5"
 
-    //Java 11 Support 
-    implementation('javax.xml.bind:jaxb-api:2.2.11')
-    implementation('com.sun.xml.bind:jaxb-core:2.2.11')
-    implementation('com.sun.xml.bind:jaxb-impl:2.2.11')
-    implementation('javax.activation:activation:1.1.1')
-    implementation('org.javassist:javassist:3.23.1-GA')
-    
-    implementation('org.apache.httpcomponents:httpclient:4.5.6')
+    implementation "org.apache.commons:commons-collections4:4.4"
 
-    testImplementation("com.h2database:h2:1.4.194") 
-    testImplementation("org.springframework.restdocs:spring-restdocs-mockmvc")
-    testImplementation("org.springframework.boot:spring-boot-starter-test")
-    testImplementation("org.springframework:spring-test")
-    testImplementation("org.springframework.security:spring-security-test")
-    implementation 'com.googlecode.json-simple:json-simple:1.1.1'
-    implementation ('org.springframework.boot:spring-boot-starter-thymeleaf')
+    implementation "javax.xml.bind:jaxb-api:2.3.1"
+
+    implementation "org.hamcrest:hamcrest:2.2"
+
+    implementation "com.googlecode.json-simple:json-simple:1.1.1"
+
+    runtimeOnly    "org.apache.httpcomponents:httpclient:4.5.13"
+
+     // driver for postgres
+    implementation "org.postgresql:postgresql:42.5.4"
+    //driver for h2
+    implementation "com.h2database:h2:2.1.214"
+
+    testImplementation "org.springframework.restdocs:spring-restdocs-mockmvc:2.0.6.RELEASE"
+    testImplementation "org.springframework.boot:spring-boot-starter-test"
+    testImplementation "org.springframework:spring-test"
+    testImplementation "org.springframework.security:spring-security-test"
    
     //Java 11 Support 
-    testImplementation("org.mockito:mockito-core:2.18.0")
-    testImplementation("org.powermock:powermock-module-junit4:2.0.0-beta.5")
-    testImplementation("org.powermock:powermock-api-mockito2:2.0.0-beta.5")
-
-    testImplementation('org.springframework.restdocs:spring-restdocs-mockmvc:2.0.2.RELEASE')
-    testImplementation('org.asciidoctor:asciidoctor-gradle-plugin:1.5.9.2')
+    testImplementation "org.mockito:mockito-core:4.9.0"
+    testImplementation "org.powermock:powermock-module-junit4:2.0.9"
+    testImplementation "org.powermock:powermock-api-mockito2:2.0.9"
+    testImplementation "junit:junit:4.13.2"
 }
 
-springBoot  {
-    buildInfo()
-}
-
-bootJar {
-    manifest {
-        attributes 'Main-Class': 'org.springframework.boot.loader.PropertiesLauncher'
-    }
-    dependsOn asciidoctor
-    from ("${asciidoctor.outputDir}/html5") {
-        into 'static/docs'
-    }
-    launchScript()
-    archiveFileName = "${archiveBaseName.get()}.${archiveExtension.get()}"
+if (project.hasProperty('release')) {
+    println 'Using \'release\' profile for building ' + project.getName()
+    apply from: 'gradle/profile-deploy.gradle'
 }
 
 test {
@@ -125,11 +123,34 @@ test {
         outputs.upToDateWhen {false}
         showStandardStreams = true
     }
+   environment "spring.config.location", "classpath:/test-config/"
 }
 
+tasks.withType(Test) {
+    testLogging {
+        events 'started', 'passed'
+    }
+}
 
-jacoco {
-    toolVersion = "0.8.5"
+springBoot {    
+    buildInfo()
+}
+
+bootJar {
+    println 'Create bootable jar...'
+    archiveFileName = "${archiveBaseName.get()}.${archiveExtension.get()}"
+    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+    manifest {
+        attributes 'Main-Class': 'org.springframework.boot.loader.PropertiesLauncher'
+    }
+    launchScript()
+}
+
+// task for printing project name.
+task printProjectName {
+    doLast {
+        println "${project.name}"
+    }
 }
 
 jacocoTestReport {

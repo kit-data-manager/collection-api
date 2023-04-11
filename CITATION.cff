@@ -1,0 +1,20 @@
+cff-version: 1.2.0
+message: "If you use this software, please cite it as below."
+authors:
+- family-names: "Jejkal"
+  given-names: "Thomas"
+  affiliation: Karlsruhe Institute of Technology
+  email: thomas.jejkal@kit.edu
+  orcid: "https://orcid.org/0000-0003-2804-688X"
+- family-names: "Chelbi"
+  given-names: "Sabrine"
+  affiliation: Karlsruhe Institute of Technology
+  email: sabrine.chelbi@kit.edu
+  orcid: "https://orcid.org/0000-0002-4480-6116"
+title: "collection-api"
+type: software
+abstract: This project contains the collection microservice for the KIT DM infrastructure. The service provides allows to build generic collections of digital resources following the recommendations of the Research Data Alliance on Research Data Collections.
+date-released: 2020-09-29
+url: "https://github.com/kit-data-manager/collection-api"
+repository-code: "https://github.com/kit-data-manager/collection-api"
+license: Apache-2.0
