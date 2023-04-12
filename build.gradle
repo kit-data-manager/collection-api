@@ -31,7 +31,7 @@ configurations {
 }
 
 ext {
-    set('springBootVersion', "2.7.2")
+    set('springBootVersion', "2.7.5")
     set('springDocVersion', "1.6.9")
     set('keycloakVersion', "19.0.0")
 
@@ -74,17 +74,18 @@ dependencies {
     implementation "org.springdoc:springdoc-openapi-data-rest:${springDocVersion}"
     implementation "org.springdoc:springdoc-openapi-webmvc-core:${springDocVersion}"
 
-    implementation "edu.kit.datamanager:repo-core:1.0.4"
-    implementation("edu.kit.datamanager:service-base:1.0.7"){
+    implementation "edu.kit.datamanager:repo-core:1.1.2"
+    implementation("edu.kit.datamanager:service-base:1.1.1"){
         exclude group: 'org.javers', module: 'javers-spring-boot-starter-sql'
     }
+    implementation "de.codecentric:spring-boot-admin-starter-client:2.7.10"
 
     //Keycloak
     implementation "org.keycloak:keycloak-spring-boot-starter:${keycloakVersion}"
-    implementation "com.nimbusds:nimbus-jose-jwt:9.25.6"
-    implementation "io.jsonwebtoken:jjwt-api:0.11.5"
-    implementation "io.jsonwebtoken:jjwt-impl:0.11.5"
-    implementation "io.jsonwebtoken:jjwt-jackson:0.11.5"
+    //implementation "com.nimbusds:nimbus-jose-jwt:9.25.6"
+    //implementation "io.jsonwebtoken:jjwt-api:0.11.5"
+    //implementation "io.jsonwebtoken:jjwt-impl:0.11.5"
+    //implementation "io.jsonwebtoken:jjwt-jackson:0.11.5"
 
     implementation "org.apache.commons:commons-collections4:4.4"
 
@@ -111,6 +112,10 @@ dependencies {
     testImplementation "org.powermock:powermock-module-junit4:2.0.9"
     testImplementation "org.powermock:powermock-api-mockito2:2.0.9"
     testImplementation "junit:junit:4.13.2"
+}
+
+dependencyManagement {
+    imports { mavenBom("org.keycloak.bom:keycloak-adapter-bom:${keycloakVersion}") }
 }
 
 if (project.hasProperty('release')) {

@@ -42,6 +42,7 @@ import edu.kit.datamanager.collection.util.JPAQueryHelper;
 import edu.kit.datamanager.collection.domain.CollectionItemMappingMetadata;
 import edu.kit.datamanager.collection.domain.CollectionProperties;
 import edu.kit.datamanager.collection.domain.Membership;
+import edu.kit.datamanager.collection.domain.TabulatorLocalPagination;
 import edu.kit.datamanager.collection.domain.d3.CollectionNode;
 import edu.kit.datamanager.collection.domain.d3.DataWrapper;
 import edu.kit.datamanager.collection.domain.d3.Link;
@@ -69,10 +70,7 @@ import java.util.Set;
 import java.util.UUID;
 import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
-//import javax.validation.ConstraintViolation;
-//import javax.validation.Validation;
-//import javax.validation.Validator;
-//import javax.validation.ValidatorFactory;
+import javax.servlet.http.HttpServletResponse;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.util.UriComponentsBuilder;
@@ -84,6 +82,7 @@ import org.springframework.web.util.UriComponentsBuilder;
 public class CollectionsApiController implements CollectionsApi {
 
     private static final Logger LOG = LoggerFactory.getLogger(CollectionsApiController.class);
+    public static final String CONTENT_RANGE_HEADER = "Content-Range";
 
     private final HttpServletRequest request;
 
@@ -120,7 +119,7 @@ public class CollectionsApiController implements CollectionsApi {
             } else {
                 try {
                     object.setId(URLDecoder.decode(object.getId(), "UTF-8"));
-                   /* Remove if tested...should work from v1.3.0
+                    /* Remove if tested...should work from v1.3.0
                     if (object.getId().contains("/")) {
                         LOG.error("Detected slash character in collection id {}.", object.getId());
                         return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
@@ -218,6 +217,41 @@ public class CollectionsApiController implements CollectionsApi {
 
         collectionRegistry.getCollectionGraph().addEdge(result.getId(), new HashSet<String>());
         return result;
+    }
+
+    @Override
+    public ResponseEntity<TabulatorLocalPagination> findAllForTabulator(
+            @Valid
+            @RequestParam(value = "f_modelType", required = false) String fModelType,
+            @Valid
+            @RequestParam(value = "f_memberType", required = false) String fMemberType,
+            @Valid
+            @RequestParam(value = "f_ownership", required = false) String fOwnership,
+            Pageable pgbl,
+            HttpServletRequest request,
+            HttpServletResponse response,
+            UriComponentsBuilder uriBuilder) {
+        int startPage = pgbl.getPageNumber() - 1;
+        startPage = startPage < 0 ? 0 : startPage;
+        ResponseEntity<CollectionResultSet> page = collectionsGet(fModelType, fMemberType, fOwnership, pgbl, request, uriBuilder);
+
+        LOG.trace("Calling findAllForTabulator({}, {}, {}, {}).", fModelType, fMemberType, fOwnership, pgbl);
+        int pageSize = pgbl.getPageSize();
+        int offset =  pgbl.getPageNumber() * pgbl.getPageSize();
+        JPAQueryHelper helper = new JPAQueryHelper(em);
+        LOG.trace("Listing collection from index {} with page size of {}.", offset, pageSize);
+        List<CollectionObject> resultList = helper.getCollectionsByFilters(fOwnership, fModelType, fMemberType, offset, pageSize);
+        LOG.trace("Obtained {} result(s). Obtaining total element count.", resultList.size());
+        Long totalElementCount = helper.getCollectionsCountByFilters(fOwnership, fModelType, fMemberType);
+        LOG.trace("Total element count is {}. Calculating total page.", totalElementCount);
+        int totalPages = (totalElementCount > 0) ? (int) Math.rint(totalElementCount / pageSize) + ((totalElementCount % pageSize != 0) ? 1 : 0) : 0;
+
+        response.addHeader(CONTENT_RANGE_HEADER, edu.kit.datamanager.util.ControllerUtils.getContentRangeHeader(startPage, pageSize, resultList.size()));
+        TabulatorLocalPagination tabulatorLocalPagination = TabulatorLocalPagination.builder()
+                .lastPage(totalPages)
+                .data(resultList)
+                .build();
+        return ResponseEntity.ok().body(tabulatorLocalPagination);
     }
 
     @Override
@@ -567,7 +601,7 @@ public class CollectionsApiController implements CollectionsApi {
             } else {
                 try {
                     item.setMid(URLDecoder.decode(item.getMid(), "UTF-8"));
-                     /* Remove if tested...should work from v1.3.0
+                    /* Remove if tested...should work from v1.3.0
                     if (item.getMid().contains("/")) {
                         LOG.error("Detected slash character in member id {}.", item.getMid());
                         return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
