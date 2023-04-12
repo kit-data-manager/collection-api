@@ -1,9 +1,9 @@
 # Collection API
 
-![Build Status](https://img.shields.io/travis/kit-data-manager/collection-api.svg)
+[![Build Status](https://github.com/kit-data-manager/collection-api/actions/workflows/gradle.yml/badge.svg)](https://github.com/kit-data-manager/collection-api/actions/workflows/gradle.yml)
 ![Code Coverage](https://img.shields.io/coveralls/github/kit-data-manager/collection-api.svg)
 ![License](https://img.shields.io/github/license/kit-data-manager/collection-api.svg)
-![Docker Cloud Build Status](https://img.shields.io/docker/cloud/build/kitdm/collection-api)
+[![Docker Cloud Build Status](https://img.shields.io/docker/cloud/build/kitdm/collection-api)](https://hub.docker.com/r/kitdm/collection-api/tags)
 ![Docker Image Version (latest semver)](https://img.shields.io/docker/v/kitdm/collection-api)
 [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.7821303.svg)](https://doi.org/10.5281/zenodo.7821303)
 
