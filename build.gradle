@@ -98,7 +98,7 @@ dependencies {
     runtimeOnly    "org.apache.httpcomponents:httpclient:4.5.13"
 
      // driver for postgres
-    implementation "org.postgresql:postgresql:42.5.0"
+    implementation "org.postgresql:postgresql:42.5.4"
     //driver for h2
     implementation "com.h2database:h2:2.1.214"
 
