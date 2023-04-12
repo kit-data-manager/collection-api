@@ -10,7 +10,9 @@ import edu.kit.datamanager.collection.domain.CollectionObject;
 import edu.kit.datamanager.collection.domain.CollectionResultSet;
 import edu.kit.datamanager.collection.domain.MemberItem;
 import edu.kit.datamanager.collection.domain.MemberResultSet;
+import edu.kit.datamanager.collection.domain.TabulatorLocalPagination;
 import edu.kit.datamanager.collection.domain.d3.DataWrapper;
+import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.Parameters;
 import io.swagger.v3.oas.annotations.enums.ParameterIn;
@@ -19,6 +21,7 @@ import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import java.time.Instant;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -29,11 +32,46 @@ import org.springframework.web.bind.annotation.RequestParam;
 import javax.validation.Valid;
 import java.util.List;
 import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import org.springdoc.core.converters.models.PageableAsQueryParam;
 import org.springframework.data.domain.Pageable;
+import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.util.UriComponentsBuilder;
 
 @javax.annotation.Generated(value = "io.swagger.codegen.languages.SpringCodegen", date = "2019-07-09T15:21:24.632+02:00")
 public interface CollectionsApi {
+
+    @Operation(operationId = "listCollectionsForTabulator",
+            summary = "List all collections and return them in a format supported by the Tabulator.js library.",
+            description = "List all collections in a paginated and/or sorted form. Possible queries are: listing with default values (X elements on first page sorted by database), "
+            + "listing page wise, sorted query page wise, and combinations of the options above.", security = {
+                @SecurityRequirement(name = "bearer-jwt")})
+    @RequestMapping(value = "/collections", method = RequestMethod.GET, produces = {"application/tabulator+json"})
+    @Parameters({
+        @Parameter(in = ParameterIn.QUERY,
+                description = "Page you want to retrieve (0..N)",
+                name = "page",
+                content = @Content(schema = @Schema(type = "integer", defaultValue = "0"))),
+        @Parameter(in = ParameterIn.QUERY,
+                description = "Number of records per page.",
+                name = "size",
+                content = @Content(schema = @Schema(type = "integer", defaultValue = "20"))),
+        @Parameter(in = ParameterIn.QUERY,
+                description = "Sorting criteria in the format: property(,asc|desc). "
+                + "Default sort order is ascending. " + "Multiple sort criteria are supported.",
+                name = "sort",
+                content = @Content(array = @ArraySchema(schema = @Schema(type = "string"))))
+    })
+    @ResponseBody
+    @PageableAsQueryParam
+    public ResponseEntity<TabulatorLocalPagination> findAllForTabulator(
+            @Parameter(description = "Filter response by the modelType property of the collection.") @Valid @RequestParam(value = "f_modelType", required = false) String fModelType,
+            @Parameter(description = "Filter response by the data type of contained collection member. A collection will meet this requirement if any of its members are of the requested type.") @Valid @RequestParam(value = "f_memberType", required = false) String fMemberType,
+            @Parameter(description = "Filter response by the ownership property of the collection") @Valid @RequestParam(value = "f_ownership", required = false) String fOwnership,
+            final Pageable pgbl,
+            final HttpServletRequest request,
+            final HttpServletResponse response,
+            final UriComponentsBuilder uriBuilder);
 
     @Schema(title = "Get a list of all collections provided by this service.", name = "collectionsGet",
             description = "This request returns a list of the collections provided by this service.  This may be a complete list, or if the service features include support for pagination, "
@@ -358,7 +396,7 @@ public interface CollectionsApi {
             @Parameter(description = "PID suffix for the collection", required = true) @PathVariable("suffix") String suffix,
             @Parameter(description = "PID prefix for the collection member item.", required = true) @PathVariable("mPrefix") String mPrefix,
             @Parameter(description = "PID suffix for the collection member item.", required = true) @PathVariable("mSuffix") String mSuffix);
-       
+
     @Schema(title = "Delete a named property of a member item in a collection.", name = "collectionsIdMembersMidPropertiesPropertyDelete",
             description = "This request deletes a specific named property of a specific member item from a collection")
     @ApiResponses(value = {
@@ -391,7 +429,7 @@ public interface CollectionsApi {
             @Parameter(description = "PID prefix for the collection member item.", required = true) @PathVariable("prefix") String prefix,
             @Parameter(description = "PID suffix for the collection member item.", required = true) @PathVariable("suffix") String suffix,
             @Parameter(description = "the name of a property to update", required = true) @PathVariable("property") String property);
-    
+
     @Schema(title = "Delete a named property of a member item in a collection.", name = "collectionsPidMembersMidPropertiesPropertyDelete",
             description = "This request deletes a specific named property of a specific member item from a collection")
     @ApiResponses(value = {
@@ -455,7 +493,7 @@ public interface CollectionsApi {
             @Parameter(description = "PID prefix for the collection member item.", required = true) @PathVariable("prefix") String prefix,
             @Parameter(description = "PID suffix for the collection member item.", required = true) @PathVariable("suffix") String suffix,
             @Parameter(description = "the name of a property to retrieve (e.g. index)", required = true) @PathVariable("property") String property);
- 
+
     @Schema(title = "Get a named property of a member item in a collection.", name = "collectionsPidMembersMidPropertiesPropertyGet",
             description = "This request retrieves a specific named property of a specific member item from a collection")
     @ApiResponses(value = {
@@ -521,7 +559,7 @@ public interface CollectionsApi {
             @Parameter(description = "PID suffix for the collection member item.", required = true) @PathVariable("suffix") String suffix,
             @Parameter(description = "the name of a property to update", required = true) @PathVariable("property") String property,
             @Parameter(description = "new property value", required = true) @Valid @RequestBody String content);
-    
+
     @Schema(title = "Update a named property of a member item in a collection.", name = "collectionsPidMembersMidPropertiesPropertyPut",
             description = "This request updates a specific named property of a specific member item from a collection")
     @ApiResponses(value = {
@@ -578,7 +616,7 @@ public interface CollectionsApi {
             @Parameter(description = "Identifier for the collection member", required = true) @PathVariable("mid") String mid,
             @Parameter(description = "Collection item mapping metadata", required = true) @Valid @RequestBody MemberItem content);
 
-     @Schema(title = "Update the properties of a collection member item.", name = "collectionsIdMembersPidPut",
+    @Schema(title = "Update the properties of a collection member item.", name = "collectionsIdMembersPidPut",
             description = "This request updates the properties of a collection member item.  The updated CollectionItemMappingMetadata  "
             + "must be supplied in the body of the request. The response may differ  depending upon whether or not the  service "
             + "features include support  for asynchronous actions.")
